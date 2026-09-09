@@ -1,14 +1,10 @@
 /**
  * Content-Security-Policy middleware (Phase 25, task 542.2).
  *
- * A static CSP can't both block inline scripts *and* let Next.js run its own
- * hydration bootstrap. The fix is a per-request nonce: we mint a fresh nonce,
- * attach it to the request so Next.js stamps it onto every script it emits, and
- * publish it in the CSP response header. Because the policy also uses
- * `strict-dynamic`, CSP3 browsers ignore the `'unsafe-inline'`/`https:`
- * fallbacks entirely — meaning any attacker-injected inline <script> without the
- * (unguessable) nonce is refused. The fallbacks exist only so pre-CSP3 browsers
- * still get a reasonable allow-list rather than a broken app.
+ * Folio is statically rendered, so its Next.js bundles do not receive a
+ * per-request nonce. The CSP must therefore permit same-origin bundles and
+ * Next's inline hydration bootstrap directly. A nonce + `strict-dynamic` policy
+ * would make browsers reject those scripts when the rendered HTML has no nonce.
  *
  * External origins are read from public env vars (never hardcoded secrets):
  *  - Supabase (REST + realtime websocket) from NEXT_PUBLIC_SUPABASE_URL
@@ -18,7 +14,7 @@
  *  - Frankfurter FX rates API used by src/lib/exchangeRates.ts
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 /** Safely extract the `https://host:port` origin from a URL-ish string. */
 function toOrigin(value: string | undefined): string | null {
@@ -30,9 +26,7 @@ function toOrigin(value: string | undefined): string | null {
   }
 }
 
-export function middleware(request: NextRequest) {
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
-
+export function middleware() {
   // Resolve dynamic origins from the environment so the policy stays tight
   // without hardcoding any project-specific URL or secret.
   const supabaseOrigin = toOrigin(process.env.NEXT_PUBLIC_SUPABASE_URL)
@@ -61,9 +55,8 @@ export function middleware(request: NextRequest) {
 
   const csp = [
     `default-src 'self'`,
-    // 'strict-dynamic' + nonce is the real guard; the trailing fallbacks are
-    // ignored by modern browsers, so inline scripts remain blocked there.
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: 'unsafe-inline'`,
+    // Next.js emits same-origin chunks plus inline hydration/bootstrap scripts.
+    `script-src 'self' 'unsafe-inline'`,
     // Inline styles are required (React inline style objects + Google Fonts CSS).
     // Styles can't execute JS, so this is a low-risk allowance.
     `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
@@ -79,13 +72,7 @@ export function middleware(request: NextRequest) {
     `upgrade-insecure-requests`,
   ].join('; ')
 
-  // Next.js reads the nonce from the CSP on the *request* headers and applies it
-  // to the scripts it renders, so it must be set on both request and response.
-  const requestHeaders = new Headers(request.headers)
-  requestHeaders.set('x-nonce', nonce)
-  requestHeaders.set('Content-Security-Policy', csp)
-
-  const response = NextResponse.next({ request: { headers: requestHeaders } })
+  const response = NextResponse.next()
   response.headers.set('Content-Security-Policy', csp)
   return response
 }

@@ -82,7 +82,7 @@ export function InsightTrendCard({ transactions }: InsightTrendCardProps) {
           exit={prefersReducedMotion ? undefined : { opacity: 0, height: 0, marginTop: 0 }}
           transition={prefersReducedMotion ? { duration: 0 } : timings.normal}
         >
-          <GlassCard elevation="low" style={{ padding: "14px 18px", borderRadius: 14 }}>
+          <GlassCard elevation="low" style={{ padding: "14px 18px", borderRadius: radius.card }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: spacing.sm }}>
               <span style={{ fontSize: typography.subhead.fontSize, lineHeight: 1.4 }} aria-hidden="true">
                 {trendEmoji}

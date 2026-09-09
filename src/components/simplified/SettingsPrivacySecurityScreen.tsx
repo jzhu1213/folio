@@ -172,7 +172,7 @@ export function SettingsPrivacySecurityScreen({
                 position: "relative",
                 width: 48,
                 height: 28,
-                borderRadius: 14,
+                borderRadius: radius.card,
                 border: "none",
                 background: analyticsEnabled ? "var(--accent-500)" : "var(--fill-06)",
                 cursor: "pointer",

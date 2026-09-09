@@ -11,26 +11,29 @@
 import type { CSSProperties } from "react"
 import type { TransactionCategory } from "@/types"
 import { FONT_FAMILY, spacing, pxToRem } from "./typography"
+import {
+  borderRadius, colorRamp, CONTENT_MAX_WIDTH, HORIZONTAL_PADDING, shadows,
+} from './tokens'
 
 // ============================================================================
 // Re-exports from new token modules
 // ============================================================================
 
 export type { TokenAccessor } from './tokens'
-export { opacity, zIndex } from './tokens'
+export { opacity, zIndex, borderRadius, colorRamp, CONTENT_MAX_WIDTH, HORIZONTAL_PADDING, shadows } from './tokens'
 export type { OpacityStep, ZIndexLayer } from './tokens'
 
-export { surfaceColors, textColors, gradients, semanticColors } from './colors'
-export type { SurfaceColorName, TextColorName, GradientName } from './colors'
+export { surfaceColors, textColors, gradients, semanticColors } from './tokens'
+export type { SurfaceColorName, TextColorName, GradientName } from './tokens'
 
-export { elevations, radius } from './surfaces'
-export type { ElevationTier, ElevationDefinition, RadiusName } from './surfaces'
+export { elevations, radius } from './tokens'
+export type { ElevationTier, ElevationDefinition, RadiusName } from './tokens'
 
-export { spacingScale, safeArea, safeAreaPadding, safeAreaBottom } from './layout'
-export type { SpacingStep } from './layout'
+export { spacingScale, safeArea, safeAreaPadding, safeAreaBottom } from './tokens'
+export type { SpacingStep } from './tokens'
 
-export { springPresets, durations, easings } from './motion'
-export type { SpringPreset, SpringPresetName, DurationName, EasingName } from './motion'
+export { springPresets, durations, easings } from './tokens'
+export type { SpringPreset, SpringPresetName, DurationName, EasingName } from './tokens'
 
 // ============================================================================
 // Color ramp tokens (Phase 6 — task 260.2)
@@ -40,41 +43,7 @@ export type { SpringPreset, SpringPresetName, DurationName, EasingName } from '.
  * A color ramp step type. Steps 50–200 are translucent fills, 300–400 are
  * borders/rings, 500 is the base, 600–900 are interactive/prominent states.
  */
-export type RampStep = 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
-
-/**
- * A full 10-step color ramp mapping to CSS custom properties.
- * Use in inline styles: `background: colorRamp.accent[100]`.
- */
-export type ColorRamp = Record<RampStep, string>
-
-function buildRamp(prefix: string): ColorRamp {
-  return {
-    50: `var(--${prefix}-50)`,
-    100: `var(--${prefix}-100)`,
-    200: `var(--${prefix}-200)`,
-    300: `var(--${prefix}-300)`,
-    400: `var(--${prefix}-400)`,
-    500: `var(--${prefix}-500)`,
-    600: `var(--${prefix}-600)`,
-    700: `var(--${prefix}-700)`,
-    800: `var(--${prefix}-800)`,
-    900: `var(--${prefix}-900)`,
-  }
-}
-
-/**
- * Semantic color ramps referencing the CSS custom properties defined in
- * globals.css `:root`. Use these in inline styles instead of ad-hoc
- * `rgba(129, 140, 248, ...)` values.
- */
-export const colorRamp = {
-  accent: buildRamp('accent'),
-  success: buildRamp('success'),
-  warning: buildRamp('warning'),
-  error: buildRamp('error'),
-  blue: buildRamp('blue'),
-} as const
+export type { RampStep, ColorRamp } from './tokens'
 
 // ============================================================================
 // Category accent colors (Phase 6 — task 234.1)
@@ -138,16 +107,12 @@ export const fills = {
 /**
  * Maximum content width used by all simplified screens.
  */
-export const CONTENT_MAX_WIDTH = 560
-
 /** Bottom padding to clear the floating dock. */
 export const DOCK_PADDING_BOTTOM = 120
 
 /**
  * Standard horizontal page padding (side gutters) for the simplified screens.
  */
-export const HORIZONTAL_PADDING = 20
-
 /**
  * Major-section vertical rhythm.
  */
@@ -160,13 +125,6 @@ export const SECTION_SPACING = spacing.xl
 /**
  * Named border-radius tokens (numeric px values for backward compatibility).
  */
-export const borderRadius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  full: 9999,
-} as const
 
 // ============================================================================
 // Shared style objects
@@ -330,17 +288,6 @@ export const chipButton: CSSProperties = {
 /**
  * Tokenized shadow scale referencing CSS custom properties.
  */
-export const shadows = {
-  none: "var(--shadow-none)",
-  sm: "var(--shadow-sm)",
-  md: "var(--shadow-md)",
-  lg: "var(--shadow-lg)",
-  xl: "var(--shadow-xl)",
-  glowAccent: "var(--shadow-glow-accent)",
-  glowAccentStrong: "var(--shadow-glow-accent-strong)",
-  /** Focus ring — 2px solid accent outline via box-shadow (WCAG 2.4.7). */
-  focusRing: "0 0 0 2px var(--focus-ring-color)",
-} as const
 
 // ============================================================================
 // Common surface patterns

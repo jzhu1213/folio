@@ -56,77 +56,26 @@
   --color-sub:      #b4b4d4;
   --color-muted:    #9494b8;
 
-  /* Accent ramp (indigo #818cf8) */
-  --color-accent-50:  rgba(129, 140, 248, 0.04);
-  --color-accent-100: rgba(129, 140, 248, 0.08);
-  --color-accent-200: rgba(129, 140, 248, 0.14);
-  --color-accent-300: rgba(129, 140, 248, 0.25);
-  --color-accent-400: rgba(129, 140, 248, 0.40);
-  --color-accent-500: #818cf8;
-  --color-accent-600: #6366f1;
-  --color-accent-700: #4f46e5;
-  --color-accent-800: #4338ca;
-  --color-accent-900: #3730a3;
+  /* Compact UI palette. Old ramp variables below are compatibility aliases. */
+  --accent-muted: rgba(129, 140, 248, 0.14);
+  --accent: #818cf8;
+  --accent-hover: #6366f1;
+  --accent-active: #4f46e5;
+  --success-muted: rgba(74, 222, 128, 0.14);
+  --success: #4ade80;
+  --warning-muted: rgba(251, 191, 36, 0.14);
+  --warning: #fbbf24;
+  --danger-muted: rgba(248, 113, 113, 0.14);
+  --danger: #f87171;
 
-  /* Success ramp (green #4ade80) */
-  --color-success-50:  rgba(74, 222, 128, 0.04);
-  --color-success-100: rgba(74, 222, 128, 0.08);
-  --color-success-200: rgba(74, 222, 128, 0.14);
-  --color-success-300: rgba(74, 222, 128, 0.25);
-  --color-success-400: rgba(74, 222, 128, 0.40);
-  --color-success-500: #4ade80;
-  --color-success-600: #22c55e;
-  --color-success-700: #16a34a;
-  --color-success-800: #15803d;
-  --color-success-900: #166534;
-
-  /* Warning ramp (amber #fbbf24) */
-  --color-warning-50:  rgba(251, 191, 36, 0.04);
-  --color-warning-100: rgba(251, 191, 36, 0.08);
-  --color-warning-200: rgba(251, 191, 36, 0.14);
-  --color-warning-300: rgba(251, 191, 36, 0.25);
-  --color-warning-400: rgba(251, 191, 36, 0.40);
-  --color-warning-500: #fbbf24;
-  --color-warning-600: #eab308;
-  --color-warning-700: #ca8a04;
-  --color-warning-800: #a16207;
-  --color-warning-900: #854d0e;
-
-  /* Error ramp (red #f87171) */
-  --color-error-50:  rgba(248, 113, 113, 0.04);
-  --color-error-100: rgba(248, 113, 113, 0.08);
-  --color-error-200: rgba(248, 113, 113, 0.14);
-  --color-error-300: rgba(248, 113, 113, 0.25);
-  --color-error-400: rgba(248, 113, 113, 0.40);
-  --color-error-500: #f87171;
-  --color-error-600: #ef4444;
-  --color-error-700: #dc2626;
-  --color-error-800: #b91c1c;
-  --color-error-900: #991b1b;
-
-  /* Caution ramp (gold #facc15 — softer amber for approaching-limit states) */
-  --color-caution-50:  rgba(250, 204, 21, 0.04);
-  --color-caution-100: rgba(250, 204, 21, 0.08);
-  --color-caution-200: rgba(250, 204, 21, 0.14);
-  --color-caution-300: rgba(250, 204, 21, 0.25);
-  --color-caution-400: rgba(250, 204, 21, 0.40);
-  --color-caution-500: #facc15;
-  --color-caution-600: #eab308;
-  --color-caution-700: #ca8a04;
-  --color-caution-800: #a16207;
-  --color-caution-900: #854d0e;
-
-  /* Blue/Info ramp (#60a5fa) */
-  --color-blue-50:  rgba(96, 165, 250, 0.04);
-  --color-blue-100: rgba(96, 165, 250, 0.08);
-  --color-blue-200: rgba(96, 165, 250, 0.14);
-  --color-blue-300: rgba(96, 165, 250, 0.25);
-  --color-blue-400: rgba(96, 165, 250, 0.40);
-  --color-blue-500: #60a5fa;
-  --color-blue-600: #3b82f6;
-  --color-blue-700: #2563eb;
-  --color-blue-800: #1d4ed8;
-  --color-blue-900: #1e40af;
+  --color-accent-50: var(--accent-muted); --color-accent-100: var(--accent-muted); --color-accent-200: var(--accent-muted);
+  --color-accent-300: var(--accent); --color-accent-400: var(--accent); --color-accent-500: var(--accent);
+  --color-accent-600: var(--accent-hover); --color-accent-700: var(--accent-active); --color-accent-800: var(--accent-active); --color-accent-900: var(--accent-active);
+  --color-success-50: var(--success-muted); --color-success-100: var(--success-muted); --color-success-200: var(--success-muted); --color-success-300: var(--success); --color-success-400: var(--success); --color-success-500: var(--success); --color-success-600: var(--success); --color-success-700: var(--success); --color-success-800: var(--success); --color-success-900: var(--success);
+  --color-warning-50: var(--warning-muted); --color-warning-100: var(--warning-muted); --color-warning-200: var(--warning-muted); --color-warning-300: var(--warning); --color-warning-400: var(--warning); --color-warning-500: var(--warning); --color-warning-600: var(--warning); --color-warning-700: var(--warning); --color-warning-800: var(--warning); --color-warning-900: var(--warning);
+  --color-error-50: var(--danger-muted); --color-error-100: var(--danger-muted); --color-error-200: var(--danger-muted); --color-error-300: var(--danger); --color-error-400: var(--danger); --color-error-500: var(--danger); --color-error-600: var(--danger); --color-error-700: var(--danger); --color-error-800: var(--danger); --color-error-900: var(--danger);
+  --color-caution-50: var(--warning-muted); --color-caution-100: var(--warning-muted); --color-caution-200: var(--warning-muted); --color-caution-300: var(--warning); --color-caution-400: var(--warning); --color-caution-500: var(--warning); --color-caution-600: var(--warning); --color-caution-700: var(--warning); --color-caution-800: var(--warning); --color-caution-900: var(--warning);
+  --color-blue-50: var(--accent-muted); --color-blue-100: var(--accent-muted); --color-blue-200: var(--accent-muted); --color-blue-300: var(--accent); --color-blue-400: var(--accent); --color-blue-500: var(--accent); --color-blue-600: var(--accent-hover); --color-blue-700: var(--accent-active); --color-blue-800: var(--accent-active); --color-blue-900: var(--accent-active);
 
   /* ── 2. GRADIENT TOKENS (4) ────────────────────────────────────────── */
   --gradient-ambient:     radial-gradient(ellipse at 50% 0%, #141428, #0e0e1a);
@@ -206,27 +155,32 @@
   --type-overline-tracking:    0.08em;
   --type-overline-family:      'Inter', system-ui, -apple-system, sans-serif;
 
-  /* ── 4. SPACING TOKENS (12 steps, 4px grid) ────────────────────────── */
+  /* ── 4. SPACING TOKENS (9-step, 4px grid) ─────────────────────────── */
   --space-2:   2px;
   --space-4:   4px;
-  --space-6:   6px;
   --space-8:   8px;
   --space-12:  12px;
   --space-16:  16px;
-  --space-20:  20px;
   --space-24:  24px;
   --space-32:  32px;
-  --space-40:  40px;
   --space-48:  48px;
   --space-64:  64px;
   --space-96:  96px;
+  /* Temporary compatibility aliases, not additions to the public scale. */
+  --space-6: calc(var(--space-4) + 2px);
+  --space-20: calc(var(--space-16) + var(--space-4));
+  --space-40: calc(var(--space-32) + var(--space-8));
 
-  /* ── 5. RADIUS TOKENS (5 values) ───────────────────────────────────── */
-  --radius-min:     4px;
-  --radius-control: 12px;
-  --radius-card:    20px;
-  --radius-sheet:   28px;
+  /* ── 5. RADIUS TOKENS (4 values) ───────────────────────────────────── */
+  --radius-sm:      4px;
+  --radius-md:      8px;
+  --radius-lg:      16px;
   --radius-full:    9999px;
+  /* Legacy names alias the consolidated scale. */
+  --radius-min: var(--radius-sm);
+  --radius-control: var(--radius-md);
+  --radius-card: var(--radius-lg);
+  --radius-sheet: var(--radius-lg);
 
   /* ── 6. BORDER TOKENS (4 treatments) ───────────────────────────────── */
   --border-subtle:  1px solid rgba(255, 255, 255, 0.02);
@@ -240,12 +194,13 @@
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
 
-  /* ── 7. ELEVATION SHADOW TOKENS (5 tiers) ──────────────────────────── */
+  /* ── 7. ELEVATION SHADOW TOKENS (4 values including none) ─────────── */
   --shadow-none: none;
-  --shadow-sm:   0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
-  --shadow-md:   0 4px 12px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.1);
-  --shadow-lg:   0 8px 24px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.15);
-  --shadow-xl:   0 12px 40px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.2);
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.18);
+  --shadow-md:   0 8px 24px rgba(0, 0, 0, 0.24);
+  --shadow-lg:   0 16px 40px rgba(0, 0, 0, 0.32);
+  --shadow-glow: 0 0 20px rgba(129, 140, 248, 0.24);
+  --shadow-xl: var(--shadow-lg);
 
   /* ── 8. BLUR TOKENS (3 values) ─────────────────────────────────────── */
   --blur-none:    0px;
@@ -267,18 +222,21 @@
   --z-sheet:   50;
   --z-overlay: 100;
 
-  /* ── 11. MOTION DURATION TOKENS (5 values) ─────────────────────────── */
-  --duration-instant: 100ms;
+  /* ── 11. MOTION DURATION TOKENS (instant + 3 named values) ────────── */
+  --duration-instant: 0ms;
   --duration-fast:    150ms;
-  --duration-normal:  250ms;
-  --duration-slow:    400ms;
-  --duration-slower:  600ms;
+  --duration-base:    200ms;
+  --duration-slow:    300ms;
+  --duration-normal:  var(--duration-base);
+  --duration-slower:  var(--duration-slow);
 
-  /* ── 12. MOTION EASING TOKENS (4 curves) ───────────────────────────── */
-  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-in:      cubic-bezier(0.4, 0, 1, 1);
-  --ease-out:     cubic-bezier(0, 0, 0.2, 1);
-  --ease-spring:  cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  /* ── 12. MOTION EASING TOKENS (2 named curves) ─────────────────────── */
+  --ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-exit:  cubic-bezier(0.4, 0, 1, 1);
+  --ease-default: var(--ease-enter);
+  --ease-in: var(--ease-exit);
+  --ease-out: var(--ease-enter);
+  --ease-spring: var(--ease-enter);
 
   /* ════════════════════════════════════════════════════════════════════════
    * LEGACY ALIASES — backward compat with existing components
@@ -297,17 +255,11 @@
   --muted:     var(--color-muted);
   --dim:       #2a2a40;
 
-  /* Semantic status (reference canonical ramp 500 values) */
-  --success:   var(--color-success-500);
-  --warning:   var(--color-warning-500);
-  --caution:   var(--color-caution-500);
-  --error:     var(--color-error-500);
-  --blue:      var(--color-blue-500);
-  --info:      var(--color-blue-500);
-
-  /* Accent shorthand */
-  --accent:      var(--color-accent-500);
-  --accent-muted: var(--color-accent-200);
+  /* Compatibility semantic aliases. Canonical values are declared above. */
+  --caution: var(--warning);
+  --error: var(--danger);
+  --blue: var(--accent);
+  --info: var(--accent);
 
   /* Accent ramp aliases (reference canonical --color-accent-* tokens) */
   --accent-50:  var(--color-accent-50);
@@ -389,11 +341,8 @@
   --amber:     var(--color-warning-500);
   --blue-glow: var(--color-blue-100);
 
-  /* Border radius — legacy values preserved */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius:    8px;
+  /* Border radius compatibility alias */
+  --radius: var(--radius-md);
 
   /* White alpha fills (surface overlays, borders, separators) */
   --fill-02: rgba(255, 255, 255, 0.02);
@@ -407,8 +356,8 @@
   --fill-15: rgba(255, 255, 255, 0.15);
 
   /* Elevation shadows — legacy tokens preserved */
-  --shadow-glow-accent: 0 0 12px rgba(129, 140, 248, 0.15);
-  --shadow-glow-accent-strong: 0 4px 16px rgba(129, 140, 248, 0.3);
+  --shadow-glow-accent: var(--shadow-glow);
+  --shadow-glow-accent-strong: var(--shadow-glow);
 }
 
 /* ── Gradient accent utilities ───────────────────────────────────── */

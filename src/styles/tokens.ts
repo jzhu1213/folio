@@ -55,7 +55,7 @@ export const tailwindTokens = {
   spacing: designTokens.spacing,
   borderRadius: { sm: 'var(--radius-sm)', md: 'var(--radius-md)', lg: 'var(--radius-lg)', full: 'var(--radius-full)' },
   boxShadow: { none: 'var(--shadow-none)', sm: 'var(--shadow-sm)', md: 'var(--shadow-md)', lg: 'var(--shadow-lg)', xl: 'var(--shadow-lg)', glow: 'var(--shadow-glow)', 'glow-accent': 'var(--shadow-glow)', 'glow-accent-strong': 'var(--shadow-glow)' },
-  fontFamily: { sans: ['Inter', 'sans-serif'] },
+  fontFamily: { sans: ['Inter', 'sans-serif'] as string[] },
   transitionDuration: { fast: designTokens.motion.duration.fast, base: designTokens.motion.duration.base, slow: designTokens.motion.duration.slow },
   transitionTimingFunction: { enter: designTokens.motion.easing.enter, exit: designTokens.motion.easing.exit },
   animation: {

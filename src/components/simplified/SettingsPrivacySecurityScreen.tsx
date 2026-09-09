@@ -21,6 +21,8 @@ import { ListRow } from "@/components/ui/primitives/ListRow"
 import { GlassCard } from "@/components/ui/GlassCard"
 import { AppLockSetting } from "./AppLockSetting"
 import { SessionsSetting } from "./SessionsSetting"
+import { SettingsDataExportScreen } from "./SettingsDataExportScreen"
+import { SettingsDangerZone } from "./SettingsDangerZone"
 import { isOptedOut, optIn, optOut } from "@/lib/analytics"
 
 // ============================================================================
@@ -30,14 +32,30 @@ import { isOptedOut, optIn, optOut } from "@/lib/analytics"
 export interface SettingsPrivacySecurityScreenProps {
   onBack: () => void
   onOpenPrivacyDashboard?: () => void
+  onExportData?: () => void
+  onExportCSV?: () => void
+  onOpenReports?: () => void
+  onOpenSharing?: () => void
+  activeShareCount?: number
+  onDeleteAccount?: () => void
 }
 
 // ============================================================================
 // Component
 // ============================================================================
 
-export function SettingsPrivacySecurityScreen({ onBack, onOpenPrivacyDashboard }: SettingsPrivacySecurityScreenProps) {
+export function SettingsPrivacySecurityScreen({
+  onBack,
+  onOpenPrivacyDashboard,
+  onExportData,
+  onExportCSV,
+  onOpenReports,
+  onOpenSharing,
+  activeShareCount,
+  onDeleteAccount,
+}: SettingsPrivacySecurityScreenProps) {
   const [analyticsEnabled, setAnalyticsEnabled] = useState(true)
+  const [showDataControls, setShowDataControls] = useState(false)
 
   // Hydrate from localStorage on mount (SSR-safe)
   useEffect(() => {
@@ -62,12 +80,43 @@ export function SettingsPrivacySecurityScreen({ onBack, onOpenPrivacyDashboard }
     }
   }, [])
 
+  if (showDataControls) {
+    return (
+      <SettingsDataExportScreen
+        onBack={() => setShowDataControls(false)}
+        onExportData={onExportData}
+        onExportCSV={onExportCSV}
+        onOpenReports={onOpenReports}
+        onOpenSharing={onOpenSharing}
+        activeShareCount={activeShareCount}
+      />
+    )
+  }
+
   return (
     <SettingsSubScreen title="Privacy" description="Keep your data safe and control who sees what." onBack={onBack}>
       <AppLockSetting />
 
       <div style={{ marginTop: spacingScale['32'] }}>
         <SessionsSetting />
+      </div>
+
+      <div style={{ marginTop: spacingScale['12'] }}>
+        <ListRow
+          variant="dense"
+          onPress={() => setShowDataControls(true)}
+          aria-label="Open your data controls"
+          style={{
+            borderRadius: radius.control,
+            border: '1px solid var(--border)',
+            background: 'var(--fill-03)',
+          }}
+        >
+          <span style={{ flex: 1, ...typography['body-sm'], color: textColors.text, fontWeight: 500 }}>
+            Your data
+          </span>
+          <span style={{ fontSize: typography.body.fontSize, color: textColors.sub, flexShrink: 0 }} aria-hidden="true">›</span>
+        </ListRow>
       </div>
 
       {/* Analytics opt-out toggle (Task 533.3) */}
@@ -202,6 +251,8 @@ export function SettingsPrivacySecurityScreen({ onBack, onOpenPrivacyDashboard }
           </span>
         </ListRow>
       </div>
+
+      {onDeleteAccount && <SettingsDangerZone onDeleteAccount={onDeleteAccount} />}
     </SettingsSubScreen>
   )
 }

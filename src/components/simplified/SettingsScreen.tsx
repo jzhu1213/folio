@@ -45,11 +45,7 @@ import { SettingsAutomationScreen } from "./SettingsAutomationScreen"
 import { SettingsMotivationScreen } from "./SettingsMotivationScreen"
 import { SettingsEducationScreen } from "./SettingsEducationScreen"
 import { getEducationPreferences } from "@/lib/educationPreferences"
-import { ListRow } from "@/components/ui"
-import { SectionHeader } from "@/components/ui/primitives/SectionHeader"
 import { SettingsNavList } from "./SettingsNavList"
-import { SettingsDangerZone } from "./SettingsDangerZone"
-import { WHATS_NEW_ITEMS } from "@/lib/whatsNew"
 
 // ============================================================================
 // Types
@@ -149,19 +145,12 @@ export interface NavRowDef {
 }
 
 const NAV_ROWS: NavRowDef[] = [
-  { id: 'profile', icon: '👤', label: 'Profile', keywords: ['account', 'handle', 'avatar', 'email', 'sign out'], group: 0 },
-  { id: 'spending-style', icon: '🎯', label: 'Spending', keywords: ['mode', 'tracker', 'guided', 'structured', 'over-limit', 'focus', 'goal', 'style'], group: 1 },
-  { id: 'budget-income', icon: '💰', label: 'Budget', keywords: ['budget', 'limits', 'income', 'categories', 'term', 'smoothing'], group: 1 },
-  { id: 'hero-display', icon: '🔢', label: 'Hero number', keywords: ['hero', 'big number', 'allowance', 'spent', 'balance', 'period', 'display'], group: 1 },
-  { id: 'home-screen', icon: '🏠', label: 'Home', keywords: ['extras', 'pace', 'savings', 'badge', 'cards', 'pin', 'style', 'screen'], group: 2 },
-  { id: 'look-feel', icon: '🎨', label: 'Appearance', keywords: ['theme', 'warm', 'dark', 'region', 'currency', 'look', 'feel'], group: 2 },
-  { id: 'motivation', icon: '🏆', label: 'Motivation', keywords: ['gamification', 'streak', 'challenge', 'milestone', 'garden', 'celebration', 'habit', 'progress', 'motivation'], group: 2 },
-  { id: 'education', icon: '📚', label: 'Learning', keywords: ['education', 'tips', 'lessons', 'financial', 'learning', 'teach', 'topics'], group: 2 },
-  { id: 'notifications', icon: '🔔', label: 'Notifications', keywords: ['nudge', 'alert', 'buffer', 'balance', 'reminder'], group: 3 },
-  { id: 'tools-features', icon: '🧩', label: 'Features', keywords: ['feature', 'visibility', 'toggle', 'categorization', 'rules', 'tools'], group: 3 },
-  { id: 'automation', icon: '🤖', label: 'Automation', keywords: ['automation', 'predictions', 'recurring', 'suggest', 'pace', 'bills'], group: 3 },
-  { id: 'privacy-security', icon: '🔒', label: 'Privacy', keywords: ['lock', 'pin', 'biometric', 'session', 'data', 'dashboard', 'security'], group: 4 },
-  { id: 'data-export', icon: '📤', label: 'Export', keywords: ['export', 'csv', 'pdf', 'sharing', 'reports', 'data'], group: 4 },
+  { id: 'budget-income', icon: '💰', label: 'Budget', keywords: ['budget', 'limits', 'income', 'categories', 'term', 'smoothing', 'automation', 'bills'], group: 0 },
+  { id: 'spending-style', icon: '🎯', label: 'Spending', keywords: ['mode', 'tracker', 'guided', 'structured', 'over-limit', 'focus', 'goal', 'style', 'travel'], group: 0 },
+  { id: 'home-screen', icon: '🏠', label: 'Home', keywords: ['hero', 'big number', 'allowance', 'spent', 'balance', 'extras', 'pace', 'savings', 'badge', 'cards', 'pin', 'style', 'screen'], group: 1 },
+  { id: 'look-feel', icon: '🎨', label: 'Appearance', keywords: ['theme', 'warm', 'dark', 'region', 'currency', 'look', 'feel'], group: 1 },
+  { id: 'notifications', icon: '🔔', label: 'Notifications', keywords: ['nudge', 'alert', 'buffer', 'balance', 'reminder'], group: 2 },
+  { id: 'privacy-security', icon: '🔒', label: 'Privacy', keywords: ['lock', 'pin', 'biometric', 'session', 'data', 'dashboard', 'security', 'export', 'backup', 'sharing'], group: 2 },
 ]
 
 // ============================================================================
@@ -197,9 +186,6 @@ export function SettingsScreen(props: SettingsScreenProps) {
 
   // ── Sub-screen navigation ────────────────────────────────────────────
   const [activeSubScreen, setActiveSubScreen] = useState<SettingsCategory | null>(null)
-
-  // ── What's New toggle (495.1) ────────────────────────────────────────
-  const [showWhatsNew, setShowWhatsNew] = useState(false)
 
   // ── Focus management (385.2) ─────────────────────────────────────────
   const rowRefs = useRef<Map<SettingsCategory, HTMLDivElement | null>>(new Map())
@@ -347,7 +333,11 @@ export function SettingsScreen(props: SettingsScreenProps) {
       />
     ),
     'home-screen': (
-      <SettingsHomeExtrasScreen onBack={handleBack} />
+      <SettingsHomeExtrasScreen
+        onBack={handleBack}
+        heroMeaning={heroMeaning}
+        onSetHeroMeaning={props.onSetHeroMeaning ?? (() => {})}
+      />
     ),
     'look-feel': (
       <SettingsLookFeelScreen onBack={handleBack} />
@@ -374,6 +364,12 @@ export function SettingsScreen(props: SettingsScreenProps) {
       <SettingsPrivacySecurityScreen
         onBack={handleBack}
         onOpenPrivacyDashboard={props.onOpenPrivacyDashboard}
+        onExportData={props.onExportData}
+        onExportCSV={props.onExportCSV}
+        onOpenReports={props.onOpenReports}
+        onOpenSharing={props.onOpenSharing}
+        activeShareCount={props.activeShareCount}
+        onDeleteAccount={onDeleteAccount}
       />
     ),
     'data-export': (
@@ -412,7 +408,26 @@ export function SettingsScreen(props: SettingsScreenProps) {
         transition={prefersReducedMotion ? timings.fast : springs.gentle}
         style={{ pointerEvents: activeSubScreen ? 'none' : 'auto' }}
       >
-        <h1 style={{ ...typography.headline, color: textColors.text, margin: 0, paddingBottom: spacingScale["8"] }}>{t('settings.title')}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: spacingScale["12"], paddingBottom: spacingScale["8"] }}>
+          <h1 style={{ ...typography.headline, color: textColors.text, margin: 0 }}>{t('settings.title')}</h1>
+          <button
+            type="button"
+            onClick={onOpenProfile}
+            aria-label="Open account profile"
+            style={{
+              border: `1px solid ${elevations.resting.border}`,
+              borderRadius: radius.control,
+              background: elevations.sunken.fill,
+              color: textColors.text,
+              ...typography["body-sm"],
+              fontWeight: fontWeights.medium,
+              padding: `${spacingScale["8"]} ${spacingScale["12"]}`,
+              cursor: 'pointer',
+            }}
+          >
+            Account
+          </button>
+        </div>
 
         {/* Search (370.2) */}
         <div style={{ marginTop: spacingScale["16"], marginBottom: spacingScale["20"] }}>
@@ -456,150 +471,6 @@ export function SettingsScreen(props: SettingsScreenProps) {
           </nav>
         )}
 
-        {/* Help & Info section (task 495) — relocated features */}
-        <section
-          aria-labelledby="help-info-heading"
-          style={{ marginTop: spacingScale["24"] }}
-        >
-          <SectionHeader
-            id="help-info-heading"
-            style={{
-              ...typography["body-sm"],
-              color: textColors.muted,
-              fontWeight: fontWeights.medium,
-              paddingInlineStart: spacingScale["4"],
-              paddingBottom: 0,
-              marginBottom: spacingScale["12"],
-            }}
-          >
-            {t('settings.helpInfo')}
-          </SectionHeader>
-          <div style={{ display: "flex", flexDirection: "column", gap: spacingScale["8"] }}>
-            {/* What's New (495.1) */}
-            {WHATS_NEW_ITEMS.length > 0 && (
-              <ListRow
-                variant="dense"
-                onPress={() => {
-                  setShowWhatsNew(v => !v)
-                }}
-                aria-label={t('settings.whatsNew')}
-                aria-expanded={showWhatsNew}
-                style={{
-                  minHeight: '44px',
-                  background: elevations.sunken.fill,
-                  border: `1px solid ${elevations.resting.border}`,
-                  borderRadius: radius.control,
-                }}
-              >
-                <span aria-hidden="true" style={{ fontSize: typography.subhead.fontSize, lineHeight: 1, width: '28px', textAlign: 'center', flexShrink: 0 }}>
-                  ✨
-                </span>
-                <span style={{ flex: 1, ...typography["body-sm"], color: textColors.text, fontWeight: fontWeights.medium, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {t('settings.whatsNew')}
-                </span>
-                <span aria-hidden="true" style={{ color: textColors.muted }}>{showWhatsNew ? '▾' : '›'}</span>
-              </ListRow>
-            )}
-
-            {/* What's New content (inline expandable) */}
-            {showWhatsNew && WHATS_NEW_ITEMS.length > 0 && (
-              <div
-                style={{
-                  padding: `${spacingScale["12"]} ${spacingScale["16"]}`,
-                  background: "var(--blue-100)",
-                  border: "1px solid var(--blue-200)",
-                  borderRadius: radius.control,
-                }}
-              >
-                {WHATS_NEW_ITEMS.map((item) => (
-                  <div key={item.version} style={{ display: "flex", gap: spacingScale["8"], marginBottom: spacingScale["8"] }}>
-                    <span style={{ fontSize: typography.body.fontSize, flexShrink: 0 }} aria-hidden="true">{item.emoji}</span>
-                    <div>
-                      <p style={{ ...typography["body-sm"], color: textColors.text, margin: 0, fontWeight: 500 }}>
-                        {item.title}
-                      </p>
-                      <p style={{ ...typography.caption, color: textColors.sub, margin: 0, marginTop: 2 }}>
-                        {item.message}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Catch up on missed days (495.2) */}
-            {props.onOpenBackfill && (
-              <ListRow
-                variant="dense"
-                onPress={props.onOpenBackfill}
-                aria-label={t('settings.catchUpMissedDays')}
-                style={{
-                  minHeight: '44px',
-                  background: elevations.sunken.fill,
-                  border: `1px solid ${elevations.resting.border}`,
-                  borderRadius: radius.control,
-                }}
-              >
-                <span aria-hidden="true" style={{ fontSize: typography.subhead.fontSize, lineHeight: 1, width: '28px', textAlign: 'center', flexShrink: 0 }}>
-                  📅
-                </span>
-                <span style={{ flex: 1, ...typography["body-sm"], color: textColors.text, fontWeight: fontWeights.medium, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {t('settings.catchUpMissedDays')}
-                </span>
-                <span aria-hidden="true" style={{ color: textColors.muted }}>›</span>
-              </ListRow>
-            )}
-
-            {/* Travel Mode (495.3) */}
-            {props.onOpenTravelMode && (
-              <ListRow
-                variant="dense"
-                onPress={props.onOpenTravelMode}
-                aria-label={t('settings.travelMode')}
-                style={{
-                  minHeight: '44px',
-                  background: elevations.sunken.fill,
-                  border: `1px solid ${elevations.resting.border}`,
-                  borderRadius: radius.control,
-                }}
-              >
-                <span aria-hidden="true" style={{ fontSize: typography.subhead.fontSize, lineHeight: 1, width: '28px', textAlign: 'center', flexShrink: 0 }}>
-                  ✈️
-                </span>
-                <span style={{ flex: 1, ...typography["body-sm"], color: textColors.text, fontWeight: fontWeights.medium, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {t('settings.travelMode')}
-                </span>
-                <span aria-hidden="true" style={{ color: textColors.muted }}>›</span>
-              </ListRow>
-            )}
-
-            {/* Resume setup (495.4, task 392.2) — shown when checklist is dismissed but not complete */}
-            {props.showResumeChecklist && props.onResumeChecklist && (
-              <ListRow
-                variant="dense"
-                onPress={props.onResumeChecklist}
-                aria-label={t('settings.resumeSetup')}
-                style={{
-                  minHeight: '44px',
-                  background: elevations.sunken.fill,
-                  border: `1px solid ${elevations.resting.border}`,
-                  borderRadius: radius.control,
-                }}
-              >
-                <span aria-hidden="true" style={{ fontSize: typography.subhead.fontSize, lineHeight: 1, width: '28px', textAlign: 'center', flexShrink: 0 }}>
-                  🔄
-                </span>
-                <span style={{ flex: 1, ...typography["body-sm"], color: textColors.text, fontWeight: fontWeights.medium, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {t('settings.resumeSetup')}
-                </span>
-                <span aria-hidden="true" style={{ color: textColors.muted }}>›</span>
-              </ListRow>
-            )}
-          </div>
-        </section>
-
-        {/* Danger zone */}
-        {onDeleteAccount && <SettingsDangerZone onDeleteAccount={onDeleteAccount} />}
       </motion.div>
 
       {/* Sub-screen overlay (384.1) */}

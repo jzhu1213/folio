@@ -20,6 +20,7 @@ import { ListRow } from "@/components/ui/primitives/ListRow"
 import { SettingsSubScreen } from "./SettingsSubScreen"
 import { SettingsTermScheduleScreen } from "./SettingsTermScheduleScreen"
 import { SettingsSpendDownPlansScreen } from "./SettingsSpendDownPlansScreen"
+import { SettingsAutomationScreen } from "./SettingsAutomationScreen"
 import { computeBudgetSummary } from "@/lib/budgetSummary"
 import { formatMoney } from "@/lib/localeFormat"
 import { CURRENCIES } from "@/lib/currencyUtils"
@@ -55,7 +56,7 @@ export interface SettingsBudgetIncomeScreenProps {
 // Sub-flow type
 // ============================================================================
 
-type SubFlow = 'term-schedule' | 'spend-down-plans' | null
+type SubFlow = 'term-schedule' | 'spend-down-plans' | 'automation' | null
 
 // ============================================================================
 // Section heading
@@ -265,6 +266,10 @@ export function SettingsBudgetIncomeScreen({
     )
   }
 
+  if (activeSubFlow === 'automation') {
+    return <SettingsAutomationScreen onBack={() => setActiveSubFlow(null)} />
+  }
+
   return (
     <SettingsSubScreen title="Budget" description="Your monthly budget and how income flows in." onBack={onBack}>
       {/* Budget summary card */}
@@ -374,6 +379,10 @@ export function SettingsBudgetIncomeScreen({
             label="Spend-down plans →"
             badge={activePlanCount > 0 ? activePlanCount : undefined}
             onPress={() => setActiveSubFlow('spend-down-plans')}
+          />
+          <LinkRow
+            label="Smart assistance →"
+            onPress={() => setActiveSubFlow('automation')}
           />
         </div>
       </section>

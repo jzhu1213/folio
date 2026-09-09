@@ -29,6 +29,7 @@ import {
   getComingUpEnabled,
   setComingUpEnabled,
 } from "@/lib/comingUpPreferences"
+import type { HeroMeaning } from "@/types/folio"
 
 // ============================================================================
 // Types
@@ -36,6 +37,8 @@ import {
 
 export interface SettingsHomeExtrasScreenProps {
   onBack: () => void
+  heroMeaning: HeroMeaning
+  onSetHeroMeaning: (meaning: HeroMeaning) => void
 }
 
 // ============================================================================
@@ -98,7 +101,7 @@ function ToggleRow({ label, description, checked, onChange, ariaLabel }: ToggleR
 // Component
 // ============================================================================
 
-export function SettingsHomeExtrasScreen({ onBack }: SettingsHomeExtrasScreenProps) {
+export function SettingsHomeExtrasScreen({ onBack, heroMeaning, onSetHeroMeaning }: SettingsHomeExtrasScreenProps) {
   const [savingsBadge, setSavingsBadge] = useState(false)
   const [paceIndicator, setPaceIndicator] = useState(true)
   const [comingUpEnabled, setComingUpEnabledLocal] = useState(true)
@@ -133,6 +136,40 @@ export function SettingsHomeExtrasScreen({ onBack }: SettingsHomeExtrasScreenPro
 
   return (
     <SettingsSubScreen title="Home" description="Customize what shows up on your home screen." onBack={onBack}>
+      <section aria-labelledby="hero-number-heading" style={{ marginBottom: spacingScale["32"] }}>
+        <SectionHeading id="hero-number-heading">Hero number</SectionHeading>
+        <div role="group" aria-label="Choose the home screen hero number" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacingScale["8"] }}>
+          {([
+            { value: "allowance", label: "Today's budget" },
+            { value: "spent_today", label: "Spent today" },
+            { value: "spent_week", label: "This week" },
+            { value: "balance", label: "Balance" },
+          ] as const).map(({ value, label }) => {
+            const selected = heroMeaning === value
+            return (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => onSetHeroMeaning(value)}
+                style={{
+                  padding: `${spacingScale["12"]} ${spacingScale["16"]}`,
+                  borderRadius: 10,
+                  border: `1px solid ${selected ? "var(--accent-300)" : "var(--border)"}`,
+                  background: selected ? "var(--accent-100)" : "var(--fill-03)",
+                  color: textColors.text,
+                  ...typography["body-sm"],
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
       {/* Toggles section */}
       <section aria-labelledby="home-toggles-heading" style={{ marginBottom: spacingScale["32"] }}>
         <SectionHeading id="home-toggles-heading">Extras</SectionHeading>

@@ -156,7 +156,7 @@ export function SwipeableTransactionRow({
                 color: "var(--text)",
               }}
             >
-              <Icon name="action:delete" size={20} strokeWidth={2} />
+              <Icon name="action:delete" size={20} />
             </span>
           </motion.div>
 
@@ -190,7 +190,7 @@ export function SwipeableTransactionRow({
                   color: "var(--text)",
                 }}
               >
-                <Icon name="action:edit" size={20} strokeWidth={2} />
+                <Icon name="action:edit" size={20} />
               </span>
             </motion.div>
           )}

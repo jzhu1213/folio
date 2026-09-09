@@ -318,7 +318,7 @@ export function AppShell({
                 : { scale: fabScale }
             }
           >
-            <Icon name="action:add" size={26} strokeWidth={2.2} />
+            <Icon name="action:add" size={26} />
           </motion.button>
         )}
       </AnimatePresence>

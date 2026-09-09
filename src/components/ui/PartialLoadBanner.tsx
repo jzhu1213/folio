@@ -70,7 +70,7 @@ export function PartialLoadBanner({ visible, onRetry }: PartialLoadBannerProps) 
               className="flex-shrink-0"
               style={{ color: semanticColors.caution }}
             >
-              <Icon name="status:warning" size={16} strokeWidth={2} />
+              <Icon name="status:warning" size={16} />
             </span>
 
             {/* Message */}
@@ -91,9 +91,7 @@ export function PartialLoadBanner({ visible, onRetry }: PartialLoadBannerProps) 
               className="flex-shrink-0"
               style={{ color: 'var(--sub)' }}
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
+              <Icon name="status:retry" size={14} />
             </span>
           </GlassCard>
         </motion.button>

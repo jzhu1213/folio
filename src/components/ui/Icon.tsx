@@ -7,7 +7,7 @@
  * with Folio's consistent defaults:
  *
  *   - **size** 20px (matches the app's optical icon rhythm; nav/chrome override)
- *   - **strokeWidth** 1.6 (matches the old hand-rolled `AppShell` SVGs)
+ *   - **strokeWidth** 1.5 across the UI
  *   - **color** `currentColor` so icons inherit the surrounding theme text color
  *     and never break the warm-purple palette
  *
@@ -21,10 +21,13 @@
 
 import type { LucideProps } from 'lucide-react'
 import { ICON_REGISTRY, type IconName } from '@/lib/icons'
+import { iconSizes, type IconSize } from '@/styles/tokens'
 
-export interface IconProps extends Omit<LucideProps, 'ref' | 'name'> {
+export interface IconProps extends Omit<LucideProps, 'ref' | 'name' | 'size'> {
   /** Semantic icon name resolved through the central registry. */
   name: IconName
+  /** An approved optical size from the central sizing token map. */
+  size?: IconSize
   /**
    * Accessible name for icon-only controls. When omitted the icon is treated as
    * decorative and hidden from assistive tech (`aria-hidden`).
@@ -33,9 +36,9 @@ export interface IconProps extends Omit<LucideProps, 'ref' | 'name'> {
 }
 
 /** Default optical size, in px. */
-const DEFAULT_SIZE = 20
-/** Default stroke width — matches the legacy hand-rolled AppShell SVGs. */
-const DEFAULT_STROKE_WIDTH = 1.6
+const DEFAULT_SIZE = iconSizes.medium
+/** Single stroke weight for the Lucide icon system. */
+const DEFAULT_STROKE_WIDTH = 1.5
 
 export function Icon({
   name,

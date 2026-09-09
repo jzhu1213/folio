@@ -85,6 +85,10 @@ import {
   Plus,
   ChevronRight,
   Trash2,
+  X,
+  ChevronLeft,
+  Sun,
+  Moon,
   // Toast
   CircleCheck,
   CircleX,
@@ -188,6 +192,10 @@ export type IconName =
   | 'action:forward'
   | 'action:edit'
   | 'action:delete'
+  | 'action:close'
+  | 'action:back'
+  | 'chrome:sun'
+  | 'chrome:moon'
   // ── Toast status icons ───────────────────────────────────────────────────
   | 'toast:success'
   | 'toast:error'
@@ -290,6 +298,10 @@ export const ICON_REGISTRY = {
   'action:forward': ChevronRight,
   'action:edit': Pencil,
   'action:delete': Trash2,
+  'action:close': X,
+  'action:back': ChevronLeft,
+  'chrome:sun': Sun,
+  'chrome:moon': Moon,
   // ── Toast status icons ────────────────────────────────────────────────────
   'toast:success': CircleCheck,
   'toast:error': CircleX,

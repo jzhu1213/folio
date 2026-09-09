@@ -103,7 +103,7 @@ export function SyncIndicator({
           style={glassCardStyle}
         >
           <span className="flex-shrink-0" style={{ color: 'var(--success)' }}>
-            <Icon name="toast:success" size={16} strokeWidth={2} />
+            <Icon name="toast:success" size={16} />
           </span>
           <p
             className="text-xs flex-1 leading-snug"
@@ -133,7 +133,7 @@ export function SyncIndicator({
           style={glassCardStyle}
         >
           <span className="flex-shrink-0" style={{ color: 'var(--warning)' }}>
-            <Icon name="status:error" size={16} strokeWidth={2} />
+            <Icon name="status:error" size={16} />
           </span>
           <p
             className="text-xs flex-1 leading-snug"
@@ -200,7 +200,7 @@ export function SyncIndicator({
               animate={prefersReducedMotion ? {} : { rotate: 360 }}
               transition={prefersReducedMotion ? {} : { duration: 2, repeat: Infinity, ease: 'linear' }}
             >
-              <Icon name="status:retry" size={16} strokeWidth={2} />
+              <Icon name="status:retry" size={16} />
             </motion.span>
           </span>
           <p

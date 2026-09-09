@@ -10,9 +10,8 @@
  * Resolution order:
  *   1. explicit `iconName` (e.g. a custom category's chosen icon)
  *   2. the built-in category icon (unless `isCustom`)
- *   3. a legacy `emoji` (backward-compat for custom categories created before
- *      the icon set existed — task 234.2)
- *   4. the neutral `category:fallback` icon
+ *   3. the neutral `category:fallback` icon (legacy `emoji` data remains
+ *      accepted but is not rendered as a UI icon)
  *
  * The chip background is derived from the category's accent color (see
  * {@link getCategoryAccent}) via `color-mix`, and the icon inherits that accent
@@ -35,7 +34,7 @@ export interface CategoryIconProps {
   category: TransactionCategory | string
   /** Explicit icon override — used for custom categories with a chosen icon. */
   iconName?: IconName
-  /** Legacy emoji fallback for custom categories that predate the icon set. */
+  /** Legacy custom-category data retained for backwards-compatible callers. */
   emoji?: string
   /**
    * When true the built-in category→icon mapping is skipped so custom
@@ -73,21 +72,10 @@ export function CategoryIcon({
   const accent = isCustom && !iconName ? getCategoryAccent("fallback") : getCategoryAccent(category)
   const glyphSize = iconSize ?? Math.round(size * 0.52)
 
-  // Decide what to render inside the chip following the resolution order.
-  let content: React.ReactNode
-  if (iconName) {
-    content = <Icon name={iconName} size={glyphSize} strokeWidth={strokeWidth} />
-  } else if (!isCustom) {
-    content = <Icon name={getCategoryIconName(category)} size={glyphSize} strokeWidth={strokeWidth} />
-  } else if (emoji) {
-    content = (
-      <span style={{ fontSize: Math.round(glyphSize * 1.05), lineHeight: 1 }} aria-hidden="true">
-        {emoji}
-      </span>
-    )
-  } else {
-    content = <Icon name="category:fallback" size={glyphSize} strokeWidth={strokeWidth} />
-  }
+  // `emoji` is intentionally ignored: category icon shapes now always come
+  // from Lucide while stored custom-category data remains compatible.
+  void emoji
+  const resolvedIcon = iconName ?? (!isCustom ? getCategoryIconName(category) : 'category:fallback')
 
   const a11yProps = label
     ? { role: "img" as const, "aria-label": label }
@@ -110,7 +98,7 @@ export function CategoryIcon({
       }}
       {...a11yProps}
     >
-      {content}
+      <Icon name={resolvedIcon} size={glyphSize as 12 | 14 | 16 | 18 | 20 | 24 | 26 | 28 | 32} strokeWidth={strokeWidth} />
     </span>
   )
 }

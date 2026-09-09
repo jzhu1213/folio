@@ -113,6 +113,9 @@ export type SpacingStep = '2' | '4' | '6' | '8' | '12' | '16' | '20' | '24' | '3
 /** Official 4px-based scale; 2px is retained only as a compatibility hairline alias. */
 export const spacingScale: TokenAccessor<SpacingStep> = { '2': 'var(--space-2)', '4': 'var(--space-4)', '6': 'var(--space-6)', '8': 'var(--space-8)', '12': 'var(--space-12)', '16': 'var(--space-16)', '20': 'var(--space-20)', '24': 'var(--space-24)', '32': 'var(--space-32)', '40': 'var(--space-40)', '48': 'var(--space-48)', '64': 'var(--space-64)', '96': 'var(--space-96)' }
 export const spacing = { xxs: 4, xs: 8, sm: 12, md: 16, lg: 24, xl: 32, '2xl': 48, '3xl': 64, '4xl': 96 } as const
+/** Approved optical sizes for UI glyphs; avoids one-off icon sizing values. */
+export const iconSizes = { compact: 12, small: 14, standard: 16, comfortable: 18, medium: 20, large: 24, dock: 26, xl: 28, display: 32 } as const
+export type IconSize = (typeof iconSizes)[keyof typeof iconSizes]
 
 /** 560px wins: it is the established simplified-screen width used by more components. */
 export const CONTENT_MAX_WIDTH = 560 as const

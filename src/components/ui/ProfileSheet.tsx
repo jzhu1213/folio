@@ -11,6 +11,7 @@ import { HORIZONTAL_PADDING, shadows } from '@/styles/shared'
 import { radius } from '@/styles/surfaces'
 import { validateHandle, normalizeHandle, HANDLE_ERRORS } from '@/lib/social/handles'
 import { FriendsSection } from './FriendsSection'
+import { Icon } from './Icon'
 
 interface ProfileSheetProps {
   isOpen: boolean
@@ -197,9 +198,7 @@ export function ProfileSheet({
               border: 'none',
             }}
           >
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <Icon name="action:close" size={20} />
           </button>
         </div>
 

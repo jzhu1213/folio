@@ -115,7 +115,7 @@ export function QuickLogControl({
       />
 
       {/* Plus icon — high contrast (black on bright gradient) */}
-      <Icon name="action:add" size={24} strokeWidth={2.2} />
+      <Icon name="action:add" size={24} />
     </motion.button>
   )
 }

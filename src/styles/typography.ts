@@ -15,6 +15,7 @@
  */
 
 import type { CSSProperties } from 'react'
+import { spacing as tokenSpacing } from './tokens'
 
 // ============================================================================
 // Font family
@@ -259,14 +260,14 @@ export function animatedFontWeight(
  * layout gaps throughout the simplified app.
  */
 export const spacing = {
-  xxs: 4,
-  xs: 8,
-  sm: 12,
-  md: 16,
-  lg: 24,
-  xl: 32,
-  xxl: 48,
-  xxxl: 64,
+  xxs: tokenSpacing.xxs,
+  xs: tokenSpacing.xs,
+  sm: tokenSpacing.sm,
+  md: tokenSpacing.md,
+  lg: tokenSpacing.lg,
+  xl: tokenSpacing.xl,
+  xxl: tokenSpacing['2xl'],
+  xxxl: tokenSpacing['3xl'],
 } as const
 
 export type SpacingName = keyof typeof spacing

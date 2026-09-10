@@ -128,9 +128,7 @@ export function Toggle({
       tabIndex={disabled ? -1 : 0}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      className="focus-ring"
-      whileTap={disabled ? undefined : (prefersReducedMotion ? { opacity: 0.92 } : { scale: 0.96 })}
-      transition={prefersReducedMotion ? timings.fast : springs.snappy}
+      className="focus-ring interactive-control"
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -141,7 +139,7 @@ export function Toggle({
         minWidth: "44px",
         minHeight: "44px",
         borderRadius: radius.full,
-        opacity: disabled ? 0.4 : 1,
+        opacity: disabled ? "var(--opacity-40)" : 1,
         WebkitTapHighlightColor: "transparent",
       }}
     >
@@ -184,5 +182,4 @@ export function Toggle({
     </motion.div>
   )
 }
-
 

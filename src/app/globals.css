@@ -413,6 +413,70 @@ body {
   outline: none;
 }
 
+/* Shared five-state treatment for interactive primitives. The duration and
+ * easing are the consolidated motion tokens; hover is gated to pointer devices. */
+.interactive-control {
+  transition: transform var(--duration-fast) var(--ease-enter),
+    background var(--duration-fast) var(--ease-enter),
+    border-color var(--duration-fast) var(--ease-enter),
+    box-shadow var(--duration-fast) var(--ease-enter),
+    color var(--duration-fast) var(--ease-enter),
+    opacity var(--duration-fast) var(--ease-enter);
+}
+
+@media (hover: hover) {
+  .interactive-control:not(:disabled):not([aria-disabled="true"]):hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.interactive-control:not(:disabled):not([aria-disabled="true"]):active {
+  transform: scale(0.98);
+}
+
+.interactive-control:disabled,
+.interactive-control[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: var(--opacity-40);
+}
+
+.interactive-field {
+  transition: border-color var(--duration-fast) var(--ease-enter),
+    box-shadow var(--duration-fast) var(--ease-enter),
+    background var(--duration-fast) var(--ease-enter),
+    color var(--duration-fast) var(--ease-enter),
+    opacity var(--duration-fast) var(--ease-enter);
+}
+
+.date-picker-chips button {
+  transition: transform var(--duration-fast) var(--ease-enter),
+    background var(--duration-fast) var(--ease-enter),
+    border-color var(--duration-fast) var(--ease-enter),
+    box-shadow var(--duration-fast) var(--ease-enter),
+    color var(--duration-fast) var(--ease-enter);
+}
+
+.date-picker-chips button:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+@media (hover: hover) {
+  .date-picker-chips button:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.date-picker-chips button:active { transform: scale(0.98); }
+
+@media (hover: hover) {
+  .interactive-field:not(:disabled):hover {
+    border-color: var(--accent);
+  }
+}
+
 /* ── Global focus-visible catch-all (Req 18.4, WCAG 2.4.7) ─────── */
 /*
  * Ensures ALL interactive elements show a visible focus ring when

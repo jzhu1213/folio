@@ -114,13 +114,12 @@ export const Input: React.FC<InputProps> = ({
     fontVariantNumeric: 'tabular-nums',
     color: disabled ? textColors.muted : textColors.text,
     outline: 'none',
-    opacity: disabled ? 0.5 : 1,
+    opacity: disabled ? 'var(--opacity-40)' : 1,
     cursor: disabled ? 'not-allowed' : 'text',
-    transition: 'border-color 150ms ease-out, box-shadow 150ms ease-out',
     WebkitTapHighlightColor: 'transparent',
     boxSizing: 'border-box',
     // Focus ring via box-shadow (≥2px, ≥3:1 contrast) when focused
-    boxShadow: isFocused && !disabled ? '0 0 0 2px var(--focus-ring-color)' : 'none',
+    boxShadow: 'none',
   }
 
   return (
@@ -142,6 +141,7 @@ export const Input: React.FC<InputProps> = ({
       autoComplete={autoComplete}
       inputMode={inputMode}
       style={baseStyles}
+      className="focus-ring interactive-field"
     />
   )
 }

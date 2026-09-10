@@ -128,7 +128,7 @@ export function DatePickerChips({
   }, [showCustomInput])
 
   return (
-    <div style={{ textAlign: 'center' }}>
+    <div className="date-picker-chips" style={{ textAlign: 'center' }}>
       {/* Main date button */}
       <button
         type="button"
@@ -358,6 +358,7 @@ export function DatePickerChips({
                     cursor: 'pointer',
                   }}
                   aria-label="Pick a custom date"
+                  className="focus-ring interactive-field"
                 />
               </div>
             )}

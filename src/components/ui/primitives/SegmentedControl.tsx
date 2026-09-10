@@ -126,7 +126,7 @@ export function SegmentedControl({
       aria-label={ariaLabel}
       style={{
         ...containerStyles,
-        opacity: disabled ? 0.4 : 1,
+        opacity: disabled ? "var(--opacity-40)" : 1,
         cursor: disabled ? "not-allowed" : undefined,
       }}
     >
@@ -141,9 +141,7 @@ export function SegmentedControl({
             tabIndex={isSelected ? 0 : -1}
             onClick={() => handleSelect(index)}
             onKeyDown={(e) => handleKeyDown(e, index)}
-            className="focus-ring"
-            whileTap={disabled ? undefined : (prefersReducedMotion ? { opacity: 0.92 } : { scale: 0.96 })}
-            transition={prefersReducedMotion ? timings.fast : springs.snappy}
+            className="focus-ring interactive-control"
             style={{
               ...segmentStyles,
               color: isSelected ? textColors.text : textColors.muted,

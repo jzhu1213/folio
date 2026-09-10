@@ -110,7 +110,6 @@ const optionStyles: React.CSSProperties = {
   cursor: "pointer",
   ...typography.body,
   color: textColors.text,
-  transition: "background 100ms ease-out",
 }
 
 // ============================================================================
@@ -248,14 +247,12 @@ export function Select({
         tabIndex={disabled ? -1 : 0}
         onClick={toggleOpen}
         onKeyDown={handleKeyDown}
-        className="focus-ring"
-        whileTap={disabled ? undefined : (prefersReducedMotion ? { opacity: 0.92 } : { scale: 0.96 })}
-        transition={prefersReducedMotion ? timings.fast : springs.snappy}
+        className="focus-ring interactive-control"
         style={{
           ...baseStyles,
           ...variantStyles[variant],
           color: selectedOption ? textColors.text : textColors.muted,
-          opacity: disabled ? 0.4 : 1,
+          opacity: disabled ? "var(--opacity-40)" : 1,
           cursor: disabled ? "not-allowed" : "pointer",
           borderColor: isOpen
             ? colorRamp.accent[400]
@@ -289,10 +286,18 @@ export function Select({
                 role="option"
                 aria-selected={option.value === value}
                 aria-disabled={option.disabled}
+                tabIndex={option.disabled ? -1 : 0}
                 onClick={() => {
                   if (!option.disabled) handleSelect(option.value)
                 }}
                 onMouseEnter={() => setFocusedIndex(index)}
+                onKeyDown={(e) => {
+                  if (!option.disabled && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault()
+                    handleSelect(option.value)
+                  }
+                }}
+                className="focus-ring interactive-control"
                 style={{
                   ...optionStyles,
                   background:
@@ -301,7 +306,7 @@ export function Select({
                       : option.value === value
                         ? colorRamp.accent[50]
                         : "transparent",
-                  opacity: option.disabled ? 0.4 : 1,
+                  opacity: option.disabled ? "var(--opacity-40)" : 1,
                   cursor: option.disabled ? "not-allowed" : "pointer",
                 }}
               >

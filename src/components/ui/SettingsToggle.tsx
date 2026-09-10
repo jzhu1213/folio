@@ -15,7 +15,6 @@
  */
 
 import { motion } from "framer-motion"
-import { springs, useReducedMotion } from "@/lib/animations"
 import { shadows, fills, colorRamp } from "@/styles/shared"
 import { textColors } from "@/styles/colors"
 import { opacity } from "@/styles/tokens"
@@ -38,8 +37,6 @@ export function SettingsToggle({
   ariaLabel,
   disabled = false,
 }: SettingsToggleProps) {
-  const { prefersReducedMotion } = useReducedMotion()
-
   return (
     <motion.button
       type="button"
@@ -48,8 +45,7 @@ export function SettingsToggle({
       aria-label={ariaLabel}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      whileTap={prefersReducedMotion ? undefined : { scale: disabled ? 1 : 0.95 }}
-      transition={springs.snappy}
+      className="focus-ring interactive-control"
       style={{
         flexShrink: 0,
         width: 44,
@@ -61,8 +57,7 @@ export function SettingsToggle({
           ? colorRamp.accent[400]
           : fills[10],
         position: "relative",
-        transition: "background 0.2s ease",
-        opacity: disabled ? 0.5 : 1,
+        opacity: disabled ? opacity['40'] : 1,
         // Extend touch target to 44×44px minimum (WCAG 2.5.5)
         padding: "9px 0",
         boxSizing: "content-box",
@@ -77,7 +72,7 @@ export function SettingsToggle({
           height: 20,
           borderRadius: radius.full,
           background: checked ? textColors.text : "var(--sub)",
-          transition: "left 0.2s ease, background 0.2s ease",
+          transition: "left var(--duration-fast) var(--ease-enter), background var(--duration-fast) var(--ease-enter)",
           boxShadow: shadows.sm,
         }}
       />

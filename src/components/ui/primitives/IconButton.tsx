@@ -14,8 +14,6 @@
  */
 
 import React from 'react'
-import { motion } from 'framer-motion'
-import { springs, useReducedMotion } from '@/lib/animations'
 import { radius } from '@/styles/surfaces'
 import { textColors, semanticColors } from '@/styles/colors'
 
@@ -56,7 +54,7 @@ function getVariantStyles(variant: IconButtonVariant, disabled: boolean): React.
       background: 'transparent',
       color: textColors.muted,
       border: '1px solid transparent',
-      opacity: 0.5,
+      opacity: 'var(--opacity-40)',
       cursor: 'not-allowed',
     }
   }
@@ -91,8 +89,6 @@ export const IconButton: React.FC<IconButtonProps> = ({
   onClick,
   'aria-label': ariaLabel,
 }) => {
-  const { prefersReducedMotion } = useReducedMotion()
-
   const baseStyles: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
@@ -107,18 +103,16 @@ export const IconButton: React.FC<IconButtonProps> = ({
   }
 
   return (
-    <motion.button
+    <button
       type="button"
       disabled={disabled}
       onClick={disabled ? undefined : onClick}
       aria-label={ariaLabel}
       aria-disabled={disabled}
-      className="focus-ring"
+      className="focus-ring interactive-control"
       style={baseStyles}
-      whileTap={disabled ? undefined : (prefersReducedMotion ? { opacity: 0.92 } : { scale: 0.95 })}
-      transition={springs.snappy}
     >
       {children}
-    </motion.button>
+    </button>
   )
 }

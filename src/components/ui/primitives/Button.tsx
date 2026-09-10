@@ -15,7 +15,6 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { springPresets } from '@/styles/motion'
 import { FONT_FAMILY, typography } from '@/styles/typography'
 import { radius } from '@/styles/surfaces'
 import { spacingScale } from '@/styles/layout'
@@ -90,7 +89,7 @@ function getVariantStyles(variant: ButtonVariant, disabled: boolean): React.CSSP
       background: 'var(--color-surface)',
       color: textColors.muted,
       border: `1px solid ${semanticColors.borderSubtle}`,
-      opacity: 0.5,
+      opacity: 'var(--opacity-40)',
       cursor: 'not-allowed',
     }
   }
@@ -171,15 +170,8 @@ export const Button: React.FC<ButtonProps> = ({
       aria-label={ariaLabel}
       aria-disabled={isDisabled}
       aria-busy={loading}
-      className="focus-ring"
+      className="focus-ring interactive-control"
       style={baseStyles}
-      whileTap={isDisabled ? undefined : { scale: 0.96 }}
-      transition={{
-        type: 'spring',
-        stiffness: springPresets.snappy.stiffness,
-        damping: springPresets.snappy.damping,
-        mass: springPresets.snappy.mass,
-      }}
     >
       {loading ? (
         <LoadingSpinner />

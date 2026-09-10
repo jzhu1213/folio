@@ -108,11 +108,6 @@ const ROW_HEIGHTS: Record<ListRowVariant, string> = {
 // Motion Variants
 // ============================================================================
 
-const pressVariants: Variants = {
-  rest: { scale: 1, transition: springs.bouncy },
-  pressed: { scale: 0.98, transition: springs.snappy },
-}
-
 /** Removal animation: collapse height + fade out within 400ms (Req 14.7). */
 const removalVariants: Variants = {
   present: {
@@ -281,10 +276,7 @@ export const ListRow = forwardRef<HTMLDivElement, ListRowProps>(function ListRow
       <motion.div
         ref={ref}
         style={baseStyle}
-        className={`focus-ring${className ? ` ${className}` : ''}`}
-        variants={pressVariants}
-        initial="rest"
-        whileTap={onPress ? "pressed" : undefined}
+        className={`focus-ring interactive-control${className ? ` ${className}` : ''}`}
         onClick={onPress}
         role={onPress ? "button" : undefined}
         tabIndex={tabIndexProp ?? (onPress ? 0 : undefined)}
@@ -370,9 +362,15 @@ export const ListRow = forwardRef<HTMLDivElement, ListRowProps>(function ListRow
         }}
         whileTap={!isRevealed ? { scale: 0.98, transition: springs.snappy } : undefined}
         onClick={isRevealed ? handleClose : onPress}
+        onKeyDown={(e) => {
+          if (onPress && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault()
+            isRevealed ? handleClose() : onPress()
+          }
+        }}
         role={onPress ? "button" : undefined}
         tabIndex={onPress ? 0 : undefined}
-        className={onPress ? "focus-ring" : undefined}
+        className={onPress ? "focus-ring interactive-control" : undefined}
       >
         {children}
       </motion.div>

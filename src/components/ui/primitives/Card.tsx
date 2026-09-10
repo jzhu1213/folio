@@ -16,9 +16,8 @@
  */
 
 import { type ReactNode, forwardRef } from "react"
-import { motion, type Variants } from "framer-motion"
+import { motion } from "framer-motion"
 import { elevations, radius } from "@/styles/surfaces"
-import { springs } from "@/lib/animations"
 
 // ============================================================================
 // Types
@@ -43,15 +42,6 @@ export interface CardProps {
   "aria-label"?: string
   /** Test ID for testing. */
   "data-testid"?: string
-}
-
-// ============================================================================
-// Motion Variants
-// ============================================================================
-
-const pressVariants: Variants = {
-  rest: { scale: 1, transition: springs.bouncy },
-  pressed: { scale: 0.98, transition: springs.snappy },
 }
 
 // ============================================================================
@@ -103,11 +93,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
     <motion.div
       ref={ref}
       style={{ ...baseStyle, cursor: "pointer" }}
-      className={`focus-ring${className ? ` ${className}` : ''}`}
-      variants={pressVariants}
-      initial="rest"
-      whileHover="rest"
-      whileTap="pressed"
+      className={`focus-ring interactive-control${className ? ` ${className}` : ''}`}
       onClick={onPress}
       role="button"
       tabIndex={0}

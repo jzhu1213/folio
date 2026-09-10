@@ -110,8 +110,7 @@ export function EmptyState({
         <motion.button
           type="button"
           onClick={onAction}
-          whileTap={{ scale: prefersReducedMotion ? 1 : 0.96 }}
-          transition={springs.snappy}
+          className="focus-ring interactive-control"
           style={{
             marginTop: spacingScale["4"],
             padding: `${spacingScale["12"]} ${spacingScale["24"]}`,

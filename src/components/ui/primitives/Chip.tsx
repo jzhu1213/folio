@@ -15,8 +15,6 @@
  */
 
 import React from 'react'
-import { motion } from 'framer-motion'
-import { springs, useReducedMotion } from '@/lib/animations'
 import { FONT_FAMILY, typography } from '@/styles/typography'
 import { radius } from '@/styles/surfaces'
 import { spacingScale } from '@/styles/layout'
@@ -51,7 +49,7 @@ function getVariantStyles(
       background: 'var(--color-surface)',
       color: textColors.muted,
       border: `1px solid ${semanticColors.borderSubtle}`,
-      opacity: 0.5,
+      opacity: 'var(--opacity-40)',
       cursor: 'not-allowed',
     }
   }
@@ -103,8 +101,6 @@ export const Chip: React.FC<ChipProps> = ({
   'aria-label': ariaLabel,
 }) => {
   const isDisabled = disabled
-  const { prefersReducedMotion } = useReducedMotion()
-
   const baseStyles: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
@@ -132,7 +128,7 @@ export const Chip: React.FC<ChipProps> = ({
   }
 
   return (
-    <motion.button
+    <button
       type="button"
       disabled={isDisabled}
       onClick={isDisabled ? undefined : onClick}
@@ -140,12 +136,10 @@ export const Chip: React.FC<ChipProps> = ({
       aria-disabled={isDisabled}
       aria-pressed={selected}
       role="option"
-      className="focus-ring"
+      className="focus-ring interactive-control"
       style={baseStyles}
-      whileTap={isDisabled ? undefined : (prefersReducedMotion ? { opacity: 0.92 } : { scale: 0.95 })}
-      transition={springs.snappy}
     >
       {children}
-    </motion.button>
+    </button>
   )
 }

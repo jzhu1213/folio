@@ -212,6 +212,7 @@ export function ChartFrame({
               <button
                 type="button"
                 onClick={onRetry}
+                className="focus-ring interactive-control"
                 style={{
                   padding: `${spacingScale["8"]} ${spacingScale["16"]}`,
                   borderRadius: radius.full,

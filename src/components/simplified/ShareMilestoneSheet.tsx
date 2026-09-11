@@ -14,7 +14,7 @@
 // ============================================================================
 
 import { useState, useCallback, useEffect, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { HORIZONTAL_PADDING } from "@/styles/shared"
 import { radius } from '@/styles/surfaces'

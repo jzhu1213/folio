@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback, useMemo, type ReactNode } from "react"
-import { motion, useMotionValue, useTransform, animate, type MotionValue } from "framer-motion"
+import { motion, useMotionValue, useTransform, animate, type MotionValue } from 'motion/react'
 import { springs, useReducedMotion } from "@/lib/animations"
 
 /**
@@ -15,7 +15,7 @@ import { springs, useReducedMotion } from "@/lib/animations"
  * then pulse/breathe while refreshing — cohesive with Folio's warm purple
  * mesh aesthetic. Respects prefers-reduced-motion.
  *
- * Uses framer-motion's spring physics for smooth, bouncy interaction.
+ * Uses motion/react's spring physics for smooth, bouncy interaction.
  * GPU-composited (transform + opacity only).
  *
  * Requirements: 13.1

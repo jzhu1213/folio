@@ -1,8 +1,6 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { springs, useReducedMotion } from '@/lib/animations'
 import { BottomSheet } from './BottomSheet'
 import { signOut, updateProfilePreferences } from '@/lib/supabaseData'
 import { GlassCard } from './GlassCard'
@@ -52,7 +50,6 @@ export function ProfileSheet({
   onSignOut,
   onProfileUpdate,
 }: ProfileSheetProps) {
-  const { prefersReducedMotion } = useReducedMotion()
   const [isEditing, setIsEditing] = useState(false)
   const [displayName, setDisplayName] = useState(initialDisplayName || '')
   const [avatarUrlInput, setAvatarUrlInput] = useState(initialAvatarUrl || '')
@@ -183,8 +180,10 @@ export function ProfileSheet({
             Your Profile
           </h2>
           <button
+            type="button"
             onClick={onClose}
             aria-label="Close"
+            className="focus-ring interactive-control"
             style={{
               color: 'var(--muted)',
               padding: spacing.xxs,
@@ -419,10 +418,12 @@ export function ProfileSheet({
                 </p>
               </div>
               <button
+                type="button"
                 role="switch"
                 aria-checked={discoverable}
                 aria-label="Toggle discoverability"
                 onClick={() => setDiscoverable(!discoverable)}
+                className="focus-ring interactive-control"
                 style={{
                   width: 44,
                   height: 24,
@@ -435,7 +436,6 @@ export function ProfileSheet({
                     ? 'var(--accent-400)'
                     : 'var(--fill-12)',
                   position: 'relative',
-                  transition: 'background 0.2s',
                 }}
               >
                 <span
@@ -447,7 +447,7 @@ export function ProfileSheet({
                     height: 20,
                     borderRadius: '50%',
                     background: 'var(--text)',
-                    transition: 'left 0.2s',
+                    transition: 'left var(--duration-fast) var(--ease-enter)',
                     boxShadow: shadows.sm,
                   }}
                 />
@@ -456,11 +456,11 @@ export function ProfileSheet({
 
             {/* Save / Cancel */}
             <div style={{ display: 'flex', gap: spacing.xs, marginTop: spacing.md }}>
-              <motion.button
+              <button
+                type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                whileTap={!prefersReducedMotion ? { scale: 0.97 } : undefined}
-                transition={springs.snappy}
+                className="focus-ring interactive-control"
                 style={{
                   flex: 1,
                   height: 40,
@@ -476,11 +476,11 @@ export function ProfileSheet({
                 }}
               >
                 {isSaving ? 'Saving...' : 'Save'}
-              </motion.button>
-              <motion.button
+              </button>
+              <button
+                type="button"
                 onClick={handleCancel}
-                whileTap={!prefersReducedMotion ? { scale: 0.97 } : undefined}
-                transition={springs.snappy}
+                className="focus-ring interactive-control"
                 style={{
                   flex: 1,
                   height: 40,
@@ -495,18 +495,18 @@ export function ProfileSheet({
                 }}
               >
                 Cancel
-              </motion.button>
+              </button>
             </div>
           </GlassCard>
         )}
 
         {/* Edit profile button */}
         {userEmail && !isEditing && (
-          <motion.button
+          <button
+            type="button"
             onClick={() => setIsEditing(true)}
-            whileTap={!prefersReducedMotion ? { scale: 0.97 } : undefined}
-            transition={springs.bouncy}
             aria-label="Edit profile"
+            className="focus-ring interactive-control"
             style={{
               width: '100%',
               height: 48,
@@ -522,17 +522,10 @@ export function ProfileSheet({
               border: '1px solid var(--fill-10)',
               cursor: 'pointer',
               marginBottom: spacing.sm,
-              transition: 'all 0.15s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--fill-06)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'var(--fill-04)'
             }}
           >
             Edit profile
-          </motion.button>
+          </button>
         )}
 
         {/* Friends section */}
@@ -542,11 +535,11 @@ export function ProfileSheet({
 
         {/* Sign out button or sign-in prompt */}
         {userEmail ? (
-          <motion.button
+          <button
+            type="button"
             onClick={handleSignOut}
-            whileTap={!prefersReducedMotion ? { scale: 0.97 } : undefined}
-            transition={springs.bouncy}
             aria-label="Sign out"
+            className="focus-ring interactive-control"
             style={{
               width: '100%',
               height: 52,
@@ -561,19 +554,10 @@ export function ProfileSheet({
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--error-300)',
               cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--error)'
-              e.currentTarget.style.background = 'var(--error-100)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--error-300)'
-              e.currentTarget.style.background = 'transparent'
             }}
           >
             Sign Out
-          </motion.button>
+          </button>
         ) : (
           <p
             style={{

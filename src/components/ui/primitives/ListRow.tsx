@@ -34,7 +34,7 @@ import {
   useRef,
   useEffect,
 } from "react"
-import { motion, useMotionValue, useTransform, AnimatePresence, type PanInfo, type Variants } from "framer-motion"
+import { motion, useMotionValue, useTransform, AnimatePresence, type PanInfo, type Variants } from 'motion/react'
 import { elevations, radius } from "@/styles/surfaces"
 import { spacingScale } from "@/styles/layout"
 import { springs, layoutSpring, timings } from "@/lib/animations"

@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useState, useCallback } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { timings, springs } from "@/lib/animations"
 import type { SpendingInsight } from "@/lib/spendingInsights"
 import { GlassCard } from "@/components/ui/GlassCard"
@@ -129,8 +129,8 @@ function getExpandedDetail(insight: SpendingInsight): string {
  * - "Tell me more" expansion reveals extra context
  * - Dismissible (persisted to localStorage by insight ID)
  * - Uses GlassCard with glow based on tone (positive/cautionary/neutral)
- * - Animated entrance/exit with framer-motion
- * - Accessible: ARIA labels, reduced-motion support via framer-motion defaults
+ * - Animated entrance/exit with motion/react
+ * - Accessible: ARIA labels, reduced-motion support via motion/react defaults
  *
  * Requirements: 19.4
  */

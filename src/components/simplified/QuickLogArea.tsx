@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react"
-import { motion, AnimatePresence, PanInfo, Variants, Reorder, LayoutGroup } from "framer-motion"
+import { motion, AnimatePresence, PanInfo, Variants, Reorder, LayoutGroup } from 'motion/react'
 import type { Transaction, Budget, TransactionCategory } from "@/types"
 import { BUDGET_CATEGORIES } from "@/types"
 import type { QuickTransaction, SmartSuggestion, CustomCategory } from "@/types/folio"
@@ -1028,7 +1028,7 @@ export function QuickLogArea({
     setEditingCategoryId(null)
   }, [])
 
-  /** Handle reorder from framer-motion Reorder.Group */
+  /** Handle reorder from motion/react Reorder.Group */
   const handleReorder = useCallback((newOrder: { category: TransactionCategory; emoji: string; label: string }[]) => {
     setCustomizedCategories(newOrder)
   }, [])

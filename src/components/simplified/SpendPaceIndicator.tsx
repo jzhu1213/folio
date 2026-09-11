@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import type { Transaction } from "@/types"
 import { computeSpendVelocity, velocityToPath } from "@/lib/spendVelocity"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { timings, useReducedMotion as useAppReducedMotion } from "@/lib/animations"
 import { chartLinePatterns } from "@/styles/chartTokens"
 import { spacing } from "@/styles/typography"

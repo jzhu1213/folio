@@ -13,7 +13,7 @@
  */
 
 import { useMemo } from "react"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { useReducedMotion } from "@/lib/animations"
 import { ChartFrame } from "@/components/ui/primitives/ChartFrame"
 import { GlassCard } from "@/components/ui/GlassCard"

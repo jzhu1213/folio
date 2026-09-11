@@ -15,7 +15,7 @@
  */
 
 import { useMemo, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { timings, useReducedMotion as useAppReducedMotion } from "@/lib/animations"
 import { track } from "@/lib/analytics"
 import { FONT_FAMILY, spacing, typography } from '@/styles/typography'

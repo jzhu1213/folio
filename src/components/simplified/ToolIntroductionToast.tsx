@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings } from '@/lib/animations'
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { spacingScale } from '@/styles/layout'
@@ -15,7 +15,7 @@ import { markToolIntroductionShown } from '@/lib/toolIntroductions'
 //
 // A brief, 1-tap dismissible toast that surfaces when a checklist step is
 // completed — introducing a related tool. Non-blocking, auto-dismisses after
-// 6 seconds. Uses framer-motion for enter/exit animation.
+// 6 seconds. Uses motion/react for enter/exit animation.
 // ============================================================================
 
 /** Auto-dismiss timeout in ms */

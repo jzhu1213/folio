@@ -947,8 +947,8 @@ input[type="date"] {
   position: absolute;
   border-radius: 50%;
   /* Soft edges — heavily diffused for a subtle, low-saturation backdrop */
-  filter: blur(60px);
-  opacity: 0.24;
+  filter: blur(calc(var(--blur-overlay) * 2));
+  opacity: calc(var(--opacity-20) * 1.2);
   will-change: transform, opacity;
   transform: translate3d(0, 0, 0);
 }
@@ -959,7 +959,7 @@ input[type="date"] {
   height: 60vmax;
   top: -20vmax;
   left: -10vmax;
-  background: radial-gradient(circle at center, rgba(129, 140, 248, 0.28), transparent 65%);
+  background: radial-gradient(circle at center, color-mix(in srgb, var(--accent) 28%, transparent), transparent 65%);
   /* soft indigo — reduced from 0.35 */
   animation: mesh-drift-1 33s ease-in-out infinite;
 }
@@ -969,9 +969,9 @@ input[type="date"] {
   height: 55vmax;
   bottom: -18vmax;
   right: -12vmax;
-  background: radial-gradient(circle at center, rgba(167, 139, 250, 0.24), transparent 65%);
+  background: radial-gradient(circle at center, color-mix(in srgb, var(--accent-hover) 24%, transparent), transparent 65%);
   /* warm purple — reduced from 0.3 */
-  opacity: 0.18;
+  opacity: calc(var(--opacity-20) * 0.9);
   animation: mesh-drift-2 40s ease-in-out infinite;
 }
 
@@ -980,16 +980,16 @@ input[type="date"] {
   height: 45vmax;
   top: 30vmax;
   left: 25vmax;
-  background: radial-gradient(circle at center, rgba(67, 56, 202, 0.36), transparent 65%);
+  background: radial-gradient(circle at center, color-mix(in srgb, var(--accent-active) 36%, transparent), transparent 65%);
   /* deep violet — reduced further; hero AmbientGlow is the ONE focal glow */
-  opacity: 0.18;
+  opacity: calc(var(--opacity-20) * 0.9);
   animation: mesh-drift-3 48s ease-in-out infinite;
 }
 
 /* Muted variant — even subtler warm purple-tone orbs for settings / secondary screens */
 .gradient-mesh--muted .gradient-mesh__orb {
-  opacity: 0.18;
-  filter: blur(80px);
+  opacity: calc(var(--opacity-20) * 0.9);
+  filter: blur(calc(var(--blur-overlay) * 2.5));
 }
 
 .gradient-mesh--muted .gradient-mesh__orb--1 {
@@ -997,7 +997,7 @@ input[type="date"] {
   height: 55vmax;
   top: -18vmax;
   left: -12vmax;
-  background: radial-gradient(circle at center, rgba(129, 140, 248, 0.20), transparent 68%);
+  background: radial-gradient(circle at center, color-mix(in srgb, var(--accent) 20%, transparent), transparent 68%);
   animation: mesh-drift-1 43s ease-in-out infinite;
 }
 
@@ -1006,7 +1006,7 @@ input[type="date"] {
   height: 50vmax;
   bottom: -20vmax;
   right: -14vmax;
-  background: radial-gradient(circle at center, rgba(167, 139, 250, 0.16), transparent 68%);
+  background: radial-gradient(circle at center, color-mix(in srgb, var(--accent-hover) 16%, transparent), transparent 68%);
   animation: mesh-drift-2 53s ease-in-out infinite;
 }
 
@@ -1015,7 +1015,7 @@ input[type="date"] {
   height: 40vmax;
   top: 28vmax;
   left: 22vmax;
-  background: radial-gradient(circle at center, rgba(67, 56, 202, 0.28), transparent 68%);
+  background: radial-gradient(circle at center, color-mix(in srgb, var(--accent-active) 28%, transparent), transparent 68%);
   animation: mesh-drift-3 60s ease-in-out infinite;
 }
 
@@ -1190,9 +1190,9 @@ input[type="date"] {
   position: relative;
   border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(5px) saturate(140%);
-  -webkit-backdrop-filter: blur(5px) saturate(140%);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(6px) saturate(140%);
+  -webkit-backdrop-filter: blur(6px) saturate(140%);
+  box-shadow: var(--shadow-md);
   /* Halo color/strength — overridden inline when a glow is requested. */
   --glass-glow: transparent;
 }
@@ -1221,33 +1221,33 @@ input[type="date"] {
 .glass-card--low {
   backdrop-filter: blur(6px) saturate(130%);
   -webkit-backdrop-filter: blur(6px) saturate(130%);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   --glass-border-top: rgba(129, 140, 248, 0.06);
 }
 
 .glass-card--medium {
-  backdrop-filter: blur(10px) saturate(145%);
-  -webkit-backdrop-filter: blur(10px) saturate(145%);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), 0 2px 6px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(var(--blur-raised)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--blur-raised)) saturate(145%);
+  box-shadow: var(--shadow-md);
   --glass-border-top: rgba(129, 140, 248, 0.12);
 }
 
 .glass-card--high {
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(var(--blur-overlay)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--blur-overlay)) saturate(160%);
+  box-shadow: var(--shadow-lg);
   --glass-border-top: rgba(129, 140, 248, 0.16);
 }
 
 /* Contextual colored halo — layered on top of the elevation drop-shadow */
 .glass-card--glow.glass-card--low {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 16px 0 var(--glass-glow);
+  box-shadow: var(--shadow-sm), 0 0 20px var(--glass-glow);
 }
 .glass-card--glow.glass-card--medium {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), 0 2px 6px rgba(0, 0, 0, 0.12), 0 0 24px 0 var(--glass-glow);
+  box-shadow: var(--shadow-md), 0 0 20px var(--glass-glow);
 }
 .glass-card--glow.glass-card--high {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 40px 2px var(--glass-glow);
+  box-shadow: var(--shadow-lg), 0 0 20px var(--glass-glow);
 }
 
 /* Fallback for browsers without backdrop-filter: use a solid-ish surface so
@@ -1266,10 +1266,10 @@ input[type="date"] {
  */
 .card {
   position: relative;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--surface);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-default);
 }
 
 /* Subtle scan-line texture for added depth */
@@ -1331,7 +1331,7 @@ input[type="date"] {
 .ambient-glow__pool {
   position: absolute;
   border-radius: 50%;
-  filter: blur(64px);
+  filter: blur(var(--blur-overlay));
   will-change: opacity;
   background: radial-gradient(
     circle at center,
@@ -1339,7 +1339,7 @@ input[type="date"] {
     transparent 70%
   );
   /* Smooth color + strength transition when status changes */
-  transition: background 300ms ease, opacity 300ms ease;
+  transition: background var(--duration-slow) var(--ease-enter), opacity var(--duration-slow) var(--ease-enter);
 }
 
 /* Footprint of the glow pool */
@@ -1362,13 +1362,13 @@ input[type="date"] {
 
 /* Perceived strength — kept subtle/atmospheric (0.12–0.20) */
 .ambient-glow--subtle .ambient-glow__pool {
-  opacity: 0.12;
+  opacity: calc(var(--opacity-20) * 0.6);
 }
 .ambient-glow--medium .ambient-glow__pool {
-  opacity: 0.16;
+  opacity: calc(var(--opacity-20) * 0.8);
 }
 .ambient-glow--strong .ambient-glow__pool {
-  opacity: 0.20;
+  opacity: var(--opacity-20);
 }
 
 /* Anchor point within the positioned parent */
@@ -1418,7 +1418,7 @@ input[type="date"] {
   border-radius: 50%;
   background: var(--color-canvas);
   opacity: 0;
-  transition: opacity 300ms ease;
+  transition: opacity var(--duration-slow) var(--ease-enter);
 }
 
 /* Inherit size from parent size class */
@@ -2006,7 +2006,7 @@ input[type="date"] {
 
 /*
  * Scroll-driven divider element (Task 14.2):
- * A real DOM element whose opacity is driven by a framer-motion MotionValue
+ * A real DOM element whose opacity is driven by a Motion MotionValue
  * (GPU-composited). Reveals at ≥3:1 contrast against the header surface.
  * Replaces the previous ::after + class-toggle approach.
  */
@@ -2292,7 +2292,7 @@ input[type="date"] {
 .app-dock-fab {
   position: fixed;
   left: 50%;
-  /* Centering handled via margin so framer-motion scale doesn't clobber it */
+  /* Centering handled via margin so Motion scale doesn't clobber it */
   margin-left: -28px; /* half of 56px width */
   /* Sit above the dock with enough clearance (dock ~64px + 16px safe + 8px gap) */
   bottom: calc(80px + var(--safe-bottom));
@@ -2401,7 +2401,7 @@ input[type="date"] {
 /*
  * Primitives that react to scroll (see src/components/ui/ScrollAware and
  * src/hooks/useScrollProgress). Every scroll-driven change is applied inline
- * by framer-motion as a `transform` or `opacity` on a MotionValue, so it runs
+ * by Motion as a `transform` or `opacity` on a MotionValue, so it runs
  * on the compositor thread. The classes below only supply the static
  * structure (layout, glass treatment, shadows, masks).
  *
@@ -2412,7 +2412,7 @@ input[type="date"] {
  */
 
 /* Parallax mesh layer — over-extended so drift never reveals an edge.
- * The transform set by framer-motion makes this a containing block, so the
+ * The transform set by Motion makes this a containing block, so the
  * GradientMesh inside (position: fixed) fills this extended box. */
 .parallax-mesh {
   position: fixed;
@@ -2446,7 +2446,7 @@ input[type="date"] {
   align-self: center;
   justify-self: center;
   /* Only interactive once it has faded in; the full hero owns taps until then.
-   * framer-motion drives opacity, so this stays visually hidden at rest. */
+   * Motion drives opacity, so this stays visually hidden at rest. */
   pointer-events: auto;
   will-change: transform, opacity;
 }
@@ -2499,7 +2499,7 @@ input[type="date"] {
   }
 }
 
-/* Momentum scroll wrapper — framer-motion drives a small translateY lean that
+/* Momentum scroll wrapper — Motion drives a small translateY lean that
  * springs back as scrolling settles. Only the transform changes, so it stays
  * on the compositor thread. */
 .momentum-scroll {

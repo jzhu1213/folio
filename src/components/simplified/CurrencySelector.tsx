@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, useReducedMotion } from '@/lib/animations'
 import { triggerHaptic } from '@/lib/haptics'
 import { CURRENCIES, getCurrencySymbol, normalizeCode, formatCurrency } from '@/lib/currencyUtils'

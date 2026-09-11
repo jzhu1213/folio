@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
 import { BottomSheet } from "@/components/ui/BottomSheet"
 import type { Goal } from "@/types"
@@ -40,7 +40,7 @@ function formatAmount(value: number): string {
 /**
  * GoalContributeSheet — warm, glass bottom sheet for adding money to a goal.
  * Shares the ExpenseSheet / IncomeSheet visual language (Inter font,
- * `--surface` glass panel, framer-motion slide-up + backdrop, reduced-motion
+ * `--surface` glass panel, motion/react slide-up + backdrop, reduced-motion
  * aware). Offers quick-add chips plus a custom amount entry, and shows the
  * goal's current progress for context.
  *

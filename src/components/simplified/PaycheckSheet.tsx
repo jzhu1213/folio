@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings } from '@/lib/animations'
 import { Sheet } from '@/components/ui/primitives/Sheet'
 import { useToast } from '@/contexts/ToastContext'

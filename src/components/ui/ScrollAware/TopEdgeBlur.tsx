@@ -22,7 +22,7 @@
  * Validates: Requirements 13.1, 13.5, 8.4
  */
 
-import { motion, useTransform, type MotionValue } from "framer-motion"
+import { motion, useTransform, type MotionValue } from 'motion/react'
 import { useScrollProgress } from "@/hooks/useScrollProgress"
 
 export interface TopEdgeBlurProps {

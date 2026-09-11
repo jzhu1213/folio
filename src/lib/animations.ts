@@ -1,13 +1,13 @@
 "use client"
 
-import { useReducedMotion as useFramerReducedMotion } from "framer-motion"
-import type { Variants, Transition } from "framer-motion"
+import { useReducedMotion as useFramerReducedMotion } from 'motion/react'
+import type { Variants, Transition } from 'motion/react'
 import { springPresets, type SpringPresetName } from "@/styles/motion"
 
 /**
  * Folio Motion System — animations.ts
  *
- * Provides 6 spring presets (as framer-motion Transition objects), 11 named
+ * Provides 6 spring presets (as motion/react Transition objects), 11 named
  * motion variants, backward-compatible stagger/page/button/nav exports, and a
  * `useReducedMotion` hook that selects appropriate variant sets.
  *
@@ -26,12 +26,12 @@ import { springPresets, type SpringPresetName } from "@/styles/motion"
  */
 
 // ============================================================================
-// Spring Presets (framer-motion Transition objects)
+// Spring Presets (motion/react Transition objects)
 // ============================================================================
 
 /**
  * Spring transition presets derived from the canonical motion.ts SpringPresets.
- * Each includes `type: "spring"` for direct use as a framer-motion Transition.
+ * Each includes `type: "spring"` for direct use as a motion/react Transition.
  */
 export const springs = {
   /** Quick, controlled settle — taps, toggles. Stiffness 400, Damping 30, Mass 1.0 */
@@ -53,7 +53,7 @@ export const springs = {
 // ============================================================================
 
 /**
- * Duration-based tween presets. Durations in seconds (framer-motion convention).
+ * Duration-based tween presets. Durations in seconds (motion/react convention).
  */
 export const timings = {
   /** 100ms ease-out — instant swap / fast fade. */

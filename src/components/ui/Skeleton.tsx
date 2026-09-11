@@ -20,7 +20,7 @@
  */
 
 import type { CSSProperties, ReactNode } from "react"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { FONT_FAMILY, spacing, fontWeights } from '@/styles/typography'
 import { HORIZONTAL_PADDING } from "@/styles/shared"
 
@@ -197,7 +197,7 @@ export interface FadeInContentProps {
 
 /**
  * Wraps freshly-loaded content so it fades in gently instead of popping.
- * Uses framer-motion for a 250ms opacity tween (within the 150–300ms spec).
+ * Uses motion/react for a 250ms opacity tween (within the 150–300ms spec).
  * When used inside AnimatePresence, guarantees the skeleton is fully unmounted
  * before content appears (CLS ≤ 0.02).
  *

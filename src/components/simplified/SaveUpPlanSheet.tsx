@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useCallback } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
 import { BottomSheet } from "@/components/ui/BottomSheet"
 import { GlassCard } from "@/components/ui/GlassCard"
@@ -42,7 +42,7 @@ export interface SaveUpPlanSheetProps {
  * sees multiple timeline scenarios at different weekly contribution rates.
  * They can select one to pre-fill a new savings goal.
  *
- * Uses GlassCard, framer-motion, and Inter font per the design system.
+ * Uses GlassCard, motion/react, and Inter font per the design system.
  *
  * Validates: Requirements 12.3, 12.4
  */

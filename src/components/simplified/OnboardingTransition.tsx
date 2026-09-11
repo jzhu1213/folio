@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { springs, useReducedMotion, timings } from '@/lib/animations'
 import { FONT_FAMILY, typography, fontWeights } from '@/styles/typography'
 

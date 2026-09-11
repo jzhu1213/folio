@@ -23,7 +23,7 @@
  * Validates: Requirements 13.1, 13.5, 8.4
  */
 
-import { motion, useTransform } from "framer-motion"
+import { motion, useTransform } from 'motion/react'
 import { GradientMesh, type GradientMeshVariant } from "../GradientMesh"
 import { useScrollProgress } from "@/hooks/useScrollProgress"
 

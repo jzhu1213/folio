@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { springs, useReducedMotion } from '@/lib/animations'
 import { Sheet } from '@/components/ui/primitives/Sheet'
 import { triggerHaptic } from '@/lib/haptics'

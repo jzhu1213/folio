@@ -15,7 +15,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { useReducedMotion } from "@/lib/animations"
 import { Card } from "@/components/ui"
 import { Icon } from "@/components/ui/Icon"

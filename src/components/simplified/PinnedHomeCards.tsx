@@ -9,7 +9,7 @@
  * Requirement 18.6 — Pinnable home cards
  */
 
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { springs, useReducedMotion } from "@/lib/animations"
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import {

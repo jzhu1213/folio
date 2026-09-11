@@ -14,7 +14,7 @@
  */
 
 import React, { useEffect, useCallback, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { elevations, radius } from "@/styles/surfaces"
 import { spacingScale } from "@/styles/layout"
 import { typography, FONT_FAMILY, fontWeights } from '@/styles/typography'

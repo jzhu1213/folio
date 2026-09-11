@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { timings } from "@/lib/animations"
 import type { MonthlyDigest } from "@/lib/monthlyDigest"
 import { dismissDigest, isDigestDismissed } from "@/lib/monthlyDigest"
@@ -35,7 +35,7 @@ export interface MonthlyDigestCardProps {
  * - Ends with a single actionable tip
  * - Warm, celebratory tone (GlassCard with celebration glow)
  * - Dismissible, persisted with month key (shows once per period)
- * - Animated with framer-motion
+ * - Animated with motion/react
  * - Accessible: proper ARIA labels
  *
  * Requirements: 19.4

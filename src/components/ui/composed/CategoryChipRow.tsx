@@ -17,7 +17,7 @@
  */
 
 import React, { useMemo } from "react"
-import { motion, AnimatePresence, type Variants } from "framer-motion"
+import { motion, AnimatePresence, type Variants } from 'motion/react'
 import { spacingScale } from "@/styles/layout"
 import { springPresets } from "@/styles/motion"
 import { radius } from "@/styles/surfaces"

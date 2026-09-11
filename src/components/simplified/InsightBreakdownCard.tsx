@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { timings, useReducedMotion } from "@/lib/animations"
 import type { Transaction } from "@/types"
 import { toMonthString } from "@/lib/budgetUtils"
@@ -29,7 +29,7 @@ export interface InsightBreakdownCardProps {
  * - Shows category breakdown as text rows with percent
  * - Uses warm, non-judgmental tone
  * - Only renders when there are at least 3 expenses in the current month
- * - Respects reduced motion via framer-motion defaults
+ * - Respects reduced motion via motion/react defaults
  * - Uses GlassCard with low elevation
  *
  * Requirements: 9.4

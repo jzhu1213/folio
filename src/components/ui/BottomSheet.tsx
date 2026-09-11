@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useCallback, useRef, type ReactNode } from "react"
-import { motion, AnimatePresence, type PanInfo } from "framer-motion"
-import { timings, sheetSpring, useReducedMotion } from "@/lib/animations"
+import { motion, AnimatePresence, type PanInfo } from 'motion/react'
+import { useReducedMotion } from "@/lib/animations"
 import { sheetPresentationConfig } from "@/lib/transitions"
+import { motionTransitions, reducedFade, slideUpSheet } from "@/lib/motionPresets"
 
 // ============================================================================
 // Types
@@ -41,20 +42,11 @@ export interface BottomSheetProps {
 // Animation variants
 // ============================================================================
 
-/**
- * Polished sheet spring — slightly under-damped for native-feeling liveliness
- * without visible overshoot. Uses the shared `sheetSpring` from animations.ts.
- */
-
 /** Drag-to-dismiss thresholds */
 const DRAG_DISMISS_DISTANCE = 100 // px
 const DRAG_DISMISS_VELOCITY = 500 // px/s
 
-const sheetVariantsFull = {
-  hidden: { y: "100%" },
-  visible: { y: "0%", transition: sheetSpring },
-  exit: { y: "100%", transition: { type: "tween" as const, duration: 0.25, ease: "easeIn" as const } },
-}
+const sheetVariantsFull = slideUpSheet
 
 /**
  * Origin-scale variants: the sheet scales up from the FAB position (center-bottom)
@@ -67,30 +59,26 @@ const sheetVariantsFabOrigin = {
     opacity: 1,
     scale: 1,
     y: "0%",
-    transition: sheetSpring,
+    transition: motionTransitions.enter,
   },
   exit: {
     opacity: 0,
     scale: 0.4,
     y: "30%",
-    transition: { type: "tween" as const, duration: 0.2, ease: "easeIn" as const },
+    transition: motionTransitions.exit,
   },
 }
 
-const sheetVariantsReduced = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: timings.fast },
-  exit: { opacity: 0, transition: timings.fast },
-}
+const sheetVariantsReduced = reducedFade
 
 const backdropVariants = {
   hidden: { opacity: 0, backdropFilter: "blur(0px)" },
   visible: {
     opacity: sheetPresentationConfig.backdropDimOpacity,
     backdropFilter: `blur(${sheetPresentationConfig.backdropBlur})`,
-    transition: sheetPresentationConfig.backdropTransition,
+    transition: motionTransitions.enter,
   },
-  exit: { opacity: 0, backdropFilter: "blur(0px)", transition: { type: "tween" as const, duration: 0.2, ease: "easeIn" as const } },
+  exit: { opacity: 0, backdropFilter: "blur(0px)", transition: motionTransitions.exit },
 }
 
 // ============================================================================

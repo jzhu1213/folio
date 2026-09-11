@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
 import { BottomSheet } from "@/components/ui/BottomSheet"
 import type { Goal } from "@/types"
@@ -57,7 +57,7 @@ function sanitizeName(raw: string): string {
 /**
  * GoalEditSheet — warm, glass bottom sheet for creating or editing a savings
  * goal. Matches the visual language of ExpenseSheet / IncomeSheet (Inter font,
- * `--surface` glass panel, framer-motion slide-up with backdrop, reduced-motion
+ * `--surface` glass panel, motion/react slide-up with backdrop, reduced-motion
  * aware). Collects a name, emoji, and target amount.
  *
  * Submission awaits the create/update handler so optimistic updates upstream

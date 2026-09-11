@@ -10,7 +10,7 @@
  */
 
 import { useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { useReducedMotion } from '@/lib/animations'
 import { Card } from '@/components/ui'
 import { contentColumn, spacingScale } from '@/styles/layout'

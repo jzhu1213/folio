@@ -13,9 +13,9 @@
  *
  * How it works:
  *   - {@link useScrollProgress} exposes the raw window `scrollY` MotionValue.
- *   - framer-motion's `useVelocity` turns that into a scroll velocity (px/s).
+ *   - motion/react's `useVelocity` turns that into a scroll velocity (px/s).
  *   - We map the (clamped) velocity to a small bounded `translateY` lean and
- *     smooth it with {@link useSpringScroll} so it eases in and springs back.
+ *     smooth it with Motion's `useSpring` so it eases in and springs back.
  *
  * Drop it around the areas that benefit from a tactile scroll feel:
  *
@@ -38,8 +38,9 @@
  */
 
 import type { ReactNode } from "react"
-import { motion, useTransform, useVelocity } from "framer-motion"
-import { useScrollProgress, useSpringScroll } from "@/hooks/useScrollProgress"
+import { motion, useSpring, useTransform, useVelocity } from 'motion/react'
+import { useScrollProgress } from "@/hooks/useScrollProgress"
+import { motionTransitions } from "@/lib/motionPresets"
 
 export interface MomentumScrollProps {
   /** The scrollable content to give a momentum-spring feel. */
@@ -78,7 +79,7 @@ export function MomentumScroll({
   })
 
   // Spring the lean so it eases in and settles back with momentum.
-  const springLean = useSpringScroll(lean)
+  const springLean = useSpring(lean, motionTransitions.scroll)
 
   if (prefersReducedMotion) {
     return (

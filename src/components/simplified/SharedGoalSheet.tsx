@@ -11,7 +11,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
 import { GlassCard } from "@/components/ui/GlassCard"
 import type { Goal, GoalParticipant } from "@/types"

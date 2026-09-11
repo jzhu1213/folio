@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
 import type { Transaction, TransactionCategory } from "@/types"
 import { CategoryIcon } from "@/components/ui/CategoryIcon"

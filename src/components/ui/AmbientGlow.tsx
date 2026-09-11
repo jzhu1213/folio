@@ -86,12 +86,12 @@ export interface AmbientGlowProps
  * governed by the `intensity` opacity band in globals.css.
  */
 const STATUS_GLOW_COLORS: Record<AmbientGlowStatus, string> = {
-  healthy: 'rgba(74, 222, 128, 0.55)', // --success green
-  caution: 'rgba(251, 191, 36, 0.55)', // --warning amber
-  warning: 'rgba(251, 146, 60, 0.55)', // urgent orange
-  over: 'rgba(251, 182, 182, 0.35)', // muted rose — calm, not alarming
-  celebration: 'rgba(252, 211, 77, 0.6)', // warm gold
-  neutral: 'var(--accent-400)', // --accent indigo
+  healthy: 'var(--success)',
+  caution: 'var(--warning)',
+  warning: 'var(--warning)',
+  over: 'var(--danger)',
+  celebration: 'var(--accent)',
+  neutral: 'var(--accent)',
 }
 
 /**

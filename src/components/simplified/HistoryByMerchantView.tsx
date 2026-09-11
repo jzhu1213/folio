@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import type { Transaction } from "@/types"
 import { BUDGET_CATEGORIES } from "@/types"
 import { GlassCard } from "@/components/ui/GlassCard"

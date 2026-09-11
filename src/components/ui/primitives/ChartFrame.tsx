@@ -23,7 +23,7 @@
  */
 
 import type { ReactNode } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
 import { typography, FONT_FAMILY, fontWeights } from '@/styles/typography'
 import { spacingScale } from "@/styles/layout"

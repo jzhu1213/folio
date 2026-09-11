@@ -7,7 +7,7 @@
  * glow ring. This is the highest-contrast interactive element in the viewport.
  *
  * - Gradient fill from --gradient-action token
- * - Animated glow ring using framer-motion (pulse)
+ * - Animated glow ring using motion/react (pulse)
  * - Highest contrast: dark icon on bright gradient (≥10:1)
  * - Hit area ≥44×44px
  * - Reduced motion: static glow, no pulse animation
@@ -16,7 +16,7 @@
  */
 
 import React from "react"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { Icon } from "@/components/ui/Icon"
 import { gradients, colorRamp, surfaceColors } from "@/styles/colors"
 import { springs, useReducedMotion } from "@/lib/animations"

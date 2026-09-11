@@ -12,7 +12,7 @@
  */
 
 import { useCallback, useEffect, useRef, useId } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { radius } from '@/styles/surfaces'
 import { shadows } from '@/styles/shared'

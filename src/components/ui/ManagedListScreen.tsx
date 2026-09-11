@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useState, useCallback, type ReactNode } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, useReducedMotion } from "@/lib/animations"
 import { GlassCard } from "@/components/ui/GlassCard"
 import { EmptyState } from "@/components/ui/EmptyState"
@@ -118,7 +118,7 @@ export interface ManagedListScreenProps<T extends ManagedItem> {
  * - Standard page layout (max-width, padding, header with back button)
  * - CRUD state management (editingId, showAddForm, confirmDeleteId)
  * - 2-step delete confirmation pattern
- * - Animated list (framer-motion AnimatePresence + layout)
+ * - Animated list (motion/react AnimatePresence + layout)
  * - Empty state with warm messaging
  * - Dashed add button
  * - Summary slot (optional)

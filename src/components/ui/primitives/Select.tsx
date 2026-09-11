@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useId, useCallback } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
 import { elevations, radius } from "@/styles/surfaces"
 import { spacingScale } from "@/styles/layout"
@@ -18,7 +18,7 @@ import { typography } from "@/styles/typography"
  * States: default, open, focused, disabled
  *
  * All visual values resolve from the Design_Token_System.
- * Hit area ≥ 44×44px. Press animation via framer-motion (snappy spring).
+ * Hit area ≥ 44×44px. Press animation via motion/react (snappy spring).
  * No arbitrary style props exposed.
  *
  * Requirements: 16.1, 16.2, 16.4

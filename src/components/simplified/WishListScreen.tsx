@@ -14,7 +14,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { useReducedMotion } from "@/lib/animations"
 import { SectionHeader, ListRow, Card } from "@/components/ui"
 import { Icon } from "@/components/ui/Icon"

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings, useReducedMotion } from '@/lib/animations'
 import { Icon } from '@/components/ui/Icon'
 import { GlassCard } from '@/components/ui/GlassCard'

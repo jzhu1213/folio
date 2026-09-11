@@ -14,7 +14,7 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react"
 import { useTranslation } from "@/contexts/I18nContext"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
 import { useTheme } from "@/contexts/ThemeContext"
 import type { Budget, Goal, TransactionCategory } from "@/types"

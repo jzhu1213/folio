@@ -14,7 +14,7 @@
  * SettingsScreen to a single reusable component.
  */
 
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { shadows, fills, colorRamp } from "@/styles/shared"
 import { textColors } from "@/styles/colors"
 import { opacity } from "@/styles/tokens"

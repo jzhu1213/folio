@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { springs, useReducedMotion } from "@/lib/animations"
 import { GlassCard } from "@/components/ui/GlassCard"
 import { Icon } from "@/components/ui/Icon"

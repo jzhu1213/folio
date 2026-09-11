@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, motion } from 'motion/react'
 import { GlassCard } from "@/components/ui"
 import {
   springs,
@@ -20,7 +20,7 @@ import { resolvedColors } from "@/styles/colors"
  *
  * Elevated in Task 257.1 with:
  * - Refined confetti timing with multi-burst layering for milestones
- * - Animated SVG star-burst for milestone celebrations (framer-motion powered)
+ * - Animated SVG star-burst for milestone celebrations (motion/react powered)
  * - Progress timer ring on dismiss button showing auto-dismiss countdown
  * - Staggered card element entrance (icon → title → message → button)
  * - Context-aware dismiss copy ("Nice!" / "Amazing!" / "Let's go!")
@@ -112,7 +112,7 @@ function getDismissCopy(type: CelebrationType): string {
 }
 
 // ---------------------------------------------------------------------------
-// SVG Star-burst animation (replaces Lottie — pure framer-motion)
+// SVG Star-burst animation (replaces Lottie — pure motion/react)
 // ---------------------------------------------------------------------------
 
 /** A brief animated sparkle/star-burst rendered via motion.svg for milestones. */

@@ -12,7 +12,7 @@
 
 import type { ReactNode } from "react"
 import { useRef, useEffect } from "react"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { springs, useReducedMotion, timings } from "@/lib/animations"
 import { contentColumn, spacingScale, safeAreaTop, safeAreaBottom } from "@/styles/layout"
 import { typography } from "@/styles/typography"

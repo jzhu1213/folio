@@ -10,7 +10,7 @@
  * Follows the existing weekend pill / spend-down pill pattern in HomeScreen.
  */
 
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion, useReducedMotion } from 'motion/react'
 import { timings } from '@/lib/animations'
 import { FONT_FAMILY, typography } from '@/styles/typography'
 import type { TimeHorizonStats } from '@/lib/timeHorizonStats'

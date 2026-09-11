@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings, useReducedMotion } from '@/lib/animations'
 import { Icon } from '@/components/ui/Icon'
 import { FONT_FAMILY, typography, fontWeights } from '@/styles/typography'
@@ -9,7 +9,7 @@ import { FONT_FAMILY, typography, fontWeights } from '@/styles/typography'
 // ============================================================================
 // SyncIndicator — premium glass-card sync status (warm, on-brand)
 // Requirements: 10.3, 10.4
-// Phase 6, task 265.1 — redesigned with Icon system, glass aesthetic, framer-motion
+// Phase 6, task 265.1 — redesigned with Icon system, glass aesthetic, motion/react
 // ============================================================================
 
 interface SyncIndicatorProps {

@@ -6,7 +6,7 @@ import { initStorageVersions } from '@/lib/storageKeys'
 initStorageVersions()
 
 import dynamic from 'next/dynamic'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { timings, NAV_ORDER, navScreenVariants, navScreenVariantsReduced, useReducedMotion } from '@/lib/animations'
 import {
   Toast,

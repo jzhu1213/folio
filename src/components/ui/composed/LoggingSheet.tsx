@@ -19,7 +19,7 @@
  */
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { Sheet } from "@/components/ui/primitives/Sheet"
 import { Button } from "@/components/ui/primitives/Button"
 import { CategoryChipRow, type CategoryChipItem } from "./CategoryChipRow"

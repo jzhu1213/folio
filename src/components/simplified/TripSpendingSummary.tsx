@@ -15,7 +15,7 @@
  */
 
 import { useMemo } from "react"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import type { Transaction } from "@/types"
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { radius } from '@/styles/surfaces'

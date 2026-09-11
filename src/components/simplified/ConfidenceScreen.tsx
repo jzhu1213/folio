@@ -14,7 +14,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { useReducedMotion } from "@/lib/animations"
 import { SectionHeader, Card } from "@/components/ui"
 import { Icon } from "@/components/ui/Icon"

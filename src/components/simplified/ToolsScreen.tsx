@@ -15,7 +15,7 @@
 
 import { useMemo, useState, useEffect, useCallback } from "react"
 import { useTranslation } from "@/contexts/I18nContext"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { layoutTransition, MAX_STAGGER_ITEMS, useReducedMotion } from "@/lib/animations"
 import { getPeerContextEnabled, setPeerContextEnabled } from "@/lib/uiPreferences"
 import { recordToolUsage, getRecentlyUsedTools, hasSectionBeenUsed } from "@/lib/toolUsageTracker"
@@ -182,8 +182,8 @@ const SECTIONS: ToolSection[] = [
 
 interface ToolSectionListProps {
   tools: ToolItem[]
-  listContainer: import("framer-motion").Variants
-  listItem: import("framer-motion").Variants
+  listContainer: import("motion/react").Variants
+  listItem: import("motion/react").Variants
   prefersReducedMotion: boolean
 }
 

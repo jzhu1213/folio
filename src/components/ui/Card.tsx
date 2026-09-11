@@ -22,6 +22,9 @@
  *
  * This component is a plain typed wrapper (no hooks), so it stays a server
  * component and can be used anywhere.
+ * It intentionally does not compose `ui/primitives/Card`: this legacy public
+ * wrapper accepts the full div attribute surface and a padding shorthand,
+ * while the primitive has a deliberately narrower interaction API.
  *
  * Accessibility: the opaque `var(--surface)` fill (#1a1a2e) against pure-white
  * `--text` keeps WCAG AA contrast comfortably. The same border-radius tokens

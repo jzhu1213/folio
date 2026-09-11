@@ -12,7 +12,7 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import type { TransactionCategory } from "@/types"
 import type { QuickTransaction } from "@/types/folio"
 import type { FundingSource } from "@/lib/fundingSources"

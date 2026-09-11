@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { motion, useMotionValue, useTransform, type PanInfo } from "framer-motion"
+import { motion, useMotionValue, useTransform, type PanInfo } from 'motion/react'
 import { GlassCard, type GlassGlow } from "@/components/ui"
 import { Icon } from "@/components/ui/Icon"
 import { getTipIconName } from "@/lib/icons"

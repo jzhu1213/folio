@@ -1,9 +1,13 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { springs, useReducedMotion } from '@/lib/animations'
+import { motion, AnimatePresence } from 'motion/react'
+import { useReducedMotion } from '@/lib/animations'
+import { motionTransitions, reducedFade } from '@/lib/motionPresets'
 import { GlassCard } from './GlassCard'
+import { EmptyState } from './EmptyState'
+import { Icon } from './Icon'
+import { SkeletonText } from './Skeleton'
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { radius } from '@/styles/surfaces'
 import {
@@ -90,7 +94,6 @@ const smallButtonStyle: React.CSSProperties = {
   borderRadius: 'var(--radius-sm)',
   cursor: 'pointer',
   border: 'none',
-  transition: 'opacity 0.15s',
 }
 
 const inputStyle: React.CSSProperties = {
@@ -254,6 +257,13 @@ export function FriendsSection({ userId }: FriendsSectionProps) {
   }
 
   const isEmpty = friends.length === 0 && pendingRequests.length === 0 && outgoingRequests.length === 0
+  const expandedVariants = prefersReducedMotion
+    ? reducedFade
+    : {
+        initial: { opacity: 0, height: 0 },
+        enter: { opacity: 1, height: 'auto', transition: motionTransitions.enter },
+        exit: { opacity: 0, height: 0, transition: motionTransitions.exit },
+      }
 
   // Don't render if not signed in
   if (!userId) return null
@@ -262,9 +272,11 @@ export function FriendsSection({ userId }: FriendsSectionProps) {
     <div style={{ marginBottom: spacing.sm }}>
       {/* Section toggle header */}
       <button
+        type="button"
         onClick={() => setIsExpanded(!isExpanded)}
         aria-expanded={isExpanded}
         aria-label={`Friends section, ${totalCount} total. ${isExpanded ? 'Collapse' : 'Expand'}`}
+        className="focus-ring interactive-control"
         style={sectionHeaderStyle}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: spacing.xs }}>
@@ -291,49 +303,32 @@ export function FriendsSection({ userId }: FriendsSectionProps) {
             </span>
           )}
         </div>
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="var(--muted)"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{
-            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.2s ease',
-          }}
+        <span
           aria-hidden="true"
+          style={{
+            color: 'var(--muted)',
+            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform var(--duration-fast) var(--ease-enter)',
+          }}
         >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+          <Icon name="action:expand" size={16} />
+        </span>
       </button>
 
       {/* Expandable content */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
-            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, height: 'auto' }}
-            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
-            transition={springs.gentle}
+            variants={expandedVariants}
+            initial="initial"
+            animate="enter"
+            exit="exit"
             style={{ overflow: 'hidden' }}
           >
             <GlassCard elevation="low" style={{ padding: spacing.md, marginBottom: 12 }}>
               {/* Loading state */}
               {isLoading && (
-                <p
-                  style={{
-                    fontSize: typography['body-sm'].fontSize,
-                    fontFamily: FONT_FAMILY,
-                    color: 'var(--muted)',
-                    textAlign: 'center',
-                    padding: '12px 0',
-                  }}
-                >
-                  Loading...
-                </p>
+                <SkeletonText lines={2} lastLineWidth="45%" style={{ padding: '12px 0' }} />
               )}
 
               {/* Action message toast */}
@@ -359,42 +354,11 @@ export function FriendsSection({ userId }: FriendsSectionProps) {
 
               {/* Empty state */}
               {!isLoading && isEmpty && (
-                <div
-                  style={{
-                    textAlign: 'center',
-                    padding: '20px 12px',
-                  }}
-                >
-                  <p
-                    style={{
-                      fontSize: typography.title.fontSize,
-                      marginBottom: spacing.xs,
-                    }}
-                    aria-hidden="true"
-                  >
-                    👋
-                  </p>
-                  <p
-                    style={{
-                      fontSize: typography.body.fontSize,
-                      fontFamily: FONT_FAMILY,
-                      fontWeight: fontWeights.medium,
-                      color: 'var(--text)',
-                      marginBottom: 4,
-                    }}
-                  >
-                    Add a friend to split costs together
-                  </p>
-                  <p
-                    style={{
-                      fontSize: typography['body-sm'].fontSize,
-                      fontFamily: FONT_FAMILY,
-                      color: 'var(--muted)',
-                    }}
-                  >
-                    Search by handle or share your invite link
-                  </p>
-                </div>
+                <EmptyState
+                  illustration="generic"
+                  title="Add a friend to split costs together"
+                  subtitle="Search by handle or share your invite link"
+                />
               )}
 
               {/* Incoming requests */}
@@ -429,10 +393,10 @@ export function FriendsSection({ userId }: FriendsSectionProps) {
                       </div>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <motion.button
+                          type="button"
                           onClick={() => handleRespond(req.id, 'accepted')}
-                          whileTap={!prefersReducedMotion ? { scale: 0.95 } : undefined}
-                          transition={springs.snappy}
                           aria-label="Accept friend request"
+                          className="focus-ring interactive-control"
                           style={{
                             ...smallButtonStyle,
                             background: 'var(--accent-200)',
@@ -442,10 +406,10 @@ export function FriendsSection({ userId }: FriendsSectionProps) {
                           Accept
                         </motion.button>
                         <motion.button
+                          type="button"
                           onClick={() => handleRespond(req.id, 'declined')}
-                          whileTap={!prefersReducedMotion ? { scale: 0.95 } : undefined}
-                          transition={springs.snappy}
                           aria-label="Decline friend request"
+                          className="focus-ring interactive-control"
                           style={{
                             ...smallButtonStyle,
                             background: 'var(--fill-05)',
@@ -565,10 +529,10 @@ export function FriendsSection({ userId }: FriendsSectionProps) {
                           </span>
                         </div>
                         <motion.button
+                          type="button"
                           onClick={() => handleRemove(friend.id)}
-                          whileTap={!prefersReducedMotion ? { scale: 0.95 } : undefined}
-                          transition={springs.snappy}
                           aria-label={confirmRemoveId === friend.id ? "Confirm remove friend" : "Remove friend"}
+                          className="focus-ring interactive-control"
                           style={{
                             ...smallButtonStyle,
                             background: confirmRemoveId === friend.id ? 'var(--error-200)' : 'var(--fill-04)',
@@ -666,10 +630,10 @@ export function FriendsSection({ userId }: FriendsSectionProps) {
                             </div>
                           </div>
                           <motion.button
+                            type="button"
                             onClick={() => handleSendRequest(profile.id)}
-                            whileTap={!prefersReducedMotion ? { scale: 0.95 } : undefined}
-                            transition={springs.snappy}
                             aria-label={`Send friend request to ${profile.displayName || profile.handle}`}
+                            className="focus-ring interactive-control"
                             style={{
                               ...smallButtonStyle,
                               background: 'var(--accent-200)',
@@ -685,10 +649,10 @@ export function FriendsSection({ userId }: FriendsSectionProps) {
 
                   {/* Invite link button */}
                   <motion.button
+                    type="button"
                     onClick={handleCopyInviteLink}
-                    whileTap={!prefersReducedMotion ? { scale: 0.97 } : undefined}
-                    transition={springs.snappy}
                     aria-label="Copy invite link to clipboard"
+                    className="focus-ring interactive-control"
                     style={{
                       width: '100%',
                       marginTop: spacing.sm,
@@ -707,20 +671,7 @@ export function FriendsSection({ userId }: FriendsSectionProps) {
                       cursor: 'pointer',
                     }}
                   >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                    </svg>
+                    <Icon name="action:link" size={14} />
                     Copy invite link
                   </motion.button>
                 </div>

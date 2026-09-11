@@ -6,14 +6,14 @@
  * transitions drive only `transform`, `opacity`, and `filter` — never
  * layout or paint properties.
  *
- * Components consume these configs via framer-motion's `AnimatePresence`,
+ * Components consume these configs via motion/react's `AnimatePresence`,
  * `motion` components, and `variants` props. The actual animation execution
- * is handled by framer-motion; this module provides the choreography.
+ * is handled by motion/react; this module provides the choreography.
  *
  * Validates: Requirements 8.1, 8.2, 8.4, 8.5, 8.7
  */
 
-import type { Transition, Variants } from "framer-motion"
+import type { Transition, Variants } from 'motion/react'
 
 import { springPresets } from "@/styles/motion"
 import { NAV_ORDER } from "@/lib/animations"

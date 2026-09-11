@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { TransactionList } from './TransactionList'
 import type { Transaction, TransactionCategory } from '@/types'
 import type { FundingSource } from '@/lib/fundingSources'

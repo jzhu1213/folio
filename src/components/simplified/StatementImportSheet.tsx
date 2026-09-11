@@ -15,7 +15,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { useReducedMotion } from '@/lib/animations'
 import type { TransactionCategory, Transaction } from '@/types'
 import { parseStatement, type ImportCandidate } from '@/lib/statementImport'

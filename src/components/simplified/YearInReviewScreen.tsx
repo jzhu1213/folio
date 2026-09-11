@@ -16,7 +16,7 @@
  */
 
 import { useMemo, useState, useCallback } from "react"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { springs } from "@/lib/animations"
 import { useReducedMotion } from "@/lib/animations"
 import { GlassCard } from "@/components/ui/GlassCard"

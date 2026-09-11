@@ -36,7 +36,7 @@ import {
   AnimatePresence,
   useMotionValue,
   useSpring,
-} from "framer-motion"
+} from 'motion/react'
 import { ProgressRing } from "@/components/ui/primitives/ProgressRing"
 import { AmbientGlow } from "@/components/ui/AmbientGlow"
 import type { AmbientGlowStatus } from "@/components/ui/AmbientGlow"
@@ -162,7 +162,7 @@ function ringColorToGlowStatus(
  * AnimatedAmount — Spring-driven digit interpolation using the responsive
  * preset. Width is held constant during animation to prevent adjacent shifts.
  *
- * Uses framer-motion's useMotionValue + useSpring to interpolate between
+ * Uses motion/react's useMotionValue + useSpring to interpolate between
  * values. The displayed number ticks through intermediate values as the
  * spring settles.
  */

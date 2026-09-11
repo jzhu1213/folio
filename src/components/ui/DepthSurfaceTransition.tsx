@@ -7,12 +7,12 @@
  * Two entry modes:
  * 1. **Shared-element continuity** — When the depth surface is opened from a
  *    visible Tools row (the user taps a row), supply a `layoutId`. The transition
- *    uses `sharedElementConfig.spring` and completes within 400ms.
+ *    uses Motion's layout animation with the shared token-derived timing.
  *
  * 2. **Standard surface entrance** — When the depth surface is opened without a
  *    visible origin (deep link, back nav, programmatic navigation, scrolled-out
  *    origin), omit `layoutId`. The transition uses a gentle opacity + translateY
- *    completing within 400ms.
+ *    using the shared token-derived timing.
  *
  * Both modes respect `prefers-reduced-motion` via reduced variants.
  *
@@ -20,15 +20,9 @@
  */
 
 import { type ReactNode, forwardRef, useEffect, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { useReducedMotion } from "@/lib/animations"
-import {
-  sharedElementVariants,
-  sharedElementVariantsReduced,
-  childEntryVariants,
-  childEntryVariantsReduced,
-  sharedElementConfig,
-} from "@/lib/transitions"
+import { fadeScaleIn, reducedFade } from "@/lib/motionPresets"
 import { elevations } from "@/styles/surfaces"
 import { zIndex } from "@/styles/tokens"
 import { safeArea } from "@/styles/layout"
@@ -43,7 +37,7 @@ export interface DepthSurfaceTransitionProps {
   /**
    * Optional layoutId for shared-element continuity.
    * When present, the origin Tools row and this surface share the same
-   * layoutId, enabling framer-motion's automatic layout animation.
+   * layoutId, enabling motion/react's automatic layout animation.
    * When absent, uses standard surface entrance (opacity + translateY).
    */
   layoutId?: string
@@ -154,19 +148,9 @@ export const DepthSurfaceTransition = forwardRef<HTMLDivElement, DepthSurfaceTra
       paddingBottom: safeArea.bottom,
     }
 
-    // Pick variants based on whether we have a layoutId (shared-element) or not
-    const hasSharedOrigin = !!layoutId
-    const variants = hasSharedOrigin
-      ? (prefersReducedMotion ? sharedElementVariantsReduced : sharedElementVariants)
-      : (prefersReducedMotion ? childEntryVariantsReduced : childEntryVariants)
-
-    // Transition config: shared-element uses spring, standard uses gentle spring
-    const transition = hasSharedOrigin
-      ? sharedElementConfig.spring
-      : (prefersReducedMotion
-          ? { type: "tween" as const, duration: 0.15 }
-          : { type: "spring" as const, stiffness: 200, damping: 24, mass: 1.0 }
-        )
+    // `layoutId` keeps Motion's shared-layout continuity; the visual enter and
+    // exit timing comes from the same token-derived presets as sheets/toasts.
+    const variants = prefersReducedMotion ? reducedFade : fadeScaleIn
 
     return (
       <AnimatePresence mode="wait">
@@ -184,7 +168,6 @@ export const DepthSurfaceTransition = forwardRef<HTMLDivElement, DepthSurfaceTra
             initial="initial"
             animate="enter"
             exit="exit"
-            transition={transition}
             role="dialog"
             aria-modal
             aria-label={ariaLabel}

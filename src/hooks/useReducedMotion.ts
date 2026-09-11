@@ -13,13 +13,13 @@
  * properties at their resting value and substitute opacity-only transitions of
  * at most 150ms for spring-driven movement (Requirement 6.8).
  *
- * Wraps framer-motion's `useReducedMotion` which subscribes to the OS-level
+ * Wraps motion/react's `useReducedMotion` which subscribes to the OS-level
  * media query reactively.
  *
  * Validates: Requirements 6.7, 6.8, 6.9
  */
 
-import { useReducedMotion as useFramerReducedMotion } from "framer-motion"
+import { useReducedMotion as useFramerReducedMotion } from 'motion/react'
 
 export interface UseReducedMotionReturn {
   /** True when the operating system reports `prefers-reduced-motion: reduce`. */

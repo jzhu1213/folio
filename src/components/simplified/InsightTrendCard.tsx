@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { timings, useReducedMotion } from "@/lib/animations"
 import type { Transaction } from "@/types"
 import { toMonthString } from "@/lib/budgetUtils"
@@ -27,7 +27,7 @@ export interface InsightTrendCardProps {
  * - Dismissible (stays dismissed for the session)
  * - Shows overall trend message
  * - Shows top 2-3 category movers
- * - Respects reduced motion via framer-motion defaults
+ * - Respects reduced motion via motion/react defaults
  * - Uses GlassCard with low elevation for a subtle presence
  *
  * Requirements: 9.4

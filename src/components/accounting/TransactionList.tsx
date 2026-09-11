@@ -1,6 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { TRANSACTION_CATEGORIES } from '@/types'
 import type { Transaction, TransactionCategory } from '@/types'
 import type { FundingSource } from '@/lib/fundingSources'

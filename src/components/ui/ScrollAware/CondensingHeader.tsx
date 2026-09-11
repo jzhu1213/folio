@@ -31,7 +31,7 @@
  */
 
 import type { ReactNode } from "react"
-import { motion, useTransform, type MotionValue } from "framer-motion"
+import { motion, useTransform, type MotionValue } from 'motion/react'
 import { useScrollProgress } from "@/hooks/useScrollProgress"
 
 export interface CondensingHeaderProps {

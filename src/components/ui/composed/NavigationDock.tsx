@@ -16,7 +16,7 @@
  */
 
 import React from "react"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { Icon } from "@/components/ui/Icon"
 import { elevations, radius } from "@/styles/surfaces"
 import { spacingScale, safeArea } from "@/styles/layout"

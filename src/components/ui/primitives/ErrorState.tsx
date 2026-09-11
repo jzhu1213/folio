@@ -15,7 +15,7 @@
  * Validates: Requirements 16.1, 16.2, 16.4
  */
 
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
 import { typography, FONT_FAMILY, fontWeights } from '@/styles/typography'
 import { spacingScale } from "@/styles/layout"

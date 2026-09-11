@@ -17,11 +17,11 @@
  * on the dock so it reads as floating above the mesh.
  *
  * Motion: the active nav item gets a spring scale + glow micro-interaction via
- * framer-motion, and a shared-layout highlight pill slides between items. All
+ * motion/react, and a shared-layout highlight pill slides between items. All
  * motion respects `prefers-reduced-motion` through {@link useReducedMotion}.
  *
  * Scroll-responsive chrome (Task 14.2): the top bar, FAB, and divider react
- * continuously to scroll position between 24–64px using framer-motion
+ * continuously to scroll position between 24–64px using motion/react
  * MotionValues (GPU-composited transform + opacity only). Collapses top chrome
  * ~40%, scales FAB down ~10%, and reveals a 3:1 contrast divider at the scroll
  * boundary. All transforms restore with a gentle spring settle (200–400ms)
@@ -40,7 +40,7 @@
  */
 
 import { type ReactNode, useCallback, useRef } from 'react'
-import { motion, AnimatePresence, useTransform, useMotionValue, useSpring } from 'framer-motion'
+import { motion, AnimatePresence, useTransform, useMotionValue, useSpring } from 'motion/react'
 import { GradientMesh, type GradientMeshVariant } from './GradientMesh'
 import { Icon } from './Icon'
 import { NavigationDock } from './composed/NavigationDock'

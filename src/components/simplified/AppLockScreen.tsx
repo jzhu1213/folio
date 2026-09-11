@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { springs, useReducedMotion } from "@/lib/animations"
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { HORIZONTAL_PADDING } from "@/styles/shared"

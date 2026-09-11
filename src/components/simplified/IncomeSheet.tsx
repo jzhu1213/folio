@@ -10,7 +10,7 @@ import { shadows, fills, colorRamp, roundButton, HORIZONTAL_PADDING } from '@/st
 import { radius } from '@/styles/surfaces'
 import type { FundingSource } from '@/lib/fundingSources'
 import { predictFundingSource } from '@/lib/fundingSources'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, useReducedMotion } from '@/lib/animations'
 import { triggerHaptic } from '@/lib/haptics'
 import { listFriends } from '@/lib/social/friends'

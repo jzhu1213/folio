@@ -8,7 +8,7 @@
  * Used for full-screen overlays that sit above the primary navigation
  * (celebration overlays, full-screen modals, etc.).
  *
- * Uses framer-motion AnimatePresence for enter/exit lifecycle.
+ * Uses motion/react AnimatePresence for enter/exit lifecycle.
  * Transition: gentle spring (opacity + translateY).
  *
  * Visual tokens from Design_Token_System:
@@ -24,7 +24,7 @@
  */
 
 import { type ReactNode, forwardRef, useEffect, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { elevations } from "@/styles/surfaces"
 import { zIndex } from "@/styles/tokens"
 import { safeArea } from "@/styles/layout"

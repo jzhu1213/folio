@@ -21,7 +21,7 @@
  */
 
 import React, { useMemo, useState, useEffect, useRef, useCallback } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { TransactionRow } from "@/components/ui/composed/TransactionRow"
 import { SwipeRevealActions } from "@/components/ui/composed/SwipeRevealActions"
 import { UndoToast } from "@/components/ui/composed/UndoToast"

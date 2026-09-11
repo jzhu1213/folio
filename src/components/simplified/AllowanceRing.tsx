@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { timings, useReducedMotion } from "@/lib/animations"
 import type { AllowanceStatus } from "@/types/folio"
 
@@ -37,7 +37,7 @@ function getStatusStrokeColor(status: AllowanceStatus): string {
  * AllowanceRing — an animated SVG progress ring that visualizes
  * the proportion of daily budget consumed.
  *
- * Uses framer-motion's motion.circle for GPU-accelerated stroke-dashoffset
+ * Uses motion/react's motion.circle for GPU-accelerated stroke-dashoffset
  * animation, ensuring smooth 60fps transitions via CSS transforms.
  *
  * A soft color-matched glow behind the progress stroke gives the ring ambient

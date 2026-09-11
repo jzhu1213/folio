@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, useReducedMotion } from '@/lib/animations'
 import type { TutorialStep } from './OnboardingTutorial'
 import type { BudgetPreset, OnboardingResult } from '@/types/folio'

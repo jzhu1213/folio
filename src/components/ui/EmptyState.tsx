@@ -29,9 +29,12 @@
 
 import type { ReactNode } from "react"
 import { useEffect, useRef } from "react"
-import { motion } from "framer-motion"
-import { springs, timings, useReducedMotion } from "@/lib/animations"
+import { motion } from 'motion/react'
+import { useReducedMotion } from "@/lib/animations"
+import { fadeScaleIn, reducedFade } from "@/lib/motionPresets"
 import { track } from "@/lib/analytics"
+import { Icon } from "@/components/ui/Icon"
+import type { IconName } from "@/lib/icons"
 import {
   emptyStateContainer,
   emptyStateTitle,
@@ -84,209 +87,20 @@ export interface EmptyStateProps {
 }
 
 // ============================================================================
-// Inline SVG illustrations (48×48, `currentColor` + accent vars)
+// Illustration icon mapping
 // ============================================================================
 
-function IllustrationTransactions() {
-  return (
-    <svg
-      width="48"
-      height="48"
-      viewBox="0 0 48 48"
-      fill="none"
-      aria-hidden="true"
-      style={{ color: semanticColors.accent }}
-    >
-      {/* Notepad body */}
-      <rect x="12" y="8" width="24" height="32" rx="4" stroke="currentColor" strokeWidth="1.5" opacity="0.6" />
-      {/* Lines on notepad */}
-      <line x1="17" y1="17" x2="31" y2="17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
-      <line x1="17" y1="23" x2="28" y2="23" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
-      <line x1="17" y1="29" x2="25" y2="29" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
-      {/* Sparkle (top-right) */}
-      <path
-        d="M36 10 L37 13 L40 14 L37 15 L36 18 L35 15 L32 14 L35 13 Z"
-        fill="currentColor"
-        opacity="0.8"
-      />
-      {/* Small sparkle (bottom-left) */}
-      <circle cx="10" cy="36" r="1.5" fill="currentColor" opacity="0.5" />
-    </svg>
-  )
+const ILLUSTRATION_ICONS: Record<EmptyStateIllustration, IconName> = {
+  transactions: "nav:history",
+  goals: "tool:sinking-funds",
+  filter: "tip:anomaly",
+  review: "tip:savings",
+  budget: "tip:goal",
+  generic: "tip:info",
 }
 
-function IllustrationGoals() {
-  return (
-    <svg
-      width="48"
-      height="48"
-      viewBox="0 0 48 48"
-      fill="none"
-      aria-hidden="true"
-      style={{ color: semanticColors.accent }}
-    >
-      {/* Gentle hill */}
-      <path
-        d="M4 40 Q16 28 24 30 Q32 32 44 24"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        opacity="0.3"
-        fill="none"
-      />
-      {/* Flag pole */}
-      <line x1="32" y1="12" x2="32" y2="28" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.7" />
-      {/* Flag */}
-      <path
-        d="M32 12 L40 16 L32 20 Z"
-        fill="currentColor"
-        opacity="0.6"
-      />
-      {/* Small star accent */}
-      <path
-        d="M14 14 L15 16 L17 16.5 L15.5 18 L16 20 L14 19 L12 20 L12.5 18 L11 16.5 L13 16 Z"
-        fill="currentColor"
-        opacity="0.5"
-      />
-    </svg>
-  )
-}
-
-function IllustrationFilter() {
-  return (
-    <svg
-      width="48"
-      height="48"
-      viewBox="0 0 48 48"
-      fill="none"
-      aria-hidden="true"
-      style={{ color: semanticColors.accent }}
-    >
-      {/* Magnifying glass */}
-      <circle cx="22" cy="22" r="10" stroke="currentColor" strokeWidth="1.5" opacity="0.6" />
-      <line x1="29.5" y1="29.5" x2="37" y2="37" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
-      {/* Soft horizontal lines inside (representing filtered-out content) */}
-      <line x1="17" y1="20" x2="27" y2="20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
-      <line x1="18" y1="24" x2="25" y2="24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
-      {/* Gentle dot accent */}
-      <circle cx="38" cy="12" r="2" fill="currentColor" opacity="0.4" />
-    </svg>
-  )
-}
-
-function IllustrationReview() {
-  return (
-    <svg
-      width="48"
-      height="48"
-      viewBox="0 0 48 48"
-      fill="none"
-      aria-hidden="true"
-      style={{ color: semanticColors.accent }}
-    >
-      {/* Pot / soil line */}
-      <path
-        d="M16 38 Q24 40 32 38"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        opacity="0.4"
-      />
-      {/* Stem */}
-      <line x1="24" y1="20" x2="24" y2="36" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
-      {/* Left leaf */}
-      <path
-        d="M24 28 Q18 24 20 18"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.6"
-      />
-      {/* Right leaf */}
-      <path
-        d="M24 24 Q30 20 30 14"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.6"
-      />
-      {/* Sparkle top */}
-      <path
-        d="M24 8 L25 11 L28 12 L25 13 L24 16 L23 13 L20 12 L23 11 Z"
-        fill="currentColor"
-        opacity="0.7"
-      />
-    </svg>
-  )
-}
-
-function IllustrationBudget() {
-  return (
-    <svg
-      width="48"
-      height="48"
-      viewBox="0 0 48 48"
-      fill="none"
-      aria-hidden="true"
-      style={{ color: semanticColors.accent }}
-    >
-      {/* Target rings */}
-      <circle cx="24" cy="24" r="14" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
-      <circle cx="24" cy="24" r="9" stroke="currentColor" strokeWidth="1.5" opacity="0.5" />
-      <circle cx="24" cy="24" r="4" fill="currentColor" opacity="0.6" />
-      {/* Sparkle accent */}
-      <path
-        d="M38 10 L39 12.5 L41.5 13.5 L39 14.5 L38 17 L37 14.5 L34.5 13.5 L37 12.5 Z"
-        fill="currentColor"
-        opacity="0.6"
-      />
-    </svg>
-  )
-}
-
-function IllustrationGeneric() {
-  return (
-    <svg
-      width="48"
-      height="48"
-      viewBox="0 0 48 48"
-      fill="none"
-      aria-hidden="true"
-      style={{ color: semanticColors.accent }}
-    >
-      {/* Central sparkle */}
-      <path
-        d="M24 12 L26 19 L33 20 L26 22 L24 29 L22 22 L15 20 L22 19 Z"
-        fill="currentColor"
-        opacity="0.6"
-      />
-      {/* Small orbiting dots */}
-      <circle cx="12" cy="32" r="2" fill="currentColor" opacity="0.4" />
-      <circle cx="36" cy="32" r="1.5" fill="currentColor" opacity="0.3" />
-      <circle cx="18" cy="38" r="1" fill="currentColor" opacity="0.3" />
-    </svg>
-  )
-}
-
-/** Resolves a named illustration key to its SVG component. */
 function resolveIllustration(illustration: EmptyStateIllustration): ReactNode {
-  switch (illustration) {
-    case "transactions":
-      return <IllustrationTransactions />
-    case "goals":
-      return <IllustrationGoals />
-    case "filter":
-      return <IllustrationFilter />
-    case "review":
-      return <IllustrationReview />
-    case "budget":
-      return <IllustrationBudget />
-    case "generic":
-    default:
-      return <IllustrationGeneric />
-  }
+  return <Icon name={ILLUSTRATION_ICONS[illustration]} size={32} />
 }
 
 // ============================================================================
@@ -329,12 +143,13 @@ export function EmptyState({
       : `1px solid ${colorRamp.accent[300]}`
   const actionTextColor =
     actionColor === "success" ? semanticColors.success : semanticColors.accent
+  const variants = prefersReducedMotion ? reducedFade : fadeScaleIn
 
   return (
     <motion.div
-      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
-      animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-      transition={prefersReducedMotion ? timings.fast : springs.gentle}
+      variants={variants}
+      initial="initial"
+      animate="enter"
       style={{
         ...emptyStateContainer,
         padding: "32px 20px",
@@ -359,8 +174,7 @@ export function EmptyState({
             }
             onAction()
           }}
-          whileTap={{ scale: prefersReducedMotion ? 1 : 0.96 }}
-          transition={springs.snappy}
+          className="focus-ring interactive-control"
           style={{
             ...emptyStateAction,
             background: actionBg,
@@ -378,8 +192,7 @@ export function EmptyState({
         <motion.button
           type="button"
           onClick={onSecondary}
-          whileTap={{ scale: prefersReducedMotion ? 1 : 0.96 }}
-          transition={springs.snappy}
+          className="focus-ring interactive-control"
           style={{
             background: "none",
             border: "none",

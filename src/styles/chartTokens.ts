@@ -149,7 +149,7 @@ export const chartMotion = {
 
 /**
  * Shared chart entrance motion config — identical ≤400ms duration across all chart views.
- * Used as the framer-motion transition for chart content becoming visible inside ChartFrame.
+ * Used as the motion/react transition for chart content becoming visible inside ChartFrame.
  * Validates: Requirement 15.5
  */
 export const chartEntranceMotion = {

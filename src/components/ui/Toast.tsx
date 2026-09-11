@@ -2,13 +2,14 @@
 
 import { useToast } from '@/contexts/ToastContext'
 import type { Toast as ToastType } from '@/contexts/ToastContext'
-import { motion, AnimatePresence } from 'framer-motion'
-import { springs, timings, useReducedMotion } from '@/lib/animations'
+import { motion, AnimatePresence } from 'motion/react'
+import { useReducedMotion } from '@/lib/animations'
 import { Icon } from '@/components/ui/Icon'
 import { GlassCard } from '@/components/ui/GlassCard'
 import type { IconName } from '@/lib/icons'
 import { FONT_FAMILY, typography, fontWeights } from '@/styles/typography'
 import { radius } from '@/styles/surfaces'
+import { reducedFade, toastSlide } from '@/lib/motionPresets'
 
 /** Map toast type to its semantic icon name. */
 function getToastIcon(type: ToastType['type']): IconName {
@@ -28,26 +29,11 @@ function getAccentColor(type: ToastType['type']): string {
   }
 }
 
-/** Framer Motion variants for toast entrance/exit with spring slide-up. */
-const toastVariants = {
-  initial: { opacity: 0, y: 16, scale: 0.96 },
-  animate: { opacity: 1, y: 0, scale: 1 },
-  exit: { opacity: 0, y: 8, scale: 0.97 },
-}
-
-/** Reduced-motion variants: opacity only, no translation or scale. */
-const toastVariantsReduced = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
-}
-
 export function Toast() {
   const { toasts, removeToast, pauseToast, resumeToast } = useToast()
   const { prefersReducedMotion } = useReducedMotion()
 
-  const variants = prefersReducedMotion ? toastVariantsReduced : toastVariants
-  const transition = prefersReducedMotion ? timings.fast : springs.snappy
+  const variants = prefersReducedMotion ? reducedFade : toastSlide
 
   return (
     <div
@@ -63,7 +49,6 @@ export function Toast() {
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={transition}
             role="status"
             aria-live="polite"
             // Pause auto-dismiss on hover/focus for motor accessibility (Req 27.3)

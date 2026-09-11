@@ -87,6 +87,8 @@ import {
   Trash2,
   X,
   ChevronLeft,
+  ChevronDown,
+  Link,
   Sun,
   Moon,
   // Toast
@@ -194,6 +196,8 @@ export type IconName =
   | 'action:delete'
   | 'action:close'
   | 'action:back'
+  | 'action:expand'
+  | 'action:link'
   | 'chrome:sun'
   | 'chrome:moon'
   // ── Toast status icons ───────────────────────────────────────────────────
@@ -300,6 +304,8 @@ export const ICON_REGISTRY = {
   'action:delete': Trash2,
   'action:close': X,
   'action:back': ChevronLeft,
+  'action:expand': ChevronDown,
+  'action:link': Link,
   'chrome:sun': Sun,
   'chrome:moon': Moon,
   // ── Toast status icons ────────────────────────────────────────────────────

@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
 import { spacingScale } from "@/styles/layout"
 import { typography, pxToRem, fontWeights } from '@/styles/typography'

@@ -5,7 +5,7 @@ import { useTranslation } from "@/contexts/I18nContext"
 import type { Transaction, TransactionCategory } from "@/types"
 import type { DailyAllowance } from "@/types/folio"
 import type { FundingSource } from "@/lib/fundingSources"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { useReducedMotion, timings } from "@/lib/animations"
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { spacingScale } from "@/styles/layout"

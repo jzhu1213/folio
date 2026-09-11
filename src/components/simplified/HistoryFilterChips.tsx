@@ -16,7 +16,7 @@
  */
 
 import { useState, useCallback, useMemo, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { TRANSACTION_CATEGORIES } from "@/types"
 import type { TransactionCategory, Transaction } from "@/types"
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'

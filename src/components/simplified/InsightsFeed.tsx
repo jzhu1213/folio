@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useCallback } from "react"
-import { AnimatePresence } from "framer-motion"
+import { AnimatePresence } from 'motion/react'
 import type { Transaction } from "@/types"
 import { detectAllPatterns } from "@/lib/spendingInsights"
 import { selectBestInsight, recordInsightShown } from "@/lib/insightCadence"

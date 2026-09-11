@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
 import { elevations, radius } from "@/styles/surfaces"
 import { colorRamp } from "@/styles/colors"
@@ -17,7 +17,7 @@ import { shadows } from "@/styles/shared"
  *
  * All visual values resolve from the Design_Token_System.
  * Hit area ≥ 44×44px (via padding when sm).
- * Press animation via framer-motion (snappy spring for knob, bouncy for state change).
+ * Press animation via motion/react (snappy spring for knob, bouncy for state change).
  * No arbitrary style props exposed.
  *
  * Requirements: 16.1, 16.2, 16.4

@@ -21,7 +21,7 @@
  */
 
 import React, { useMemo } from "react"
-import { motion, AnimatePresence, type Variants } from "framer-motion"
+import { motion, AnimatePresence, type Variants } from 'motion/react'
 import { AllowanceHero } from "@/components/ui/composed/AllowanceHero"
 import { QuickLogControl } from "@/components/ui/composed/QuickLogControl"
 import { TransactionRow } from "@/components/ui/composed/TransactionRow"

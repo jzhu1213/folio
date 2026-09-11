@@ -6,7 +6,7 @@
  * A small, composable hook that turns scroll position into GPU-friendly
  * motion values other components can bind to `transform` / `opacity`.
  *
- * It wraps framer-motion's `useScroll`, so the returned `scrollY` and
+ * It wraps motion/react's `useScroll`, so the returned `scrollY` and
  * `progress` are `MotionValue`s — reading them drives style updates on the
  * compositor thread (off the main thread) rather than triggering React
  * re-renders on every scroll frame.
@@ -28,7 +28,7 @@
  * Start/end clamping: the `start` and `end` options define the scroll pixel
  * range over which progress ramps from 0→1. Values outside this range are
  * clamped, ensuring progress stays within [0, 1]. Updates happen per animation
- * frame via framer-motion's scroll subscription.
+ * frame via motion/react's scroll subscription.
  *
  * Validates: Requirements 6.7, 6.8, 6.9, 13.1, 13.5, 8.4
  */
@@ -39,8 +39,8 @@ import {
   useSpring,
   useTransform,
   type MotionValue,
-} from "framer-motion"
-import { springs } from "@/lib/animations"
+} from 'motion/react'
+import { motionTransitions } from "@/lib/motionPresets"
 import { useReducedMotion } from "@/hooks/useReducedMotion"
 
 export interface UseScrollProgressOptions {
@@ -86,7 +86,7 @@ export interface ScrollProgress {
  * Track scroll and expose it as normalized, GPU-composited motion values.
  *
  * Progress is clamped between 0 and 1 based on the `start` and `end` scroll
- * positions. Updates happen per animation frame (driven by framer-motion's
+ * positions. Updates happen per animation frame (driven by motion/react's
  * scroll subscription which uses requestAnimationFrame internally).
  *
  * @example
@@ -118,13 +118,13 @@ export function useScrollProgress(
   const { scrollY } = useScroll(container ? { container } : undefined)
 
   // Map scroll position to [0, 1] with clamping at start and end boundaries.
-  // framer-motion's useTransform updates per animation frame via rAF.
+  // motion/react's useTransform updates per animation frame via rAF.
   const rawProgress = useTransform(scrollY, [start, clampedEnd], [0, 1], {
     clamp: true,
   })
 
   // Always create the spring (Rules of Hooks) but only surface it when asked.
-  const springProgress = useSpring(rawProgress, springs.gentle)
+  const springProgress = useSpring(rawProgress, motionTransitions.scroll)
 
   return {
     scrollY,
@@ -149,5 +149,5 @@ export function useScrollProgress(
 export function useSpringScroll(
   value: MotionValue<number>,
 ): MotionValue<number> {
-  return useSpring(value, springs.gentle)
+  return useSpring(value, motionTransitions.scroll)
 }

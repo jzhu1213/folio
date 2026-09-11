@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useEffect, useCallback } from "react"
-import { useMotionValue, useTransform, type MotionValue } from "framer-motion"
+import { useMotionValue, useTransform, type MotionValue } from 'motion/react'
 
 /**
  * useRubberBand — applies tasteful rubber-band / overscroll physics to a

@@ -53,11 +53,11 @@ export interface GlassCardProps extends HTMLAttributes<HTMLDivElement> {
 
 /** Halo colors for the semantic glow presets (tuned to the cooler theme). */
 const GLOW_PRESET_COLORS: Record<Exclude<GlowPreset, 'none'>, string> = {
-  healthy: 'rgba(6, 214, 160, 0.30)',     // --success teal
-  caution: 'rgba(245, 158, 11, 0.30)',    // --warning amber
-  warning: 'rgba(245, 158, 11, 0.40)',    // urgent amber
-  over: 'rgba(239, 68, 68, 0.38)',        // --error red
-  celebration: 'rgba(129, 140, 248, 0.40)', // warm purple
+  healthy: 'var(--success-muted)',
+  caution: 'var(--warning-muted)',
+  warning: 'var(--warning-muted)',
+  over: 'var(--danger-muted)',
+  celebration: 'var(--accent-muted)',
 }
 
 function resolveGlow(glow: GlassGlow): string | null {

@@ -16,7 +16,7 @@
  */
 
 import { useMemo, useState, useCallback } from "react"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { springs, useReducedMotion } from "@/lib/animations"
 import { GlassCard } from "@/components/ui/GlassCard"
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'

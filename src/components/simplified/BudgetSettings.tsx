@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings } from "@/lib/animations"
 import { GlassCard } from "@/components/ui/GlassCard"
 import { isCategoryRolloverEnabled, setCategoryRolloverEnabled } from "@/lib/budgetUtils"

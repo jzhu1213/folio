@@ -16,7 +16,7 @@
  */
 
 import { type ReactNode, forwardRef } from "react"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { elevations, radius } from "@/styles/surfaces"
 
 // ============================================================================

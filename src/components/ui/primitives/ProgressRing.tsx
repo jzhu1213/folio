@@ -21,7 +21,7 @@
  */
 
 import { useEffect, useState } from "react"
-import { motion, useReducedMotion as useFramerReducedMotion } from "framer-motion"
+import { motion, useReducedMotion as useFramerReducedMotion } from 'motion/react'
 import { springs } from "@/lib/animations"
 import { colorRamp } from "@/styles/colors"
 import { FONT_FAMILY, fontWeights } from '@/styles/typography'

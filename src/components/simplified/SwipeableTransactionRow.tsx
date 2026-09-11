@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion"
+import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
 import { springPresets } from "@/styles/motion"
 import { Icon } from "@/components/ui/Icon"

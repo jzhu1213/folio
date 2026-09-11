@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { motion } from "framer-motion"
+import { motion } from 'motion/react'
 import { springs } from "@/lib/animations"
 import { ManagedListScreen, type ItemRenderContext } from "@/components/ui/ManagedListScreen"
 import { BUDGET_CATEGORIES } from "@/types"

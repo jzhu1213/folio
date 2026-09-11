@@ -30,7 +30,7 @@ import { EmptyState } from "@/components/ui/EmptyState"
 import { recordLastActive } from "@/lib/reminderPreferences"
 import { getInsightsEnabled, getSavingsRateBadgeEnabled } from "@/lib/uiPreferences"
 import { getPaceIndicatorEnabled } from "@/lib/paceIndicatorPreferences"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings, STAGGER_STEP, layoutTransition, useReducedMotion as useAppReducedMotion } from "@/lib/animations"
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { formatMoney } from '@/lib/localeFormat'
@@ -74,7 +74,7 @@ import type { ChecklistStep } from '@/lib/setupChecklist'
 import { HeroContextRow } from "./HeroContextRow"
 import dynamic from "next/dynamic"
 
-// Code-split: celebration animations are heavy (canvas-confetti + framer-motion
+// Code-split: celebration animations are heavy (canvas-confetti + motion/react
 // particle layers) and only needed when a milestone is hit. Lazy-loading keeps
 // them out of the initial bundle entirely. (Requirement 13.6)
 const CelebrationOverlay = dynamic(

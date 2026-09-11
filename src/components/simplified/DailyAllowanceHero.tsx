@@ -6,7 +6,7 @@ import {
   AnimatePresence,
   useMotionValue,
   useSpring,
-} from "framer-motion"
+} from 'motion/react'
 import type { AllowanceStatus, HeroMeaning, HeroDisplay, ConfidenceBand } from "@/types/folio"
 import { getStatus, generateEncouragingMessage } from "@/lib/dailyAllowanceUtils"
 import { GlassCard, AmbientGlow } from "@/components/ui"
@@ -210,7 +210,7 @@ const HERO_COUNTER_SPRING = { type: "spring" as const, stiffness: 300, damping: 
  * AnimatedAmount — the large dollar amount rendered with a spring-driven
  * counter and a slow-moving gradient text fill.
  *
- * The number ticks up/down toward the target `value` using framer-motion's
+ * The number ticks up/down toward the target `value` using motion/react's
  * `useMotionValue` + `useSpring`. The visible text is derived from the spring
  * so it counts through the intermediate integers. Under reduced motion the
  * value is shown immediately with a static color (no gradient animation).

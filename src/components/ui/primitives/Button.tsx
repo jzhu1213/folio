@@ -14,7 +14,7 @@
  */
 
 import React from 'react'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { FONT_FAMILY, typography } from '@/styles/typography'
 import { radius } from '@/styles/surfaces'
 import { spacingScale } from '@/styles/layout'

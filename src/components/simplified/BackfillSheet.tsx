@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings } from '@/lib/animations'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Icon } from '@/components/ui/Icon'

@@ -9,9 +9,8 @@ import {
 } from 'motion/react'
 import type { AllowanceStatus, HeroMeaning, HeroDisplay, ConfidenceBand } from "@/types/folio"
 import { getStatus, generateEncouragingMessage } from "@/lib/dailyAllowanceUtils"
-import { GlassCard, AmbientGlow } from "@/components/ui"
+import { GlassCard } from "@/components/ui"
 import { useReducedMotion, springs, timings } from "@/lib/animations"
-import { useTimeOfDay } from "@/hooks/useTimeOfDay"
 import { typography, pxToRem, animatedFontWeight, fontWeights } from "@/styles/typography"
 import { fills } from "@/styles/shared"
 import { colorRamp, semanticColors, textColors } from "@/styles/colors"
@@ -83,14 +82,6 @@ function getStatusColor(status: AllowanceStatus): string {
 }
 
 /**
- * Maps an allowance status to the semantic glow preset understood by
- * GlassCard and AmbientGlow.
- */
-function getStatusGlow(status: AllowanceStatus): AllowanceStatus {
-  return status
-}
-
-/**
  * Maps an allowance status to an emoji and a short phrase for the instant
  * visual answer. Designed to communicate "am I okay today?" in under 1 second
  * — no number-reading required.
@@ -149,24 +140,6 @@ function getTrackerMessage(spentToday: number, dailyBudget: number): string {
     return "A bit more than your usual — totally fine"
   }
   return "Higher than most days — just so you know"
-}
-
-/**
- * Two-stop gradient (per status) used for the slow-moving gradient text fill
- * on the dollar amount. Both stops stay bright enough for AA contrast on the
- * dark theme surface.
- */
-function getStatusGradient(status: AllowanceStatus): { from: string; to: string } {
-  switch (status) {
-    case "healthy":
-      return { from: colorRamp.success[500], to: colorRamp.success[200] }
-    case "caution":
-      return { from: colorRamp.warning[500], to: colorRamp.caution[400] }
-    case "warning":
-      return { from: colorRamp.warning[600], to: colorRamp.warning[500] }
-    case "over":
-      return { from: colorRamp.error[500], to: colorRamp.error[300] }
-  }
 }
 
 /**
@@ -229,8 +202,6 @@ function AnimatedAmount({
   status: AllowanceStatus
   prefersReducedMotion: boolean
 }) {
-  const grad = getStatusGradient(status)
-
   // Start from the actual value so the hero paints immediately (task 3.5).
   // On subsequent updates the spring animates the transition.
   const motionValue = useMotionValue(value)
@@ -280,7 +251,6 @@ function AnimatedAmount({
 
   return (
     <span
-      className={prefersReducedMotion ? undefined : "hero-amount"}
       style={{
         ...typography.display,
         fontSize: "clamp(2rem, 10vw, 2.875rem)",
@@ -289,51 +259,12 @@ function AnimatedAmount({
         textAlign: "center",
         fontVariantNumeric: "tabular-nums",
         ...fontWeightStyle,
-        ...(prefersReducedMotion
-          ? { color: grad.from }
-          : ({
-              ["--hero-grad-from" as string]: grad.from,
-              ["--hero-grad-to" as string]: grad.to,
-            } as Record<string, string>)),
+        color: getStatusColor(status),
       }}
       aria-hidden="true"
     >
       {formatCurrency(shown)}
     </span>
-  )
-}
-
-/** Number of twinkle particles arranged around the ring when healthy. */
-const SHIMMER_PARTICLE_COUNT = 4
-
-/**
- * ShimmerParticles — a barely-visible ring of twinkling dots positioned
- * around the AllowanceRing. Rendered only when the status is healthy (and
- * motion is allowed). Purely decorative, so `aria-hidden`.
- */
-function ShimmerParticles({ size }: { size: number }) {
-  const radius = size / 2 - 2
-  return (
-    <div aria-hidden="true">
-      {Array.from({ length: SHIMMER_PARTICLE_COUNT }).map((_, i) => {
-        const angle = (i / SHIMMER_PARTICLE_COUNT) * Math.PI * 2
-        const x = size / 2 + radius * Math.cos(angle)
-        const y = size / 2 + radius * Math.sin(angle)
-        return (
-          <span
-            key={i}
-            className="hero-shimmer-particle"
-            style={{
-              left: x,
-              top: y,
-              marginInlineStart: -2,
-              marginTop: -2,
-              animationDelay: `${i * 0.4}s`,
-            }}
-          />
-        )
-      })}
-    </div>
   )
 }
 
@@ -416,7 +347,6 @@ export function DailyAllowanceHero({
   spendingMode = 'guided',
   heroMeaning,
   heroDisplay,
-  isNewDay,
   periodTransitionText,
   onDismissPeriodTransition,
   isEstimated,
@@ -426,7 +356,6 @@ export function DailyAllowanceHero({
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [showExplainer, setShowExplainer] = useState(false)
   const { prefersReducedMotion, listContainer, listItem } = useReducedMotion()
-  const atmosphere = useTimeOfDay()
   const t = useTranslation()
 
   // ── Task 484.3: Long-press to open affordability check ──────────────────
@@ -601,22 +530,6 @@ export function DailyAllowanceHero({
 
   const ringSize = 180
   const progress = ringProgress
-  const clampedProgress = Math.max(0, Math.min(1, progress))
-
-  // Soft depth shadow beneath the ring shifts horizontally with progress.
-  // Task 248.1: deeper blur + stronger opacity range for a floating effect.
-  const shadowShift = (clampedProgress - 0.5) * ringSize * 0.25
-  const shadowOpacity = 0.2 + clampedProgress * 0.25
-  const shadowTransition = prefersReducedMotion ? { duration: 0 } : springs.gentle
-
-  // Shimmer: show when status is healthy (works for all meanings)
-  const showShimmer = !hasCustomDisplay && isTrackerMode
-    ? (spentToday === 0 || (dailyBudget > 0 && spentToday / dailyBudget < 0.5)) && !prefersReducedMotion
-    : status === "healthy" && !prefersReducedMotion
-
-  // Glow: always follows the resolved status
-  const glowStatus = getStatusGlow(status)
-
   // Breakdown rows — icon accent, label, formatted value and value color.
   // In tracker mode: "spent today" is the headline, no "safe to spend" concept.
   const breakdownRows: {
@@ -742,36 +655,9 @@ export function DailyAllowanceHero({
   return (
     <GlassCard
       elevation="high"
-      glow={glowStatus}
-      className="w-full relative"
+      className="monthly-runway-hero w-full relative"
       style={{ padding: "28px 20px", overflow: "visible" }}
     >
-      {/* Breathing ambient light behind the number — time-of-day atmosphere (Task 249.1) */}
-      <div
-        className={prefersReducedMotion ? undefined : "hero-breathe"}
-        style={prefersReducedMotion ? undefined : {
-          ["--hero-breathe-duration" as string]: `${atmosphere.breatheDuration}s`,
-          ["--hero-breathe-opacity-min" as string]: String(atmosphere.breatheOpacityMin),
-          ["--hero-breathe-opacity-max" as string]: String(atmosphere.breatheOpacityMax),
-          ["--hero-breathe-scale" as string]: String(atmosphere.breatheScale),
-        } as React.CSSProperties}
-      >
-        <AmbientGlow status={status} size="lg" intensity="medium" position="center" />
-      </div>
-
-      {/* Time-of-day tint — purely atmospheric, sits underneath status glow */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          inset: 0,
-          borderRadius: "inherit",
-          background: atmosphere.tintColor,
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      />
-
       <motion.button
         type="button"
         className="flex flex-col items-center gap-2 w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-lg"
@@ -883,46 +769,8 @@ export function DailyAllowanceHero({
           </p>
         )}
 
-        {/* Ring with depth shadow + shimmer particles */}
+        {/* The runway ring remains flat; the card carries the sole tonal wash. */}
         <div className="relative" style={{ width: ringSize, height: ringSize }}>
-          {/* Soft depth shadow beneath the ring, shifting with progress (Task 248.1: refined) */}
-          <motion.div
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              left: "50%",
-              bottom: -6,
-              width: ringSize * 0.5,
-              height: 18,
-              marginInlineStart:  -(ringSize * 0.5) / 2,
-              borderRadius: "50%",
-              background: color,
-              filter: "blur(18px)",
-              pointerEvents: "none",
-            }}
-            animate={{ x: shadowShift, opacity: shadowOpacity }}
-            transition={shadowTransition}
-          />
-
-          {/* Task 483.1: New-day ring glow pulse — single brief animation on day change */}
-          {isNewDay && !prefersReducedMotion && (
-            <div
-              className="hero-ring-newday-glow"
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                inset: -8,
-                borderRadius: "50%",
-                background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
-                pointerEvents: "none",
-                zIndex: 0,
-              }}
-            />
-          )}
-
-          {/* Barely-visible shimmer around the ring when healthy */}
-          {showShimmer && <ShimmerParticles size={ringSize} />}
-
           <AllowanceRing
             progress={progress}
             status={status}

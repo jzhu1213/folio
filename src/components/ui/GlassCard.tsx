@@ -1,101 +1,35 @@
 /**
- * GlassCard
+ * Flat elevated surface retained for existing composition call sites.
  *
- * A reusable frosted-glass surface for the premium Folio UI. It renders a
- * translucent, blurred panel (`backdrop-filter: blur(6px) saturate(140%)`)
- * over the animated mesh background, with a 0.5px gradient rim (cyan-tinted
- * glow at top, fading to near-transparent) and a drop-shadow.
- *
- * - `elevation` controls blur intensity, rim brightness and shadow depth.
- * - `glow` adds a contextual colored halo tied to allowance status (healthy,
- *   caution, warning, over) or celebrations — or any custom CSS color.
- *
- * The visual treatment lives in `.glass-card*` classes in globals.css. This
- * component is a plain typed wrapper (no hooks), so it stays a server
- * component and can be used anywhere.
- *
- * Accessibility: the translucent fill is only ~4% white over the dark theme
- * background, so the effective surface stays dark and the theme's pure-white
- * text keeps WCAG AA contrast. Browsers without `backdrop-filter` fall back to
- * an opaque surface (handled in globals.css) so text is never unreadable.
+ * The public elevation and glow props remain compatible while the visual
+ * treatment now uses only the shared warm surface, border, and shadow tokens.
  */
-
 import type { HTMLAttributes } from 'react'
 
-/** How much the card lifts off the background. */
 export type GlassElevation = 'low' | 'medium' | 'high'
-
-/** Semantic halo presets that map to allowance status and celebrations. */
-export type GlowPreset =
-  | 'none'
-  | 'healthy'
-  | 'caution'
-  | 'warning'
-  | 'over'
-  | 'celebration'
-
-/**
- * Any custom CSS color for the halo (e.g. `#facc15`, `rgba(...)`, `var(--x)`).
- * The `& {}` keeps the preset literals visible in editor autocomplete while
- * still allowing arbitrary strings.
- */
+export type GlowPreset = 'none' | 'healthy' | 'caution' | 'warning' | 'over' | 'celebration'
 export type GlowColor = string & {}
-
-/** Accepted values for the `glow` prop. */
 export type GlassGlow = GlowPreset | GlowColor
 
 export interface GlassCardProps extends HTMLAttributes<HTMLDivElement> {
-  /** Blur intensity, rim brightness and shadow depth. Defaults to `medium`. */
+  /** Maps to a flat surface elevation. Defaults to `medium`. */
   elevation?: GlassElevation
-  /** Contextual colored edge lighting. Defaults to `none`. */
+  /** @deprecated Preserved for callers; glows are intentionally no longer rendered. */
   glow?: GlassGlow
-}
-
-/** Halo colors for the semantic glow presets (tuned to the cooler theme). */
-const GLOW_PRESET_COLORS: Record<Exclude<GlowPreset, 'none'>, string> = {
-  healthy: 'var(--success-muted)',
-  caution: 'var(--warning-muted)',
-  warning: 'var(--warning-muted)',
-  over: 'var(--danger-muted)',
-  celebration: 'var(--accent-muted)',
-}
-
-function resolveGlow(glow: GlassGlow): string | null {
-  if (glow === 'none') return null
-  if (glow in GLOW_PRESET_COLORS) {
-    return GLOW_PRESET_COLORS[glow as Exclude<GlowPreset, 'none'>]
-  }
-  // Any other string is treated as a custom CSS color.
-  return glow
 }
 
 export function GlassCard({
   elevation = 'medium',
-  glow = 'none',
+  glow: _glow = 'none',
   className = '',
   style,
   children,
   ...rest
 }: GlassCardProps) {
-  const glowColor = resolveGlow(glow)
-
-  const classes = [
-    'glass-card',
-    `glass-card--${elevation}`,
-    glowColor ? 'glass-card--glow' : '',
-    className,
-  ]
-    .filter(Boolean)
-    .join(' ')
-
   return (
     <div
-      className={classes}
-      style={
-        glowColor
-          ? ({ ...style, ['--glass-glow' as string]: glowColor } as typeof style)
-          : style
-      }
+      className={['glass-card', `glass-card--${elevation}`, className].filter(Boolean).join(' ')}
+      style={style}
       {...rest}
     >
       {children}

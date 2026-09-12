@@ -47,7 +47,7 @@
   --surface-canvas: var(--neutral-0);
   --surface-recessed: var(--neutral-50);
   --surface-quiet: var(--neutral-100);
-  --surface-raised: var(--neutral-200);
+  --surface-raised: var(--neutral-0);
   --border-default-color: var(--neutral-400);
   --border-strong-color: var(--neutral-500);
   --text-primary: var(--neutral-900);
@@ -61,7 +61,7 @@
   --color-raised:   var(--surface-raised);
   --color-overlay:  var(--surface-raised);
 
-  /* Opaque fallback fills (non-backdrop-filter browsers, Req 4.10) */
+  /* Flat surface fallbacks remain intentionally identical to their fills. */
   --color-raised-opaque:  var(--surface-raised);
   --color-overlay-opaque: var(--surface-raised);
 
@@ -92,9 +92,9 @@
   --color-blue-50: var(--accent-muted); --color-blue-100: var(--accent-muted); --color-blue-200: var(--accent-muted); --color-blue-300: var(--accent); --color-blue-400: var(--accent); --color-blue-500: var(--accent); --color-blue-600: var(--accent-hover); --color-blue-700: var(--accent-active); --color-blue-800: var(--accent-active); --color-blue-900: var(--accent-active);
 
   /* ── 2. GRADIENT TOKENS (4) ────────────────────────────────────────── */
-  --gradient-ambient:     linear-gradient(var(--surface-canvas), var(--surface-recessed));
+  --gradient-ambient:     none;
   --hero-tonal-wash:      radial-gradient(circle at 82% 12%, rgba(229, 138, 99, 0.14), transparent 58%);
-  --gradient-hero:        var(--hero-tonal-wash);
+  --gradient-hero:        none;
   --gradient-action:      linear-gradient(135deg, var(--accent-active), var(--accent));
   --gradient-celebration: conic-gradient(from 180deg, var(--accent), var(--warning), var(--success), var(--accent));
 
@@ -148,7 +148,7 @@
   --radius-sheet: var(--radius-lg);
 
   /* ── 6. BORDER TOKENS (4 treatments) ───────────────────────────────── */
-  --border-subtle:  1px solid var(--neutral-300);
+  --border-subtle:  var(--border-default);
   --border-default: 1px solid var(--border-default-color);
   --border-strong:  1px solid var(--border-strong-color);
   --border-accent:  1px solid var(--accent);
@@ -335,7 +335,7 @@
   --surface-canvas: var(--neutral-0);
   --surface-recessed: var(--neutral-50);
   --surface-quiet: var(--neutral-100);
-  --surface-raised: var(--neutral-200);
+  --surface-raised: var(--neutral-0);
   --border-default-color: var(--neutral-300);
   --border-strong-color: var(--neutral-400);
   --text-primary: var(--neutral-900);
@@ -353,13 +353,13 @@
   --danger-muted: #F4DCD7;
   --danger: #A84D43;
 
-  --gradient-ambient: linear-gradient(var(--surface-canvas), var(--surface-recessed));
+  --gradient-ambient: none;
   --hero-tonal-wash: radial-gradient(circle at 82% 12%, rgba(182, 83, 50, 0.16), transparent 58%);
-  --gradient-hero: var(--hero-tonal-wash);
+  --gradient-hero: none;
   --gradient-action: linear-gradient(135deg, var(--accent-active), var(--accent));
   --gradient-celebration: conic-gradient(from 180deg, var(--accent), var(--warning), var(--success), var(--accent));
 
-  --border-subtle: 1px solid var(--neutral-200);
+  --border-subtle: var(--border-default);
   --border-default: 1px solid var(--border-default-color);
   --border-strong: 1px solid var(--border-strong-color);
   --border-accent: 1px solid var(--accent);
@@ -381,21 +381,6 @@
   --fill-15: rgba(33, 28, 23, 0.15);
 }
 
-/* ── Gradient accent utilities ───────────────────────────────────── */
-/*
- * Subtle purple shimmer for key interactive surfaces. Apply
- * .accent-border-shimmer for a border-image effect, or combine
- * .glass-card--accent-border with .glass-card for a ::before gradient
- * overlay on the card rim.
- */
-.accent-border-shimmer {
-  border-image: linear-gradient(135deg, rgba(129, 140, 248, 0.3), rgba(167, 139, 250, 0.3), rgba(129, 140, 248, 0.3)) 1;
-}
-
-.glass-card--accent-border::before {
-  background: linear-gradient(135deg, rgba(129, 140, 248, 0.15), rgba(167, 139, 250, 0.2), transparent);
-}
-
 html, body, #__next {
   min-height: 100%;
 }
@@ -415,6 +400,28 @@ body {
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  isolation: isolate;
+}
+
+/* A single, quiet paper texture sits behind all content — never per surface. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.018;
+  mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='folio-paper-noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23folio-paper-noise)'/%3E%3C/svg%3E");
+}
+
+.warm body::before {
+  opacity: 0.025;
+  mix-blend-mode: multiply;
+}
+
+@media (forced-colors: active) {
+  body::before { content: none; }
 }
 
 /* ── Focus-visible utility for primitives (Req 18.4) ────────────── */
@@ -569,20 +576,11 @@ textarea:focus:not(:focus-visible),
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Display gradient text treatment ─────────────────────────────── */
-/*
- * Expressive gradient fill for the daily-allowance hero amount and
- * celebration headlines. Uses `background-clip: text` with the
- * --gradient-hero token. Contrast verified: accent-500 #818cf8 on
- * canvas #0e0e1a = ~6.8:1 (meets 3:1 large-text requirement).
- * Requirements: 2.5, 2.6
- */
+/* Retained class name for compatibility; display text is now solid. */
 .display-gradient-text {
-  background: var(--gradient-hero);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
+  background: none;
+  color: var(--color-text);
+  -webkit-text-fill-color: currentColor;
 }
 
 /* Static fallback when reduced-motion is preferred (Req 2.11) */
@@ -1185,98 +1183,37 @@ input[type="date"] {
   50%      { opacity: 0.75; }
 }
 
-/* ── Glass card (glassmorphism) ─────────────────────────────────── */
-/*
- * Frosted-glass surface used across the premium UI. A translucent white
- * fill sits over the animated mesh background and is blurred + saturated
- * with `backdrop-filter` so whatever drifts behind it shows through softly.
- *
- * Structure:
- *   .glass-card            → base surface (fill, blur, radius, shadow)
- *   .glass-card::before    → 0.5px gradient inner border (cyan-tinted glow
- *                            at top → nearly invisible at bottom) rendered
- *                            with a mask so only the edge shows.
- *   .glass-card--low/med/high → elevation: blur intensity, border
- *                            brightness and drop-shadow depth.
- *   .glass-card--glow      → contextual colored halo driven by the
- *                            `--glass-glow` custom property set inline.
- *
- * Contrast: the fill is only ~3% white over the dark (#0a0f1a) background,
- * so the effective surface stays dark and the theme's pure-white --text
- * (and --sub #94a3b8) keep WCAG AA contrast for body copy. Browsers without
- * backdrop-filter fall back to a more opaque surface (see @supports) so text
- * never lands on a see-through background.
- */
+/* ── Flat elevated card ─────────────────────────────────────────── */
+/* GlassCard remains a useful structural wrapper; its legacy prop names now
+ * map to the calm warm-surface hierarchy rather than blur or glow. */
 .glass-card {
   position: relative;
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(6px) saturate(140%);
-  -webkit-backdrop-filter: blur(6px) saturate(140%);
-  box-shadow: var(--shadow-md);
-  /* Halo color/strength — overridden inline when a glow is requested. */
-  --glass-glow: transparent;
-}
-
-/* Hairline gradient rim: warm purple-tinted glow at top, nearly invisible at bottom */
-.glass-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 0.5px;
-  background: linear-gradient(
-    to bottom,
-    var(--glass-border-top, rgba(129, 140, 248, 0.08)),
-    rgba(255, 255, 255, 0.02)
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  pointer-events: none;
-}
-
-/* Elevation — controls blur intensity, rim brightness and shadow depth */
-.glass-card--low {
-  backdrop-filter: blur(6px) saturate(130%);
-  -webkit-backdrop-filter: blur(6px) saturate(130%);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: var(--border-default);
   box-shadow: var(--shadow-sm);
-  --glass-border-top: rgba(129, 140, 248, 0.06);
+}
+
+.glass-card--low {
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .glass-card--medium {
-  backdrop-filter: blur(var(--blur-raised)) saturate(145%);
-  -webkit-backdrop-filter: blur(var(--blur-raised)) saturate(145%);
+  background: var(--color-raised);
+  border: var(--border-default);
   box-shadow: var(--shadow-md);
-  --glass-border-top: rgba(129, 140, 248, 0.12);
 }
 
 .glass-card--high {
-  backdrop-filter: blur(var(--blur-overlay)) saturate(160%);
-  -webkit-backdrop-filter: blur(var(--blur-overlay)) saturate(160%);
+  background: var(--color-raised);
+  border: var(--border-strong);
   box-shadow: var(--shadow-lg);
-  --glass-border-top: rgba(129, 140, 248, 0.16);
 }
 
-/* Contextual colored halo — layered on top of the elevation drop-shadow */
-.glass-card--glow.glass-card--low {
-  box-shadow: var(--shadow-sm), 0 0 20px var(--glass-glow);
-}
-.glass-card--glow.glass-card--medium {
-  box-shadow: var(--shadow-md), 0 0 20px var(--glass-glow);
-}
-.glass-card--glow.glass-card--high {
-  box-shadow: var(--shadow-lg), 0 0 20px var(--glass-glow);
-}
-
-/* Fallback for browsers without backdrop-filter: use a solid-ish surface so
- * text stays on an opaque, high-contrast background. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass-card {
-    background: rgba(17, 24, 39, 0.95); /* --surface with high opacity */
-  }
+/* The only tonal treatment in the product: the home Monthly Runway card. */
+.monthly-runway-hero {
+  background: var(--hero-tonal-wash), var(--color-raised);
 }
 
 /* ── Solid card (Tier 3 — list rows, dense content) ─────────────── */
@@ -1290,26 +1227,11 @@ input[type="date"] {
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-default);
+  border: var(--border-default);
 }
 
 /* Subtle scan-line texture for added depth */
-.surface-scanlines::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(129, 140, 248, 0.015) 2px,
-    rgba(129, 140, 248, 0.015) 3px
-  );
-  opacity: 0.5;
-  z-index: 1;
-}
+.surface-scanlines::after { content: none; }
 
 /* ── Safe area ───────────────────────────────────────────────────── */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
@@ -1517,95 +1439,6 @@ input[type="date"] {
   }
 }
 
-/* ── Daily allowance hero (premium treatment) ────────────────────── */
-/*
- * Visual polish for DailyAllowanceHero:
- *   .hero-amount           → gradient text fill for the dollar amount. A slow
- *                            moving linear gradient is clipped to the number
- *                            glyphs via background-clip: text. Colors are fed
- *                            in per status through --hero-grad-from/-to.
- *   .hero-breathe          → gentle breathing pulse for the ambient light
- *                            behind the number (scale + opacity).
- *   .hero-shimmer-particle → barely-visible twinkles arranged around the ring
- *                            when the status is healthy.
- *
- * All motion is transform/opacity only (GPU-composited) except the gradient
- * text which animates background-position (paint-only, no layout thrash) with
- * will-change hint for optimization. Disabled under prefers-reduced-motion
- * so the hero degrades to a calm static state.
- */
-.hero-amount {
-  background-image: linear-gradient(
-    100deg,
-    var(--hero-grad-from, var(--success)),
-    var(--hero-grad-to, #a7f3d0),
-    var(--hero-grad-from, var(--success))
-  );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-          background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  will-change: background-position;
-  animation: hero-gradient-shift 9s ease-in-out infinite;
-}
-
-@keyframes hero-gradient-shift {
-  0%   { background-position: 0% center; }
-  50%  { background-position: 100% center; }
-  100% { background-position: 0% center; }
-}
-
-/* Breathing ambient light behind the number (Task 248.1: more pronounced, Task 249.1: time-of-day rhythm) */
-.hero-breathe {
-  will-change: transform, opacity;
-  animation: hero-breathe var(--hero-breathe-duration, 4.5s) ease-in-out infinite;
-}
-
-@keyframes hero-breathe {
-  0%, 100% { transform: scale(1);                                    opacity: var(--hero-breathe-opacity-min, 0.7); }
-  50%      { transform: scale(var(--hero-breathe-scale, 1.05));      opacity: var(--hero-breathe-opacity-max, 0.95); }
-}
-
-/* Barely-visible particle shimmer around the ring (Task 248.1: larger, more visible) */
-.hero-shimmer-particle {
-  position: absolute;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--success);
-  opacity: 0;
-  pointer-events: none;
-  will-change: transform, opacity;
-  animation: hero-shimmer 3.2s ease-in-out infinite;
-}
-
-@keyframes hero-shimmer {
-  0%, 100% { opacity: 0;    transform: scale(0.5); }
-  50%      { opacity: 0.35; transform: scale(1); }
-}
-
-/* New-day ring glow pulse (Task 483.1) — single brief pulse on day change detection */
-.hero-ring-newday-glow {
-  will-change: opacity, transform;
-  animation: hero-newday-pulse 1.8s ease-out forwards;
-}
-
-@keyframes hero-newday-pulse {
-  0%   { opacity: 0; transform: scale(0.95); }
-  30%  { opacity: 0.6; transform: scale(1.06); }
-  60%  { opacity: 0.3; transform: scale(1.02); }
-  100% { opacity: 0; transform: scale(1); }
-}
-
-/* Reduced motion — freeze the shifting gradient, breathing and shimmer */
-@media (prefers-reduced-motion: reduce) {
-  .hero-amount          { animation: none; }
-  .hero-breathe         { animation: none; transform: none; }
-  .hero-shimmer-particle { animation: none; opacity: 0; }
-  .hero-ring-newday-glow { animation: none; opacity: 0; }
-}
-
 /* ── Quick log: elevated interaction design (task 9.4) ──────────── */
 /*
  * Glass-pill treatment for the QuickLogArea category cards and suggestion
@@ -1618,98 +1451,54 @@ input[type="date"] {
 .cat-pill--glass {
   position: relative;
   overflow: hidden;
-  border: 0.5px solid rgba(129, 140, 248, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(6px) saturate(140%);
-  -webkit-backdrop-filter: blur(6px) saturate(140%);
+  border: var(--border-default);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-sm);
 }
 
 .cat-pill--glass:not(.selected):hover {
-  border-color: rgba(129, 140, 248, 0.2);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-strong-color);
+  background: var(--color-raised);
 }
 
-/* Selection backdrop — soft purple glow behind the content */
+/* Selection uses a quiet accent-muted fill, not a halo. */
 .cat-pill-highlight {
   position: absolute;
   inset: 0;
   z-index: 0;
   border-radius: inherit;
   pointer-events: none;
-  border: 0.5px solid rgba(129, 140, 248, 0.45);
-  background: rgba(129, 140, 248, 0.05);
-  box-shadow:
-    inset 0 0 10px rgba(129, 140, 248, 0.08),
-    0 0 12px rgba(129, 140, 248, 0.10);
+  border: 1px solid var(--accent);
+  background: var(--accent-muted);
+  box-shadow: none;
 }
 
-/* Suggestion chip — floating glass pill with premium depth and glow */
+/* Suggestion chip — flat, compact surface. */
 .chip--glass {
   position: relative;
-  border: 0.5px solid rgba(129, 140, 248, 0.10);
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(8px) saturate(150%);
-  -webkit-backdrop-filter: blur(8px) saturate(150%);
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.18),
-    0 8px 24px rgba(0, 0, 0, 0.22),
-    0 0 0 0.5px rgba(129, 140, 248, 0.06);
+  border: var(--border-default);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
   border-radius: var(--radius-md);
 }
 
-/* Gradient rim — subtle warm-purple edge highlight (same technique as glass-card) */
-.chip--glass::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 0.5px;
-  background: linear-gradient(
-    160deg,
-    rgba(167, 139, 250, 0.14),
-    rgba(129, 140, 248, 0.06) 50%,
-    rgba(255, 255, 255, 0.02)
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  pointer-events: none;
-  opacity: 1;
-  transition: opacity 0.15s ease-out;
-}
+.chip--glass::before { content: none; }
 
 .chip--glass:hover {
-  border-color: rgba(129, 140, 248, 0.28);
-  background: rgba(129, 140, 248, 0.06);
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.18),
-    0 8px 24px rgba(0, 0, 0, 0.22),
-    0 0 12px rgba(129, 140, 248, 0.08);
+  border-color: var(--border-strong-color);
+  background: var(--color-raised);
+  box-shadow: var(--shadow-sm);
 }
 
-/* Active/selected state — accent glow ring */
+/* Active/selected state */
 .chip--glass.active {
-  border-color: rgba(129, 140, 248, 0.35);
-  background: rgba(129, 140, 248, 0.07);
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.15),
-    0 8px 24px rgba(0, 0, 0, 0.2),
-    0 0 16px rgba(129, 140, 248, 0.12),
-    0 0 4px rgba(167, 139, 250, 0.2);
+  border-color: var(--accent);
+  background: var(--accent-muted);
+  box-shadow: var(--shadow-sm);
 }
 
-.chip--glass.active::before {
-  background: linear-gradient(
-    160deg,
-    rgba(167, 139, 250, 0.22),
-    rgba(129, 140, 248, 0.10) 50%,
-    rgba(255, 255, 255, 0.03)
-  );
-}
+.chip--glass.active::before { content: none; }
 
 /* Success ripple — multi-ring radial pulse emanating from the tapped chip */
 .chip-ripple {
@@ -1992,18 +1781,13 @@ input[type="date"] {
   /* Clear the notch / Dynamic Island */
   padding-top: var(--safe-top);
   box-sizing: content-box;
-  /* Glass treatment blended into the mesh */
-  background: rgba(10, 15, 26, 0.45);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border-bottom: 1px solid transparent;
+  background: var(--color-raised);
+  border-bottom: var(--border-default);
 }
 
 /*
  * Scroll-aware bottom divider (Task 247.1):
- * A gradient divider that fades in once content scrolls beneath the bar,
- * replacing the previous static border. Uses a pseudo-element so the gradient
- * can run from transparent → accent-tinted → transparent for a soft edge.
+ * A divider that fades in once content scrolls beneath the bar.
  * Respects prefers-reduced-motion by skipping the opacity transition.
  */
 .app-topbar::after {
@@ -2012,7 +1796,7 @@ input[type="date"] {
   inset-inline: 0;
   bottom: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(129, 140, 248, 0.18) 30%, rgba(255, 255, 255, 0.08) 50%, rgba(129, 140, 248, 0.18) 70%, transparent);
+  background: var(--border-default-color);
   opacity: 0;
   transition: opacity 0.25s ease;
 }
@@ -2209,41 +1993,16 @@ input[type="date"] {
   z-index: 45;
   padding: 8px;
   border-radius: var(--radius-md);
-  /* Frosted glass matching the warm mesh backdrop — stronger blur for floating feel */
-  background: rgba(17, 24, 39, 0.45);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 0.5px solid rgba(129, 140, 248, 0.1);
-  /* Soft *upward* shadow + top highlight so it reads as truly floating */
-  box-shadow:
-    0 -1px 6px rgba(0, 0, 0, 0.15),
-    0 -6px 20px rgba(0, 0, 0, 0.2),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.08);
+  background: var(--color-raised);
+  border: var(--border-default);
+  box-shadow: var(--shadow-md);
   /* Dock morph transitions (245.2) — padding is a layout property but only
    * triggers on rare dock state changes (not during scroll/animation loops).
    * Acceptable trade-off: keeps dock item spacing correct without transform hacks. */
   transition: padding 0.2s ease;
 }
 
-/* Gradient rim — reuses the glass-card::before mask technique with stronger purple tint */
-.app-dock::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 0.5px;
-  background: linear-gradient(
-    to bottom,
-    rgba(129, 140, 248, 0.14),
-    rgba(255, 255, 255, 0.03)
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  pointer-events: none;
-}
+.app-dock::before { content: none; }
 
 /* Compact dock state when content is scrolled (245.2) */
 .app-dock--compact {
@@ -2488,37 +2247,18 @@ input[type="date"] {
   will-change: opacity;
 }
 
-/* Top-edge frosted band — constant blur, opacity animated by scroll.
- * A downward alpha mask fades it softly into the content below. */
+/* Top-edge solid band; scroll controls only its opacity. */
 .top-edge-blur {
   position: fixed;
   left: 0;
   right: 0;
   z-index: 20;
   pointer-events: none;
-  backdrop-filter: blur(12px) saturate(160%);
-  -webkit-backdrop-filter: blur(12px) saturate(160%);
-  background: linear-gradient(
-    to bottom,
-    rgba(10, 15, 26, 0.55),
-    rgba(10, 15, 26, 0)
-  );
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
-  -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent);
-  mask-image: linear-gradient(to bottom, #000 40%, transparent);
+  background: var(--color-canvas);
+  box-shadow: var(--shadow-sm);
   will-change: opacity;
 }
 
-/* Fallback: without backdrop-filter, lean on the gradient tint alone. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .top-edge-blur {
-    background: linear-gradient(
-      to bottom,
-      rgba(10, 15, 26, 0.85),
-      rgba(10, 15, 26, 0)
-    );
-  }
-}
 
 /* Momentum scroll wrapper — Motion drives a small translateY lean that
  * springs back as scrolling settles. Only the transform changes, so it stays

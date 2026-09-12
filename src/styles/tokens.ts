@@ -177,13 +177,13 @@ export const borderRadius = { sm: 4, md: 8, lg: 16, xl: 16, full: 9999 } as cons
 export type ElevationTier = 'canvas' | 'sunken' | 'resting' | 'raised' | 'overlay'
 export interface ElevationDefinition { readonly fill: string; readonly border: string; readonly shadow: string; readonly blur: string; readonly opaqueFallback?: string }
 export const elevations: Record<ElevationTier, ElevationDefinition> = {
-  canvas: { fill: 'var(--color-canvas)', border: 'var(--border-subtle)', shadow: 'var(--shadow-none)', blur: 'var(--blur-none)' },
-  sunken: { fill: 'var(--color-sunken)', border: 'var(--border-subtle)', shadow: 'var(--shadow-none)', blur: 'var(--blur-none)' },
+  canvas: { fill: 'var(--color-canvas)', border: 'var(--border-default)', shadow: 'var(--shadow-none)', blur: 'var(--blur-none)' },
+  sunken: { fill: 'var(--color-sunken)', border: 'var(--border-default)', shadow: 'var(--shadow-none)', blur: 'var(--blur-none)' },
   resting: { fill: 'var(--color-surface)', border: 'var(--border-default)', shadow: 'var(--shadow-sm)', blur: 'var(--blur-none)' },
-  raised: { fill: 'var(--color-raised)', border: 'var(--border-strong)', shadow: 'var(--shadow-md)', blur: 'var(--blur-raised)', opaqueFallback: 'var(--color-raised-opaque)' },
-  overlay: { fill: 'var(--color-overlay)', border: 'var(--border-accent)', shadow: 'var(--shadow-lg)', blur: 'var(--blur-overlay)', opaqueFallback: 'var(--color-overlay-opaque)' },
+  raised: { fill: 'var(--color-raised)', border: 'var(--border-default)', shadow: 'var(--shadow-md)', blur: 'var(--blur-none)', opaqueFallback: 'var(--color-raised-opaque)' },
+  overlay: { fill: 'var(--color-overlay)', border: 'var(--border-strong)', shadow: 'var(--shadow-lg)', blur: 'var(--blur-none)', opaqueFallback: 'var(--color-overlay-opaque)' },
 }
-export const tierMap: Record<ElevationTier, readonly string[]> = { canvas: ['AppShell (page background)', 'Ambient field', 'OverlayScreen backdrop'], sunken: ['Input wells', 'Search fields', 'Inset areas / code blocks', 'Toggle track (off state)'], resting: ['Card (default)', 'ListRow containers', 'SectionHeader panels', 'ChartFrame', 'EmptyState / ErrorState'], raised: ['AllowanceHero', 'NavigationDock', 'Floating action cards', 'Tooltips', 'QuickLogControl (expanded)'], overlay: ['Sheet (half / full)', 'Modal dialogs', 'CelebrationOverlay', 'Dropdown menus', 'ContextMenu'] }
+export const tierMap: Record<ElevationTier, readonly string[]> = { canvas: ['AppShell (page background)', 'OverlayScreen backdrop'], sunken: ['Input wells', 'Search fields', 'Inset areas / code blocks', 'Toggle track (off state)'], resting: ['Card (default)', 'ListRow containers', 'SectionHeader panels', 'ChartFrame', 'EmptyState / ErrorState'], raised: ['Monthly Runway', 'NavigationDock', 'Floating action cards', 'Tooltips', 'QuickLogControl (expanded)'], overlay: ['Sheet (half / full)', 'Modal dialogs', 'CelebrationOverlay', 'Dropdown menus', 'ContextMenu'] }
 export const shadows = { none: 'var(--shadow-none)', sm: 'var(--shadow-sm)', md: 'var(--shadow-md)', lg: 'var(--shadow-lg)', xl: 'var(--shadow-lg)', glowAccent: 'var(--shadow-glow)', glowAccentStrong: 'var(--shadow-glow)', focusRing: '0 0 0 2px var(--focus-ring-color)' } as const
 
 export interface SpringPreset { readonly stiffness: number; readonly damping: number; readonly mass: number }

@@ -76,7 +76,7 @@ export function HistoryView({
               fontSize: typography['body-sm'].fontSize,
               fontWeight: fontWeights.medium,
               color: "var(--sub)",
-              fontFamily: "Inter, sans-serif",
+              fontFamily: "var(--font-body)",
               textTransform: "uppercase",
               letterSpacing: "0.08em",
               marginBottom: spacing.md,

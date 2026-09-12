@@ -144,7 +144,7 @@ export function renderMilestoneCardImage(data: MilestoneCardData): Promise<Blob>
       const theme = getTheme(data.type)
       const centerX = width / 2
       const font = (size: number, weight = 400) =>
-        `${weight} ${size}px 'Inter', system-ui, -apple-system, sans-serif`
+        `${weight} ${size}px 'DM Sans', Arial, sans-serif`
 
       // ── Background: warm purple gradient ──────────────────────────────────
       const bg = ctx.createLinearGradient(0, 0, width, height)

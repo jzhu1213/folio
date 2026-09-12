@@ -170,7 +170,7 @@ export function renderYearInReviewImage(
       const centerX = width / 2
       ctx.textAlign = 'center'
       const font = (size: number, weight = 400) =>
-        `${weight} ${size}px 'Inter', system-ui, -apple-system, sans-serif`
+        `${weight} ${size}px 'DM Sans', Arial, sans-serif`
 
       // ── Header ────────────────────────────────────────────────────────────
       ctx.font = '96px sans-serif'

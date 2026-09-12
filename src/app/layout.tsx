@@ -1,5 +1,6 @@
 import './globals.css'
 import type { Metadata, Viewport } from 'next'
+import { DM_Sans, Fraunces } from 'next/font/google'
 import { AuthProvider } from '../contexts/AuthContext'
 import { ThemeProvider } from '../contexts/ThemeContext'
 import { ToastProvider } from '../contexts/ToastContext'
@@ -8,6 +9,20 @@ import { AmbientGlowProvider } from '../contexts/AmbientGlowContext'
 import { ScreenReaderAnnouncerProvider } from '../components/ui/ScreenReaderAnnouncer'
 import { WebVitalsReporter } from '../components/WebVitalsReporter'
 import { ErrorBoundary } from '../components/ErrorBoundary'
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-body-next',
+  display: 'swap',
+  fallback: ['Arial', 'sans-serif'],
+})
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-display-next',
+  display: 'swap',
+  fallback: ['Georgia', 'serif'],
+})
 
 export const metadata: Metadata = {
   title: 'Folio',
@@ -40,15 +55,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" dir="ltr" className="dark" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" dir="ltr" className={`${dmSans.variable} ${fraunces.variable} dark`} suppressHydrationWarning>
       <body className="min-h-screen antialiased bg-background text-foreground">
         <WebVitalsReporter />
         <ErrorBoundary>

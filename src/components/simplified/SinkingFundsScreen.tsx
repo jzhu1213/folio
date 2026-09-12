@@ -120,7 +120,7 @@ const labelStyle: React.CSSProperties = {
 
 /**
  * SinkingFundsScreen — add/edit/list sinking funds for periodic large costs.
- * Reached from Settings. Uses GlassCard + Inter + warm palette.
+ * Reached from Settings. Uses GlassCard + the warm palette.
  *
  * A sinking fund spreads a future one-time cost (textbooks, travel, gifts,
  * car registration, annual subscriptions) across remaining months so it

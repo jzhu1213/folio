@@ -1222,7 +1222,7 @@ export function DailyAllowanceHero({
                       >
                         <Icon name={row.icon} size={16} />
                       </span>
-                      <span style={{ fontFamily: 'var(--font-family, Inter, sans-serif)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontFamily: 'var(--font-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {row.label}
                       </span>
                     </span>

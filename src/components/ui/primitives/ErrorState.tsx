@@ -17,7 +17,7 @@
 
 import { motion } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
-import { typography, FONT_FAMILY, fontWeights } from '@/styles/typography'
+import { typography, typographyRoles, FONT_FAMILY, fontWeights } from '@/styles/typography'
 import { spacingScale } from "@/styles/layout"
 import { radius } from "@/styles/surfaces"
 import { colorRamp, textColors } from "@/styles/colors"
@@ -88,7 +88,7 @@ export function ErrorState({
       {/* Title */}
       <h3
         style={{
-          ...typography.subhead,
+          ...typographyRoles.cardHeadline,
           color: textColors.text,
           margin: 0,
         }}

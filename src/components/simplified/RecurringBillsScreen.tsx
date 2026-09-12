@@ -106,7 +106,7 @@ const labelStyle: React.CSSProperties = {
 
 /**
  * RecurringBillsScreen — full-screen UI to add/edit/list monthly recurring bills.
- * Reached from Settings. Uses ManagedListScreen scaffold + GlassCard + Inter + warm palette.
+ * Reached from Settings. Uses ManagedListScreen scaffold + GlassCard + the warm palette.
  *
  * Validates: Requirements 12.3, 141.1
  */

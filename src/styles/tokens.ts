@@ -9,28 +9,60 @@ import type React from 'react'
 
 export type TokenAccessor<T extends string> = { readonly [K in T]: string }
 
+const lightNeutral = {
+  0: '#FFFDF8', 50: '#FAF6EE', 100: '#F3EDE2', 200: '#E8DFD1',
+  300: '#D9CEBD', 400: '#BCAF9C', 500: '#958977', 600: '#706759',
+  700: '#514A40', 800: '#352F28', 900: '#211C17',
+} as const
+
+const darkNeutral = {
+  0: '#211F1B', 50: '#292620', 100: '#333029', 200: '#403B33',
+  300: '#544D42', 400: '#70675A', 500: '#908576', 600: '#B0A696',
+  700: '#CEC5B8', 800: '#E7DFD4', 900: '#FFF9F0',
+} as const
+
 export const designTokens = {
   colors: {
-    neutral: {
-      0: '#0e0e1a', 50: '#12121f', 100: '#1a1a2e', 200: '#22223a',
-      300: '#2a2a44', 400: '#34344f', 500: '#494965', 600: '#6c6c8e',
-      700: '#9494b8', 800: '#b4b4d4', 900: '#ffffff',
+    light: {
+      neutral: lightNeutral,
+      accent: { base: '#B65332', hover: '#99442A', active: '#7A351F', muted: '#F5DED3' },
+      semantic: {
+        success: { base: '#5E7D4E', muted: '#E3EBDD' },
+        warning: { base: '#9A6A21', muted: '#F5E8C8' },
+        danger: { base: '#A84D43', muted: '#F4DCD7' },
+      },
     },
-    accent: { muted: 'rgba(129, 140, 248, 0.14)', base: '#818cf8', hover: '#6366f1', active: '#4f46e5' },
-    semantic: {
-      success: { base: '#4ade80', muted: 'rgba(74, 222, 128, 0.14)' },
-      warning: { base: '#fbbf24', muted: 'rgba(251, 191, 36, 0.14)' },
-      danger: { base: '#f87171', muted: 'rgba(248, 113, 113, 0.14)' },
+    dark: {
+      neutral: darkNeutral,
+      accent: { base: '#E58A63', hover: '#F0A17E', active: '#FFC0A3', muted: '#4A2D24' },
+      semantic: {
+        success: { base: '#9FBE8B', muted: '#2F4029' },
+        warning: { base: '#D6A852', muted: '#4B3920' },
+        danger: { base: '#DF8B80', muted: '#4D2925' },
+      },
     },
   },
   spacing: { 4: '4px', 8: '8px', 12: '12px', 16: '16px', 24: '24px', 32: '32px', 48: '48px', 64: '64px', 96: '96px' },
   radii: { sm: '4px', md: '8px', lg: '16px', full: '9999px' },
   shadows: {
-    none: 'none',
-    sm: '0 1px 2px rgba(0, 0, 0, 0.18)',
-    md: '0 8px 24px rgba(0, 0, 0, 0.24)',
-    lg: '0 16px 40px rgba(0, 0, 0, 0.32)',
-    glow: '0 0 20px rgba(129, 140, 248, 0.24)',
+    light: {
+      none: 'none',
+      sm: '0 1px 2px rgba(57, 43, 30, 0.08)',
+      md: '0 8px 20px rgba(57, 43, 30, 0.10)',
+      lg: '0 18px 42px rgba(57, 43, 30, 0.14)',
+    },
+    dark: {
+      none: 'none',
+      sm: '0 1px 2px rgba(0, 0, 0, 0.22)',
+      md: '0 8px 20px rgba(0, 0, 0, 0.28)',
+      lg: '0 18px 42px rgba(0, 0, 0, 0.36)',
+    },
+  },
+  effects: {
+    heroTonalWash: {
+      light: 'radial-gradient(circle at 82% 12%, rgba(182, 83, 50, 0.16), transparent 58%)',
+      dark: 'radial-gradient(circle at 82% 12%, rgba(229, 138, 99, 0.14), transparent 58%)',
+    },
   },
   motion: {
     duration: { instant: '0ms', fast: '150ms', base: '200ms', slow: '300ms' },
@@ -55,7 +87,10 @@ export const tailwindTokens = {
   spacing: designTokens.spacing,
   borderRadius: { sm: 'var(--radius-sm)', md: 'var(--radius-md)', lg: 'var(--radius-lg)', full: 'var(--radius-full)' },
   boxShadow: { none: 'var(--shadow-none)', sm: 'var(--shadow-sm)', md: 'var(--shadow-md)', lg: 'var(--shadow-lg)', xl: 'var(--shadow-lg)', glow: 'var(--shadow-glow)', 'glow-accent': 'var(--shadow-glow)', 'glow-accent-strong': 'var(--shadow-glow)' },
-  fontFamily: { sans: ['Inter', 'sans-serif'] as string[] },
+  fontFamily: {
+    sans: ['var(--font-body)', 'Arial', 'sans-serif'] as string[],
+    display: ['var(--font-display)', 'Georgia', 'serif'] as string[],
+  },
   transitionDuration: { fast: designTokens.motion.duration.fast, base: designTokens.motion.duration.base, slow: designTokens.motion.duration.slow },
   transitionTimingFunction: { enter: designTokens.motion.easing.enter, exit: designTokens.motion.easing.exit },
   animation: {
@@ -104,10 +139,15 @@ export type SurfaceColorName = 'canvas' | 'sunken' | 'surface' | 'raised' | 'ove
 export const surfaceColors: TokenAccessor<SurfaceColorName> = { canvas: 'var(--color-canvas)', sunken: 'var(--color-sunken)', surface: 'var(--color-surface)', raised: 'var(--color-raised)', overlay: 'var(--color-overlay)' }
 export type TextColorName = 'text' | 'sub' | 'muted'
 export const textColors: TokenAccessor<TextColorName> = { text: 'var(--text)', sub: 'var(--sub)', muted: 'var(--muted)' }
-export type GradientName = 'ambient' | 'hero' | 'action' | 'celebration'
-export const gradients: TokenAccessor<GradientName> = { ambient: 'var(--gradient-ambient)', hero: 'var(--gradient-hero)', action: 'var(--gradient-action)', celebration: 'var(--gradient-celebration)' }
+export const colorAliases = {
+  surfaceCanvas: 'var(--surface-canvas)', surfaceRecessed: 'var(--surface-recessed)', surfaceQuiet: 'var(--surface-quiet)', surfaceRaised: 'var(--surface-raised)',
+  borderDefault: 'var(--border-default-color)', borderStrong: 'var(--border-strong-color)', textPrimary: 'var(--text-primary)', textSecondary: 'var(--text-secondary)', textMuted: 'var(--text-muted)',
+} as const
+export type GradientName = 'ambient' | 'hero' | 'heroTonalWash' | 'action' | 'celebration'
+export const gradients: TokenAccessor<GradientName> = { ambient: 'var(--gradient-ambient)', hero: 'var(--gradient-hero)', heroTonalWash: 'var(--hero-tonal-wash)', action: 'var(--gradient-action)', celebration: 'var(--gradient-celebration)' }
 export const semanticColors = { accent: 'var(--accent)', success: 'var(--success)', caution: 'var(--warning)', warning: 'var(--warning)', error: 'var(--danger)', blue: 'var(--accent)', info: 'var(--accent)', borderSubtle: 'var(--border-subtle)', borderDefault: 'var(--border-default)', borderStrong: 'var(--border-strong)', borderAccent: 'var(--border-accent)' } as const
-export const resolvedColors = { accent500: designTokens.colors.accent.base, success500: designTokens.colors.semantic.success.base, warning500: designTokens.colors.semantic.warning.base, warning600: designTokens.colors.semantic.warning.base, caution500: designTokens.colors.semantic.warning.base, error500: designTokens.colors.semantic.danger.base, blue500: designTokens.colors.accent.base, text: designTokens.colors.neutral[900], canvas: designTokens.colors.neutral[0], pink500: '#f472b6' } as const
+/** Compatibility aliases resolve to the dark theme, the app's current default. */
+export const resolvedColors = { accent500: designTokens.colors.dark.accent.base, success500: designTokens.colors.dark.semantic.success.base, warning500: designTokens.colors.dark.semantic.warning.base, warning600: designTokens.colors.dark.semantic.warning.base, caution500: designTokens.colors.dark.semantic.warning.base, error500: designTokens.colors.dark.semantic.danger.base, blue500: designTokens.colors.dark.accent.base, text: designTokens.colors.dark.neutral[900], canvas: designTokens.colors.dark.neutral[0], pink500: designTokens.colors.dark.accent.base } as const
 
 export type SpacingStep = '2' | '4' | '6' | '8' | '12' | '16' | '20' | '24' | '32' | '40' | '48' | '64' | '96'
 /** Official 4px-based scale; 2px is retained only as a compatibility hairline alias. */

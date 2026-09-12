@@ -56,7 +56,7 @@ function sanitizeName(raw: string): string {
 
 /**
  * GoalEditSheet — warm, glass bottom sheet for creating or editing a savings
- * goal. Matches the visual language of ExpenseSheet / IncomeSheet (Inter font,
+ * goal. Matches the visual language of ExpenseSheet / IncomeSheet (shared font roles,
  * `--surface` glass panel, motion/react slide-up with backdrop, reduced-motion
  * aware). Collects a name, emoji, and target amount.
  *

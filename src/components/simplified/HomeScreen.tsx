@@ -1001,7 +1001,7 @@ export const HomeScreen = memo(function HomeScreen({
             CONSTRAINTS RESPECTED:
             ✓ Hero number stays dominant (largest element, untouched)
             ✓ No functionality removed (affordability moved, not deleted)
-            ✓ Warm design language maintained (glass surfaces, Inter, purple)
+            ✓ Warm design language maintained (glass surfaces, shared type roles, terracotta)
             ✓ Mobile-first / thumb-friendly (primary buttons stay large)
             ✓ "Radical simplicity" + "clean uncluttered home canvas"
 

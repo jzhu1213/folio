@@ -12,7 +12,7 @@
  */
 
 import { type HTMLAttributes, type ReactNode, forwardRef } from "react"
-import { typography } from "@/styles/typography"
+import { typographyRoles } from "@/styles/typography"
 import { textColors } from "@/styles/colors"
 import { spacingScale } from "@/styles/layout"
 
@@ -38,7 +38,7 @@ export interface SectionHeaderProps extends Omit<HTMLAttributes<HTMLHeadingEleme
 export const SectionHeader = forwardRef<HTMLHeadingElement, SectionHeaderProps>(
   function SectionHeader({ children, style, ...rest }, ref) {
     const headlineStyle: React.CSSProperties = {
-      ...typography.headline,
+      ...typographyRoles.sectionHeadline,
       color: textColors.text,
       margin: 0,
       paddingBottom: spacingScale["8"],

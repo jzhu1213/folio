@@ -11,7 +11,7 @@ import { CONTENT_MAX_WIDTH, HORIZONTAL_PADDING, sectionHeader } from '@/styles/s
  * their data. It doubles as the public privacy URL required by app-store
  * listings, and is linked from Settings → Privacy.
  *
- * Warm, non-judgmental tone; warm-purple tokens; Inter throughout. Static
+ * Warm, non-judgmental tone; warm-neutral tokens; DM Sans and Fraunces roles. Static
  * content, so this renders as a server component with no client JS.
  */
 

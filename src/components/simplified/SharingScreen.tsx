@@ -5,7 +5,7 @@
  *
  * Full-screen overlay that allows users to generate and manage read-only
  * share links for their spending summary. Follows the established overlay
- * pattern (GlassCard + Inter + warm palette).
+ * pattern (GlassCard + warm palette).
  *
  * The shared view shows only high-level stats: daily allowance status,
  * weekly spending total, and budget category breakdown — never individual

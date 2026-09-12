@@ -104,7 +104,7 @@ const labelStyle: React.CSSProperties = {
 
 /**
  * DebtScreen — full-screen UI to add/edit/list debts (student loans,
- * credit cards, etc.). Reached from Settings. Uses Card + Inter + warm palette.
+ * credit cards, etc.). Reached from Settings. Uses Card + the warm palette.
  */
 export function DebtScreen({
   debts,

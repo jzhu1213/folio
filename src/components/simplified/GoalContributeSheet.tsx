@@ -39,7 +39,7 @@ function formatAmount(value: number): string {
 
 /**
  * GoalContributeSheet — warm, glass bottom sheet for adding money to a goal.
- * Shares the ExpenseSheet / IncomeSheet visual language (Inter font,
+ * Shares the ExpenseSheet / IncomeSheet visual language (shared font roles,
  * `--surface` glass panel, motion/react slide-up + backdrop, reduced-motion
  * aware). Offers quick-add chips plus a custom amount entry, and shows the
  * goal's current progress for context.

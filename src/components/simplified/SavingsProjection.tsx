@@ -46,7 +46,7 @@ function formatCurrency(amount: number): string {
  * - Projected values at each horizon
  * - A friendly "keep it up" message
  *
- * Uses the warm visual design system (GlassCard, Inter font, green for growth).
+ * Uses the warm visual design system (GlassCard, display/body font roles, green for growth).
  */
 export function SavingsProjection({ account }: SavingsProjectionProps) {
   const projections = useMemo(

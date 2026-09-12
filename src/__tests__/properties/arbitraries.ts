@@ -387,47 +387,47 @@ export const arbThemeConfiguration = (): fc.Arbitrary<ThemeConfiguration> =>
       displayLarge: fc.record({
         size: fc.integer({ min: 40, max: 80 }),
         weight: fc.integer({ min: 100, max: 900 }),
-        family: fc.constant('Inter'),
+        family: fc.constant('Fraunces'),
       }),
       displayMedium: fc.record({
         size: fc.integer({ min: 30, max: 60 }),
         weight: fc.integer({ min: 100, max: 900 }),
-        family: fc.constant('Inter'),
+        family: fc.constant('Fraunces'),
       }),
       headlineMedium: fc.record({
         size: fc.integer({ min: 20, max: 40 }),
         weight: fc.integer({ min: 100, max: 900 }),
-        family: fc.constant('Inter'),
+        family: fc.constant('Fraunces'),
       }),
       headlineSmall: fc.record({
         size: fc.integer({ min: 16, max: 30 }),
         weight: fc.integer({ min: 100, max: 900 }),
-        family: fc.constant('Inter'),
+        family: fc.constant('Fraunces'),
       }),
       bodyLarge: fc.record({
         size: fc.integer({ min: 14, max: 20 }),
         weight: fc.integer({ min: 100, max: 900 }),
-        family: fc.constant('Inter'),
+        family: fc.constant('DM Sans'),
       }),
       bodyMedium: fc.record({
         size: fc.integer({ min: 12, max: 18 }),
         weight: fc.integer({ min: 100, max: 900 }),
-        family: fc.constant('Inter'),
+        family: fc.constant('DM Sans'),
       }),
       labelLarge: fc.record({
         size: fc.integer({ min: 12, max: 18 }),
         weight: fc.integer({ min: 100, max: 900 }),
-        family: fc.constant('Inter'),
+        family: fc.constant('DM Sans'),
       }),
       labelMedium: fc.record({
         size: fc.integer({ min: 10, max: 16 }),
         weight: fc.integer({ min: 100, max: 900 }),
-        family: fc.constant('Inter'),
+        family: fc.constant('DM Sans'),
       }),
       labelSmall: fc.record({
         size: fc.integer({ min: 8, max: 14 }),
         weight: fc.integer({ min: 100, max: 900 }),
-        family: fc.constant('Inter'),
+        family: fc.constant('DM Sans'),
       }),
     }),
     spacing: fc.record({

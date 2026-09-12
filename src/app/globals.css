@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,38 +33,54 @@
   /* ════════════════════════════════════════════════════════════════════════
    * DESIGN TOKEN SYSTEM — 12 Families
    * Single source of truth. All components reference these tokens.
-   * No #000000 anywhere in backgrounds. Warm purple identity.
+   * No pure-black backgrounds. Warm neutral identity.
    * ════════════════════════════════════════════════════════════════════════ */
 
   /* ── 1. COLOR TOKENS (~60) ─────────────────────────────────────────── */
 
-  /* Surface hierarchy (warm purple, no pure black) */
-  --color-canvas:   #0e0e1a;
-  --color-sunken:   #12121f;
-  --color-surface:  #1a1a2e;
-  --color-raised:   #22223a;
-  --color-overlay:  #2a2a44;
+  /* Dark warm-neutral scale — mirrors designTokens.colors.dark.neutral. */
+  --neutral-0: #211F1B; --neutral-50: #292620; --neutral-100: #333029; --neutral-200: #403B33;
+  --neutral-300: #544D42; --neutral-400: #70675A; --neutral-500: #908576; --neutral-600: #B0A696;
+  --neutral-700: #CEC5B8; --neutral-800: #E7DFD4; --neutral-900: #FFF9F0;
+
+  /* Semantic neutral aliases keep consumers off raw scale steps. */
+  --surface-canvas: var(--neutral-0);
+  --surface-recessed: var(--neutral-50);
+  --surface-quiet: var(--neutral-100);
+  --surface-raised: var(--neutral-200);
+  --border-default-color: var(--neutral-400);
+  --border-strong-color: var(--neutral-500);
+  --text-primary: var(--neutral-900);
+  --text-secondary: var(--neutral-700);
+  --text-muted: var(--neutral-600);
+
+  /* Surface hierarchy */
+  --color-canvas:   var(--surface-canvas);
+  --color-sunken:   var(--surface-recessed);
+  --color-surface:  var(--surface-quiet);
+  --color-raised:   var(--surface-raised);
+  --color-overlay:  var(--surface-raised);
 
   /* Opaque fallback fills (non-backdrop-filter browsers, Req 4.10) */
-  --color-raised-opaque:  #22223a;
-  --color-overlay-opaque: #2a2a44;
+  --color-raised-opaque:  var(--surface-raised);
+  --color-overlay-opaque: var(--surface-raised);
 
   /* Text hierarchy */
-  --color-text:     #ffffff;
-  --color-sub:      #b4b4d4;
-  --color-muted:    #9494b8;
+  --color-text:     var(--text-primary);
+  --color-sub:      var(--text-secondary);
+  --color-muted:    var(--text-muted);
 
   /* Compact UI palette. Old ramp variables below are compatibility aliases. */
-  --accent-muted: rgba(129, 140, 248, 0.14);
-  --accent: #818cf8;
-  --accent-hover: #6366f1;
-  --accent-active: #4f46e5;
-  --success-muted: rgba(74, 222, 128, 0.14);
-  --success: #4ade80;
-  --warning-muted: rgba(251, 191, 36, 0.14);
-  --warning: #fbbf24;
-  --danger-muted: rgba(248, 113, 113, 0.14);
-  --danger: #f87171;
+  --accent-muted: #4A2D24;
+  --accent: #E58A63;
+  --accent-hover: #F0A17E;
+  --accent-active: #FFC0A3;
+  --success-muted: #2F4029;
+  --success: #9FBE8B;
+  --warning-muted: #4B3920;
+  --warning: #D6A852;
+  --danger-muted: #4D2925;
+  --danger: #DF8B80;
 
   --color-accent-50: var(--accent-muted); --color-accent-100: var(--accent-muted); --color-accent-200: var(--accent-muted);
   --color-accent-300: var(--accent); --color-accent-400: var(--accent); --color-accent-500: var(--accent);
@@ -78,82 +92,33 @@
   --color-blue-50: var(--accent-muted); --color-blue-100: var(--accent-muted); --color-blue-200: var(--accent-muted); --color-blue-300: var(--accent); --color-blue-400: var(--accent); --color-blue-500: var(--accent); --color-blue-600: var(--accent-hover); --color-blue-700: var(--accent-active); --color-blue-800: var(--accent-active); --color-blue-900: var(--accent-active);
 
   /* ── 2. GRADIENT TOKENS (4) ────────────────────────────────────────── */
-  --gradient-ambient:     radial-gradient(ellipse at 50% 0%, #141428, #0e0e1a);
-  --gradient-hero:        radial-gradient(ellipse at 50% 30%, rgba(67, 56, 202, 0.4), rgba(99, 102, 241, 0.1));
-  --gradient-action:      linear-gradient(135deg, #4f46e5, #818cf8);
-  --gradient-celebration: conic-gradient(from 180deg, #818cf8, #60a5fa, #4ade80, #818cf8);
+  --gradient-ambient:     linear-gradient(var(--surface-canvas), var(--surface-recessed));
+  --hero-tonal-wash:      radial-gradient(circle at 82% 12%, rgba(229, 138, 99, 0.14), transparent 58%);
+  --gradient-hero:        var(--hero-tonal-wash);
+  --gradient-action:      linear-gradient(135deg, var(--accent-active), var(--accent));
+  --gradient-celebration: conic-gradient(from 180deg, var(--accent), var(--warning), var(--success), var(--accent));
 
-  /* ── 3. TYPOGRAPHY TOKENS (10 tiers × 5 properties) ────────────────── */
+  /* ── 3. TYPOGRAPHY TOKENS (approved role scale) ─────────────────────── */
+  /* next/font provides the first family; the second remains an offline-safe fallback. */
+  --font-body: var(--font-body-next, Arial), sans-serif;
+  --font-display: var(--font-display-next, Georgia), serif;
 
-  /* display-lg */
-  --type-display-lg-size:      clamp(4.5rem, 12vw + 0.5rem, 5rem);
-  --type-display-lg-weight:    200;
-  --type-display-lg-leading:   1.0;
-  --type-display-lg-tracking:  -0.04em;
-  --type-display-lg-family:    'Inter', system-ui, -apple-system, sans-serif;
-
-  /* display */
-  --type-display-size:         clamp(4rem, 10vw + 1rem, 5rem);
-  --type-display-weight:       200;
-  --type-display-leading:      1.02;
-  --type-display-tracking:     -0.04em;
-  --type-display-family:       'Inter', system-ui, -apple-system, sans-serif;
-
-  /* display-sm */
-  --type-display-sm-size:      3.5rem;
-  --type-display-sm-weight:    300;
-  --type-display-sm-leading:   1.05;
-  --type-display-sm-tracking:  -0.04em;
-  --type-display-sm-family:    'Inter', system-ui, -apple-system, sans-serif;
-
-  /* title */
-  --type-title-size:           2rem;
-  --type-title-weight:         600;
-  --type-title-leading:        1.12;
-  --type-title-tracking:       -0.02em;
-  --type-title-family:         'Inter', system-ui, -apple-system, sans-serif;
-
-  /* headline */
-  --type-headline-size:        1.5rem;
-  --type-headline-weight:      600;
-  --type-headline-leading:     1.25;
-  --type-headline-tracking:    -0.02em;
-  --type-headline-family:      'Inter', system-ui, -apple-system, sans-serif;
-
-  /* subhead */
-  --type-subhead-size:         1.125rem;
-  --type-subhead-weight:       500;
-  --type-subhead-leading:      1.3;
-  --type-subhead-tracking:     -0.01em;
-  --type-subhead-family:       'Inter', system-ui, -apple-system, sans-serif;
-
-  /* body */
-  --type-body-size:            0.9375rem;
-  --type-body-weight:          400;
-  --type-body-leading:         1.5;
-  --type-body-tracking:        0em;
-  --type-body-family:          'Inter', system-ui, -apple-system, sans-serif;
-
-  /* body-sm */
-  --type-body-sm-size:         0.8125rem;
-  --type-body-sm-weight:       400;
-  --type-body-sm-leading:      1.45;
-  --type-body-sm-tracking:     0em;
-  --type-body-sm-family:       'Inter', system-ui, -apple-system, sans-serif;
-
-  /* caption */
-  --type-caption-size:         0.6875rem;
-  --type-caption-weight:       500;
-  --type-caption-leading:      1.35;
-  --type-caption-tracking:     0em;
-  --type-caption-family:       'Inter', system-ui, -apple-system, sans-serif;
-
-  /* overline */
-  --type-overline-size:        0.6875rem;
-  --type-overline-weight:      600;
-  --type-overline-leading:     1.35;
-  --type-overline-tracking:    0.08em;
-  --type-overline-family:      'Inter', system-ui, -apple-system, sans-serif;
+  --type-monthly-runway-size: 48px;
+  --type-monthly-runway-line-height: 50px;
+  --type-screen-title-size: 30px;
+  --type-screen-title-line-height: 34px;
+  --type-section-headline-size: 22px;
+  --type-section-headline-line-height: 28px;
+  --type-card-headline-size: 16px;
+  --type-card-headline-line-height: 22px;
+  --type-body-size: 15px;
+  --type-body-line-height: 22px;
+  --type-label-button-size: 13px;
+  --type-label-button-line-height: 18px;
+  --type-caption-size: 12px;
+  --type-caption-line-height: 16px;
+  --type-data-figure-size: 14px;
+  --type-data-figure-line-height: 20px;
 
   /* ── 4. SPACING TOKENS (9-step, 4px grid) ─────────────────────────── */
   --space-2:   2px;
@@ -183,23 +148,22 @@
   --radius-sheet: var(--radius-lg);
 
   /* ── 6. BORDER TOKENS (4 treatments) ───────────────────────────────── */
-  --border-subtle:  1px solid rgba(255, 255, 255, 0.02);
-  --border-default: 1px solid rgba(255, 255, 255, 0.06);
-  --border-strong:  1px solid rgba(255, 255, 255, 0.10);
-  --border-accent:  1px solid rgba(255, 255, 255, 0.12);
+  --border-subtle:  1px solid var(--neutral-300);
+  --border-default: 1px solid var(--border-default-color);
+  --border-strong:  1px solid var(--border-strong-color);
+  --border-accent:  1px solid var(--accent);
 
   /* ── FOCUS RING TOKEN (Req 18.4, 31.2: ≥2px thick, ≥3:1 contrast) ── */
-  /* accent-500 (#818cf8) on darkest surface (#0e0e1a) = 5.7:1 contrast ✓ */
-  --focus-ring-color: var(--accent, #818cf8);
+  --focus-ring-color: var(--accent);
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
 
   /* ── 7. ELEVATION SHADOW TOKENS (4 values including none) ─────────── */
   --shadow-none: none;
-  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.18);
-  --shadow-md:   0 8px 24px rgba(0, 0, 0, 0.24);
-  --shadow-lg:   0 16px 40px rgba(0, 0, 0, 0.32);
-  --shadow-glow: 0 0 20px rgba(129, 140, 248, 0.24);
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.22);
+  --shadow-md:   0 8px 20px rgba(0, 0, 0, 0.28);
+  --shadow-lg:   0 18px 42px rgba(0, 0, 0, 0.36);
+  --shadow-glow: var(--shadow-md);
   --shadow-xl: var(--shadow-lg);
 
   /* ── 8. BLUR TOKENS (3 values) ─────────────────────────────────────── */
@@ -244,16 +208,16 @@
    * ════════════════════════════════════════════════════════════════════════ */
 
   /* Surface aliases (reference canonical tokens) */
-  --bg:        var(--color-sunken);
+  --bg:        var(--color-canvas);
   --surface:   var(--color-surface);
   --raised:    var(--color-raised);
   --hover:     var(--color-overlay);
-  --border:    #34344f;
-  --line:      #3f3f5a;
+  --border:    var(--border-default-color);
+  --line:      var(--border-strong-color);
   --text:      var(--color-text);
   --sub:       var(--color-sub);
   --muted:     var(--color-muted);
-  --dim:       #2a2a40;
+  --dim:       var(--neutral-500);
 
   /* Compatibility semantic aliases. Canonical values are declared above. */
   --caution: var(--warning);
@@ -345,19 +309,76 @@
   --radius: var(--radius-md);
 
   /* White alpha fills (surface overlays, borders, separators) */
-  --fill-02: rgba(255, 255, 255, 0.02);
-  --fill-03: rgba(255, 255, 255, 0.03);
-  --fill-04: rgba(255, 255, 255, 0.04);
-  --fill-05: rgba(255, 255, 255, 0.05);
-  --fill-06: rgba(255, 255, 255, 0.06);
-  --fill-08: rgba(255, 255, 255, 0.08);
-  --fill-10: rgba(255, 255, 255, 0.10);
-  --fill-12: rgba(255, 255, 255, 0.12);
-  --fill-15: rgba(255, 255, 255, 0.15);
+  --fill-02: rgba(255, 249, 240, 0.02);
+  --fill-03: rgba(255, 249, 240, 0.03);
+  --fill-04: rgba(255, 249, 240, 0.04);
+  --fill-05: rgba(255, 249, 240, 0.05);
+  --fill-06: rgba(255, 249, 240, 0.06);
+  --fill-08: rgba(255, 249, 240, 0.08);
+  --fill-10: rgba(255, 249, 240, 0.10);
+  --fill-12: rgba(255, 249, 240, 0.12);
+  --fill-15: rgba(255, 249, 240, 0.15);
 
   /* Elevation shadows — legacy tokens preserved */
   --shadow-glow-accent: var(--shadow-glow);
   --shadow-glow-accent-strong: var(--shadow-glow);
+}
+
+/* Light warm-neutral theme — mirrors designTokens.colors.light. */
+.warm {
+  color-scheme: light;
+
+  --neutral-0: #FFFDF8; --neutral-50: #FAF6EE; --neutral-100: #F3EDE2; --neutral-200: #E8DFD1;
+  --neutral-300: #D9CEBD; --neutral-400: #BCAF9C; --neutral-500: #958977; --neutral-600: #706759;
+  --neutral-700: #514A40; --neutral-800: #352F28; --neutral-900: #211C17;
+
+  --surface-canvas: var(--neutral-0);
+  --surface-recessed: var(--neutral-50);
+  --surface-quiet: var(--neutral-100);
+  --surface-raised: var(--neutral-200);
+  --border-default-color: var(--neutral-300);
+  --border-strong-color: var(--neutral-400);
+  --text-primary: var(--neutral-900);
+  --text-secondary: var(--neutral-700);
+  --text-muted: var(--neutral-600);
+
+  --accent-muted: #F5DED3;
+  --accent: #B65332;
+  --accent-hover: #99442A;
+  --accent-active: #7A351F;
+  --success-muted: #E3EBDD;
+  --success: #5E7D4E;
+  --warning-muted: #F5E8C8;
+  --warning: #9A6A21;
+  --danger-muted: #F4DCD7;
+  --danger: #A84D43;
+
+  --gradient-ambient: linear-gradient(var(--surface-canvas), var(--surface-recessed));
+  --hero-tonal-wash: radial-gradient(circle at 82% 12%, rgba(182, 83, 50, 0.16), transparent 58%);
+  --gradient-hero: var(--hero-tonal-wash);
+  --gradient-action: linear-gradient(135deg, var(--accent-active), var(--accent));
+  --gradient-celebration: conic-gradient(from 180deg, var(--accent), var(--warning), var(--success), var(--accent));
+
+  --border-subtle: 1px solid var(--neutral-200);
+  --border-default: 1px solid var(--border-default-color);
+  --border-strong: 1px solid var(--border-strong-color);
+  --border-accent: 1px solid var(--accent);
+
+  --shadow-none: none;
+  --shadow-sm: 0 1px 2px rgba(57, 43, 30, 0.08);
+  --shadow-md: 0 8px 20px rgba(57, 43, 30, 0.10);
+  --shadow-lg: 0 18px 42px rgba(57, 43, 30, 0.14);
+  --shadow-glow: var(--shadow-md);
+
+  --fill-02: rgba(33, 28, 23, 0.02);
+  --fill-03: rgba(33, 28, 23, 0.03);
+  --fill-04: rgba(33, 28, 23, 0.04);
+  --fill-05: rgba(33, 28, 23, 0.05);
+  --fill-06: rgba(33, 28, 23, 0.06);
+  --fill-08: rgba(33, 28, 23, 0.08);
+  --fill-10: rgba(33, 28, 23, 0.10);
+  --fill-12: rgba(33, 28, 23, 0.12);
+  --fill-15: rgba(33, 28, 23, 0.15);
 }
 
 /* ── Gradient accent utilities ───────────────────────────────────── */
@@ -388,9 +409,9 @@ body {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 0.9375rem;
-  line-height: 1.5;
+  font-family: var(--font-body);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line-height);
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -510,7 +531,7 @@ textarea:focus:not(:focus-visible),
 
 /* ── Label utility ──────────────────────────────────────────────── */
 .label {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -539,7 +560,7 @@ textarea:focus:not(:focus-visible),
 
 /* ── Mono utility for tabular numbers ───────────────────────────── */
 .font-mono {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-variant-numeric: tabular-nums;
 }
 
@@ -636,7 +657,7 @@ textarea:focus:not(:focus-visible),
 /* ── Inputs ─────────────────────────────────────────────────────── */
 .t-input {
   @apply w-full bg-transparent;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.9375rem;
   color: var(--text);
   border: none;
@@ -665,7 +686,7 @@ input[type="date"] {
   min-height: 52px;
   background: var(--accent);
   color: #000;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.875rem;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -695,7 +716,7 @@ input[type="date"] {
   min-height: 52px;
   color: var(--sub);
   border: 1px solid var(--border);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.875rem;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -729,7 +750,7 @@ input[type="date"] {
 }
 
 .t-tab-item .tab-label {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.625rem;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -1875,7 +1896,7 @@ input[type="date"] {
   border: 1px solid rgba(255, 255, 255, 0.12);
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
 }
 
 /* Prevent overflow:hidden from clipping focus ring */
@@ -2084,7 +2105,7 @@ input[type="date"] {
 }
 
 .app-topbar__avatar-initial {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--text);
@@ -2094,7 +2115,7 @@ input[type="date"] {
 /*
  * Centered wordmark — reads as a brand, not body text.
  *
- * Treatment: Inter at a medium optical weight with slightly tightened tracking
+ * Treatment: DM Sans at a medium optical weight with slightly tightened tracking
  * (brand feel vs. the wide label tracking it had before), a subtle top-lit
  * gradient that fades from bright white into the soft-purple accent, and a
  * glowing accent "mark" dot that echoes the "folio · …" lockup used elsewhere.
@@ -2109,7 +2130,7 @@ input[type="date"] {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 1.125rem;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -2679,7 +2700,7 @@ input[type="date"] {
 }
 
 .celebration-card__title {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.375rem;
   font-weight: 600;
   color: var(--text);
@@ -2688,7 +2709,7 @@ input[type="date"] {
 }
 
 .celebration-card__message {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.9375rem;
   line-height: 1.5;
   color: var(--sub);
@@ -2700,7 +2721,7 @@ input[type="date"] {
   padding: 10px 28px;
   border: none;
   border-radius: 999px;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.9375rem;
   font-weight: 600;
   color: #1a1626;
@@ -3102,17 +3123,17 @@ input[type="date"] {
     --border-accent:  1px solid rgba(255, 255, 255, 0.50);
 
     /* Brighten secondary text for better readability */
-    --color-sub:   #d4d4f0;
-    --color-muted: #b8b8d8;
-    --sub:         #d4d4f0;
-    --muted:       #b8b8d8;
+    --color-sub:   var(--neutral-800);
+    --color-muted: var(--neutral-700);
+    --sub:         var(--neutral-800);
+    --muted:       var(--neutral-700);
 
     /* Solid surface colors — no transparency */
-    --color-canvas:  #0e0e1a;
-    --color-sunken:  #12121f;
-    --color-surface: #1a1a2e;
-    --color-raised:  #22223a;
-    --color-overlay: #2a2a44;
+    --color-canvas:  var(--surface-canvas);
+    --color-sunken:  var(--surface-recessed);
+    --color-surface: var(--surface-quiet);
+    --color-raised:  var(--surface-raised);
+    --color-overlay: var(--surface-raised);
 
     /* White alpha fills — increase visibility */
     --fill-02: rgba(255, 255, 255, 0.06);

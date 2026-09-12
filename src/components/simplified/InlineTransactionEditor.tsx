@@ -162,7 +162,7 @@ export function InlineTransactionEditor({
             <span
               style={{
                 fontSize: typography.subhead.fontSize,
-                fontFamily: "Inter, sans-serif",
+                fontFamily: "var(--font-body)",
                 fontWeight: fontWeights.light,
                 color: transaction.type === "income" ? "var(--success)" : "var(--sub)",
               }}
@@ -192,7 +192,7 @@ export function InlineTransactionEditor({
                 borderBottom: "1px solid var(--line)",
                 outline: "none",
                 fontSize: typography.headline.fontSize,
-                fontFamily: "Inter, sans-serif",
+                fontFamily: "var(--font-body)",
                 fontWeight: fontWeights.semibold,
                 color: "var(--text)",
                 width: "100%",
@@ -278,7 +278,7 @@ export function InlineTransactionEditor({
                 borderBottom: "1px solid var(--line)",
                 outline: "none",
                 fontSize: typography['body-sm'].fontSize,
-                fontFamily: "Inter, sans-serif",
+                fontFamily: "var(--font-body)",
                 color: "var(--text)",
                 padding: "6px 0",
                 caretColor: "var(--text)",
@@ -321,7 +321,7 @@ export function InlineTransactionEditor({
                   ? "var(--gradient-action)"
                   : "var(--dim)",
                 color: canSubmit ? "var(--color-canvas)" : "var(--muted)",
-                fontFamily: "Inter, sans-serif",
+                fontFamily: "var(--font-body)",
                 fontSize: typography['body-sm'].fontSize,
                 fontWeight: fontWeights.semibold,
                 borderRadius: radius.control,
@@ -344,7 +344,7 @@ export function InlineTransactionEditor({
                 justifyContent: "center",
                 background: "transparent",
                 color: "var(--sub)",
-                fontFamily: "Inter, sans-serif",
+                fontFamily: "var(--font-body)",
                 fontSize: typography['body-sm'].fontSize,
                 fontWeight: fontWeights.medium,
                 borderRadius: radius.control,

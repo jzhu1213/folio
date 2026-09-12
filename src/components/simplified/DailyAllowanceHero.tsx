@@ -1,30 +1,14 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import {
-  motion,
-  AnimatePresence,
-  useMotionValue,
-  useSpring,
-} from 'motion/react'
-import type { AllowanceStatus, HeroMeaning, HeroDisplay, ConfidenceBand } from "@/types/folio"
-import { getStatus, generateEncouragingMessage } from "@/lib/dailyAllowanceUtils"
-import { GlassCard } from "@/components/ui"
-import { useReducedMotion, springs, timings } from "@/lib/animations"
-import { typography, pxToRem, animatedFontWeight, fontWeights } from "@/styles/typography"
-import { fills } from "@/styles/shared"
-import { colorRamp, semanticColors, textColors } from "@/styles/colors"
-import { AllowanceRing } from "./AllowanceRing"
-import { Icon } from "@/components/ui/Icon"
-import { getStatusIconName, type IconName } from "@/lib/icons"
-import { STATUS_LABELS } from "@/lib/vocabulary"
+import { useEffect, useMemo, useState } from "react"
+import { animate, motion, useMotionValue } from "motion/react"
+import type { ConfidenceBand, HeroDisplay, HeroMeaning, Transaction } from "@/types"
 import type { SpendingMode } from "@/lib/spendingModes"
-import { getTravelCurrency } from "@/lib/travelMode"
-import { getTravelModeConfig, isTravelModeActive as checkTravelActive } from "@/lib/travelMode"
-import { getRate } from "@/lib/exchangeRates"
-import { getHomeCurrency } from "@/lib/currencyPreferences"
+import { GlassCard } from "@/components/ui"
+import { useReducedMotion } from "@/lib/animations"
+import { motionDurations, monthlyRunwayTransition, reducedFade } from "@/lib/motionPresets"
+import { typographyRoles } from "@/styles/typography"
 import { formatCurrency as formatCurrencyUtil } from "@/lib/currencyUtils"
-import { useTranslation } from "@/contexts/I18nContext"
 
 interface DailyAllowanceHeroProps {
   allowanceLeft: number
@@ -33,1136 +17,261 @@ interface DailyAllowanceHeroProps {
   rollover: number
   isOverBudget: boolean
   isLoading: boolean
+  /** Transactions are supplied by the existing home-screen data flow. */
+  transactions?: readonly Transaction[]
   deferredSpending?: number
   reservedForBills?: number
   upcomingBillCount?: number
   reservedForScheduled?: number
   scheduledCount?: number
-  /** Confidence band for variable income — "usually $X–$Y/day" (Task 164.2) */
   confidenceBand?: ConfidenceBand
   onTapForDetails: () => void
-  /** Controls whether the hero shows "Safe to spend" (guided/structured) or "Spent today" (tracker) framing */
   spendingMode?: SpendingMode
-  /**
-   * When provided, overrides the default allowance framing with the user's chosen
-   * hero meaning (spent_today, spent_week, balance, or allowance).
-   * The hero renders heroDisplay.displayAmount / label / status / message instead.
-   */
   heroMeaning?: HeroMeaning
-  /** Pre-computed display values matching heroMeaning — pass alongside heroMeaning */
   heroDisplay?: HeroDisplay
-  /** Task 483.1: When true, ring does a single brief glow pulse on new-day detection */
   isNewDay?: boolean
-  /** Task 483.2: Temporary period transition text shown as subtitle inside the hero */
   periodTransitionText?: string
-  /** Task 483.2: Callback to dismiss the period transition subtitle */
   onDismissPeriodTransition?: () => void
-  /** Task 483.3: When true, shows "~" prefix on the hero amount to indicate estimation */
   isEstimated?: boolean
-  /** Task 483.3: Callback for tapping the hero when in estimated mode — routes to income logging */
   onLogIncome?: () => void
-  /** Task 484.3: Callback for long-pressing the hero — opens affordability check */
   onLongPress?: () => void
 }
 
-/**
- * Returns the CSS color variable for a given allowance status.
- */
-function getStatusColor(status: AllowanceStatus): string {
-  switch (status) {
-    case "healthy":
-      return "var(--success)"
-    case "caution":
-      return "var(--warning)"
-    case "warning":
-      return "var(--warning)"
-    case "over":
-      return "var(--error)"
-  }
+interface MonthlyRunwayData {
+  cumulativeSpend: number[]
+  spentThisMonth: number
+  projectedRemaining: number
+  monthEndLabel: string
+  daysElapsed: number
 }
 
-/**
- * Maps an allowance status to an emoji and a short phrase for the instant
- * visual answer. Designed to communicate "am I okay today?" in under 1 second
- * — no number-reading required.
- *
- * Uses the canonical vocabulary for consistent emoji/labels across all surfaces.
- */
-function getInstantStatus(status: AllowanceStatus): { iconName: IconName; phrase: string } {
-  return { iconName: getStatusIconName(status), phrase: STATUS_LABELS[status] }
-}
-
-/**
- * In tracker mode there is no "budget" to be over or under — only a spend
- * level relative to the user's own history. Maps spend level to a neutral,
- * informational emoji + phrase rather than a budget-health signal.
- */
-function getTrackerInstantStatus(spentToday: number, dailyBudget: number): { iconName: IconName; phrase: string; color: string } {
-  // When there is no historical daily average to compare against, show neutral
-  if (dailyBudget <= 0) {
-    return { iconName: 'status:tracking', phrase: 'Tracking', color: 'var(--sub)' }
-  }
-  const ratio = spentToday / dailyBudget
-  if (ratio < 0.5) {
-    return { iconName: 'status:healthy', phrase: 'Light day', color: 'var(--success)' }
-  }
-  if (ratio < 0.9) {
-    return { iconName: 'status:tracking', phrase: 'Typical', color: 'var(--accent)' }
-  }
-  if (ratio < 1.3) {
-    return { iconName: 'status:caution', phrase: 'Busy day', color: 'var(--warning)' }
-  }
-  return { iconName: 'status:elevated', phrase: 'High day', color: 'var(--warning)' }
-}
-
-/**
- * Generates a tracker-mode context message — informational, never shaming.
- * Uses "typical" / "a bit more than usual" language relative to history,
- * not budget-based language.
- */
-function getTrackerMessage(spentToday: number, dailyBudget: number): string {
-  if (dailyBudget <= 0) {
-    return spentToday > 0
-      ? `You've logged $${Math.round(spentToday)} so far today`
-      : "Nothing logged yet today — tap to record spending"
-  }
-  const ratio = spentToday / dailyBudget
-  if (spentToday === 0) {
-    return "Nothing logged yet today — tap to record spending"
-  }
-  if (ratio < 0.5) {
-    return "Light spending today — well below your usual"
-  }
-  if (ratio < 0.9) {
-    return "About what you'd typically spend on a day like this"
-  }
-  if (ratio < 1.3) {
-    return "A bit more than your usual — totally fine"
-  }
-  return "Higher than most days — just so you know"
-}
-
-/**
- * Formats a number as a currency string (e.g., "$42").
- * Shows negative amounts as "-$5".
- */
 function formatCurrency(amount: number): string {
-  const rounded = Math.round(Math.abs(amount))
-  const formatted = formatCurrencyUtil(rounded, 'USD', { fractionDigits: 0 })
-  return amount < 0 ? `-${formatted}` : formatted
+  return formatCurrencyUtil(Math.round(Math.abs(amount)), "USD", { fractionDigits: 0 })
+}
+
+function formatDateLocal(date: Date): string {
+  const year = date.getFullYear()
+  const month = `${date.getMonth() + 1}`.padStart(2, "0")
+  const day = `${date.getDate()}`.padStart(2, "0")
+  return `${year}-${month}-${day}`
 }
 
 /**
- * Formats a confidence band amount — no decimals if >= $10, one decimal if < $10.
+ * Builds the month-to-date spending series from transaction effective dates.
+ * Income and future-dated expenses do not contribute to the runway pace.
  */
-function formatBandAmount(amount: number): string {
-  if (amount >= 10) {
-    return `$${Math.round(amount)}`
-  }
-  return `$${amount.toFixed(1)}`
-}
+function buildMonthlyRunway(
+  transactions: readonly Transaction[],
+  dailyBudget: number,
+  now: Date,
+): MonthlyRunwayData {
+  const year = now.getFullYear()
+  const month = now.getMonth()
+  const monthStart = new Date(year, month, 1)
+  const monthEnd = new Date(year, month + 1, 0)
+  const daysInMonth = monthEnd.getDate()
+  const daysElapsed = Math.max(1, now.getDate())
+  const monthStartKey = formatDateLocal(monthStart)
+  const todayKey = formatDateLocal(now)
+  const dailySpend = Array.from({ length: daysElapsed }, () => 0)
 
-/**
- * Triggers subtle haptic feedback if the device supports it.
- * Wrapped in try-catch for safety on unsupported browsers.
- */
-function triggerHaptic(): void {
-  try {
-    if (navigator && "vibrate" in navigator) {
-      navigator.vibrate(10)
+  for (const transaction of transactions) {
+    const date = transaction.date.slice(0, 10)
+    if (transaction.type !== "expense" || date < monthStartKey || date > todayKey) {
+      continue
     }
-  } catch {
-    // Silently ignore — haptic feedback is non-essential
+
+    const day = Number.parseInt(date.slice(-2), 10)
+    if (Number.isNaN(day) || day < 1 || day > daysElapsed) continue
+    dailySpend[day - 1] += Math.abs(transaction.amount)
+  }
+
+  const cumulativeSpend: number[] = []
+  let runningTotal = 0
+  for (const amount of dailySpend) {
+    runningTotal += amount
+    cumulativeSpend.push(runningTotal)
+  }
+
+  const spentThisMonth = runningTotal
+  const projectedSpend = (spentThisMonth / daysElapsed) * daysInMonth
+  // The daily allowance is the established home-screen plan. Scaling it to
+  // this calendar month gives this hero a plan baseline without another fetch.
+  const plannedMonthAmount = Math.max(0, dailyBudget) * daysInMonth
+
+  return {
+    cumulativeSpend,
+    spentThisMonth,
+    projectedRemaining: plannedMonthAmount - projectedSpend,
+    monthEndLabel: new Intl.DateTimeFormat(undefined, {
+      month: "long",
+      day: "numeric",
+    }).format(monthEnd),
+    daysElapsed,
   }
 }
 
-/** Spring used by the animated counter — bouncy settle with controlled overshoot (Task 248.2). */
-const HERO_COUNTER_SPRING = { type: "spring" as const, stiffness: 300, damping: 20, restDelta: 0.5 }
-
-/**
- * AnimatedAmount — the large dollar amount rendered with a spring-driven
- * counter and a slow-moving gradient text fill.
- *
- * The number ticks up/down toward the target `value` using motion/react's
- * `useMotionValue` + `useSpring`. The visible text is derived from the spring
- * so it counts through the intermediate integers. Under reduced motion the
- * value is shown immediately with a static color (no gradient animation).
- *
- * Task 248.2: Applies a brief "bold flash" via `animatedFontWeight` when the
- * status changes, creating a perceptible emphasis pulse that settles back.
- *
- * Kept `aria-hidden` — the accessible amount lives on the parent button label.
- */
-function AnimatedAmount({
-  value,
-  status,
+function AnimatedRunwayAmount({
+  amount,
   prefersReducedMotion,
 }: {
-  value: number
-  status: AllowanceStatus
+  amount: number
   prefersReducedMotion: boolean
 }) {
-  // Start from the actual value so the hero paints immediately (task 3.5).
-  // On subsequent updates the spring animates the transition.
-  const motionValue = useMotionValue(value)
-  const spring = useSpring(motionValue, HERO_COUNTER_SPRING)
-  const [display, setDisplay] = useState(value)
+  const amountValue = useMotionValue(prefersReducedMotion ? amount : 0)
+  const [displayAmount, setDisplayAmount] = useState(prefersReducedMotion ? amount : 0)
 
-  // Task 248.2: bold flash on status change — briefly push weight to bold,
-  // then settle back to semibold using animatedFontWeight's transition.
-  const [emphasisWeight, setEmphasisWeight] = useState<number>(fontWeights.semibold)
-  const prevStatusRef = useRef(status)
-
-  useEffect(() => {
-    if (prevStatusRef.current !== status && !prefersReducedMotion) {
-      // Flash to bold
-      setEmphasisWeight(fontWeights.bold)
-      const timer = setTimeout(() => {
-        setEmphasisWeight(fontWeights.semibold)
-      }, 400)
-      prevStatusRef.current = status
-      return () => clearTimeout(timer)
-    }
-    prevStatusRef.current = status
-  }, [status, prefersReducedMotion])
-
-  // Subscribe to the spring so the visible number ticks through integers.
-  useEffect(() => {
-    if (prefersReducedMotion) return
-    const unsubscribe = spring.on("change", (v) => setDisplay(v))
-    return () => unsubscribe()
-  }, [spring, prefersReducedMotion])
-
-  // Drive the spring toward the latest target value.
   useEffect(() => {
     if (prefersReducedMotion) {
-      setDisplay(value)
+      amountValue.set(amount)
+      setDisplayAmount(amount)
       return
     }
-    motionValue.set(value)
-  }, [value, prefersReducedMotion, motionValue])
 
-  const shown = prefersReducedMotion ? value : display
+    const controls = animate(amountValue, amount, monthlyRunwayTransition)
+    return () => controls.stop()
+  }, [amount, amountValue, prefersReducedMotion])
 
-  const fontWeightStyle = animatedFontWeight(
-    emphasisWeight as Parameters<typeof animatedFontWeight>[0],
-    300
-  )
+  useEffect(() => amountValue.on("change", setDisplayAmount), [amountValue])
 
   return (
     <span
-      style={{
-        ...typography.display,
-        fontSize: "clamp(2rem, 10vw, 2.875rem)",
-        lineHeight: 1.05,
-        display: "block",
-        textAlign: "center",
-        fontVariantNumeric: "tabular-nums",
-        ...fontWeightStyle,
-        color: getStatusColor(status),
-      }}
       aria-hidden="true"
+      style={{
+        ...typographyRoles.monthlyRunwayNumber,
+        color: "var(--text-primary)",
+        display: "block",
+      }}
     >
-      {formatCurrency(shown)}
+      {formatCurrency(displayAmount)}
     </span>
   )
 }
 
-/**
- * Loading skeleton placeholder for the hero section.
- */
+function SpendingSparkline({
+  values,
+  prefersReducedMotion,
+}: {
+  values: readonly number[]
+  prefersReducedMotion: boolean
+}) {
+  const width = 320
+  const height = 64
+  const inset = 4
+  const maximum = Math.max(...values, 1)
+  const pointY = (value: number) => height - inset - (value / maximum) * (height - inset * 2)
+  const points = values.map((value, index) => {
+    const x = values.length === 1
+      ? inset
+      : inset + (index / (values.length - 1)) * (width - inset * 2)
+    return `${x} ${pointY(value)}`
+  })
+  const path = values.length <= 1
+    ? `M ${inset} ${pointY(values[0] ?? 0)} L ${width - inset} ${pointY(values[0] ?? 0)}`
+    : `M ${points.join(" L ")}`
+
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+      style={{ display: "block", width: "100%", height: 64 }}
+    >
+      <path
+        d={`M ${inset} ${height - inset} H ${width - inset}`}
+        fill="none"
+        stroke="var(--border-default-color)"
+        strokeWidth="1"
+      />
+      <motion.path
+        d={path}
+        fill="none"
+        stroke="var(--accent)"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        initial={prefersReducedMotion ? { opacity: 0 } : { pathLength: 0, opacity: 1 }}
+        animate={prefersReducedMotion ? { opacity: 1 } : { pathLength: 1, opacity: 1 }}
+        transition={prefersReducedMotion
+          ? { duration: motionDurations.fast }
+          : monthlyRunwayTransition}
+      />
+    </svg>
+  )
+}
+
 function HeroSkeleton() {
   return (
-    <GlassCard
-      elevation="high"
-      className="flex flex-col items-center gap-3 w-full"
-      style={{ padding: "28px 20px" }}
-    >
-      <div
-        className="flex flex-col items-center gap-3"
-        aria-label="Loading daily allowance"
-        role="status"
-      >
-        {/* Amount skeleton */}
-        <div
-          className="rounded-lg animate-pulse"
-          style={{ width: 160, height: 64, background: "var(--raised)" }}
-        />
-        {/* Message skeleton */}
-        <div
-          className="rounded animate-pulse"
-          style={{ width: 220, height: 20, background: "var(--raised)" }}
-        />
+    <GlassCard elevation="high" className="monthly-runway-hero w-full" style={{ padding: "28px 20px" }}>
+      <div aria-label="Loading monthly runway" role="status" className="flex flex-col gap-3">
+        <div className="animate-pulse rounded-md" style={{ width: 130, height: 18, background: "var(--surface-recessed)" }} />
+        <div className="animate-pulse rounded-md" style={{ width: 210, height: 50, background: "var(--surface-recessed)" }} />
+        <div className="animate-pulse rounded-md" style={{ width: "100%", height: 64, background: "var(--surface-recessed)" }} />
       </div>
     </GlassCard>
   )
 }
 
 /**
- * Formats the rollover amount into a human-friendly string.
- * e.g., "+$5 from yesterday" or "−$3 from yesterday (yesterday's extra)"
- * The annotation on negative rollovers adds context so it reads as calm
- * information rather than a warning.
- */
-function formatRollover(rollover: number): string {
-  const rounded = Math.round(Math.abs(rollover))
-  if (rollover >= 0) {
-    return `+$${rounded} from yesterday`
-  }
-  return `\u2212$${rounded} from yesterday (yesterday's extra)`
-}
-
-/**
- * DailyAllowanceHero — the centerpiece of the simplified home screen.
- *
- * Displays the user's remaining daily allowance inside a frosted GlassCard
- * with a status-based glow. The dollar amount is a spring-driven animated
- * counter with a slow-moving gradient text fill, sitting over a gently
- * breathing ambient light. An AllowanceRing visualizes budget consumption
- * with a soft depth shadow that shifts with progress, and — when the status
- * is healthy — a faint particle shimmer twinkles around the ring.
- *
- * Tapping reveals a detailed calculation breakdown (daily budget, rollover,
- * spent today) with spring-staggered rows, divider lines and icon accents.
- *
- * All motion respects prefers-reduced-motion and the accessible amount label
- * is preserved on the interactive button.
- *
- * Validates: Requirements 2.1, 2.2, 2.4, 2.5, 2.6, 2.7, 8.1, 13.5
+ * The home screen's Monthly Runway. The file name remains a compatibility
+ * boundary for the existing dashboard import; RateDisplay is a separate
+ * exchange-rate control and is not the home hero.
  */
 export function DailyAllowanceHero({
-  allowanceLeft,
   dailyBudget,
-  spentToday,
-  rollover,
-  isOverBudget,
   isLoading,
-  deferredSpending,
-  reservedForBills,
-  upcomingBillCount,
-  reservedForScheduled,
-  scheduledCount,
-  confidenceBand,
   onTapForDetails,
-  spendingMode = 'guided',
-  heroMeaning,
-  heroDisplay,
-  periodTransitionText,
-  onDismissPeriodTransition,
-  isEstimated,
-  onLogIncome,
-  onLongPress,
+  transactions = [],
 }: DailyAllowanceHeroProps) {
-  const [showBreakdown, setShowBreakdown] = useState(false)
-  const [showExplainer, setShowExplainer] = useState(false)
-  const { prefersReducedMotion, listContainer, listItem } = useReducedMotion()
-  const t = useTranslation()
+  const { prefersReducedMotion } = useReducedMotion()
+  const runway = useMemo(
+    () => buildMonthlyRunway(transactions, dailyBudget, new Date()),
+    [dailyBudget, transactions],
+  )
 
-  // ── Task 484.3: Long-press to open affordability check ──────────────────
-  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [showLongPressTooltip, setShowLongPressTooltip] = useState(false)
-  const longPressTriggeredRef = useRef(false)
+  if (isLoading) return <HeroSkeleton />
 
-  // Show a first-use tooltip if the user hasn't seen it before
-  useEffect(() => {
-    if (onLongPress && typeof window !== 'undefined') {
-      const hasSeenTip = localStorage.getItem('folio_hero_longpress_tip_shown')
-      if (!hasSeenTip) {
-        setShowLongPressTooltip(true)
-        localStorage.setItem('folio_hero_longpress_tip_shown', '1')
-        const timer = setTimeout(() => setShowLongPressTooltip(false), 4000)
-        return () => clearTimeout(timer)
-      }
-    }
-  }, [onLongPress])
-
-  const handlePointerDown = useCallback(() => {
-    if (!onLongPress) return
-    longPressTriggeredRef.current = false
-    longPressTimerRef.current = setTimeout(() => {
-      longPressTriggeredRef.current = true
-      triggerHaptic()
-      onLongPress()
-    }, 500)
-  }, [onLongPress])
-
-  const handlePointerUp = useCallback(() => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current)
-      longPressTimerRef.current = null
-    }
-  }, [])
-
-  const handlePointerLeave = useCallback(() => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current)
-      longPressTimerRef.current = null
-    }
-  }, [])
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current)
-      }
-    }
-  }, [])
-
-  // ── Task 483.2: Auto-dismiss period transition subtitle after 5s or on interaction ──
-  const [showPeriodTransition, setShowPeriodTransition] = useState(!!periodTransitionText)
-  useEffect(() => {
-    if (!periodTransitionText) {
-      setShowPeriodTransition(false)
-      return
-    }
-    setShowPeriodTransition(true)
-    const timer = setTimeout(() => {
-      setShowPeriodTransition(false)
-      onDismissPeriodTransition?.()
-    }, 5000)
-    return () => clearTimeout(timer)
-  }, [periodTransitionText, onDismissPeriodTransition])
-
-  // ── Travel mode: show "≈ €X" equivalent beneath the allowance (task 422.3) ──
-  const [travelEquivalent, setTravelEquivalent] = useState<{ amount: number; currency: string } | null>(null)
-
-  // ── Travel mode badge: "✈ London" or "✈ EUR" indicator (task 424.3) ──
-  const [travelBadge, setTravelBadge] = useState<{ label: string } | null>(null)
-  useEffect(() => {
-    if (checkTravelActive()) {
-      const config = getTravelModeConfig()
-      if (config) {
-        const label = config.destinationLabel
-          ? `✈ ${config.destinationLabel}`
-          : `✈ ${config.currency}`
-        setTravelBadge({ label })
-      } else {
-        const currency = getTravelCurrency()
-        setTravelBadge(currency ? { label: `✈ ${currency}` } : null)
-      }
-    } else {
-      setTravelBadge(null)
-    }
-  }, [allowanceLeft, spentToday])
-
-  // When heroDisplay is provided (heroMeaning !== 'allowance' or explicit heroDisplay),
-  // use it to override the default allowance framing entirely.
-  const hasCustomDisplay = heroDisplay !== undefined && heroMeaning !== undefined && heroMeaning !== 'allowance'
-
-  const isTrackerMode = spendingMode === 'tracker'
-
-  // ── Tracker mode: derive neutral status/messaging from spend level ──────
-  const trackerStatus = isTrackerMode
-    ? getTrackerInstantStatus(spentToday, dailyBudget)
-    : null
-
-  // Determine status and message — heroDisplay takes priority, then tracker, then default
-  const status: AllowanceStatus = hasCustomDisplay
-    ? heroDisplay!.status
-    : isOverBudget
-      ? "over"
-      : getStatus(allowanceLeft, dailyBudget)
-
-  const message = hasCustomDisplay
-    ? heroDisplay!.message
-    : isTrackerMode
-      ? getTrackerMessage(spentToday, dailyBudget)
-      : generateEncouragingMessage(status, allowanceLeft, spentToday)
-
-  // In tracker mode: use tracker color (neutral/accent), not budget-health color
-  // For custom hero meaning: use status color (same logic as budget mode)
-  const color = !hasCustomDisplay && isTrackerMode
-    ? (trackerStatus?.color ?? 'var(--sub)')
-    : getStatusColor(status)
-
-  // Ring progress: for custom meanings, show neutral ring progress or suppress
-  const ringProgress = hasCustomDisplay
-    ? (heroMeaning === 'spent_today' && dailyBudget > 0
-        ? Math.min(1, heroDisplay!.displayAmount / dailyBudget)
-        : heroMeaning === 'spent_week' && dailyBudget > 0
-          ? Math.min(1, heroDisplay!.displayAmount / (dailyBudget * 7))
-          : 0.5) // neutral half-ring for balance
-    : isTrackerMode
-      ? (dailyBudget > 0 ? Math.min(1, spentToday / dailyBudget) : 0)
-      : (dailyBudget > 0 ? spentToday / dailyBudget : 0)
-
-  // The hero number
-  const heroValue = hasCustomDisplay
-    ? heroDisplay!.displayAmount
-    : isTrackerMode ? spentToday : allowanceLeft
-
-  // The hero label (shown above or below the ring when relevant)
-  const heroLabel = hasCustomDisplay
-    ? heroDisplay!.label
-    : isTrackerMode ? 'Spent today' : null
-
-  // The instant status badge
-  const instantStatus: { iconName: IconName; phrase: string } = hasCustomDisplay
-    ? { iconName: getStatusIconName(status), phrase: heroDisplay!.label }
-    : isTrackerMode
-      ? { iconName: trackerStatus?.iconName ?? 'status:tracking', phrase: trackerStatus?.phrase ?? 'Tracking' }
-      : getInstantStatus(status)
-
-  // ── Travel mode: fetch "≈ €X" equivalent for the hero value (task 422.3) ──
-  useEffect(() => {
-    const travelCurrencyCode = getTravelCurrency()
-    const value = hasCustomDisplay
-      ? heroDisplay?.displayAmount ?? 0
-      : isTrackerMode ? spentToday : allowanceLeft
-    if (!travelCurrencyCode || value <= 0) {
-      setTravelEquivalent(null)
-      return
-    }
-    let cancelled = false
-    const home = getHomeCurrency()
-    getRate(home, travelCurrencyCode).then((rate) => {
-      if (!cancelled && rate !== null) {
-        setTravelEquivalent({ amount: value * rate, currency: travelCurrencyCode })
-      }
-    })
-    return () => { cancelled = true }
-  }, [allowanceLeft, spentToday, isTrackerMode, hasCustomDisplay, heroDisplay])
-
-  if (isLoading) {
-    return <HeroSkeleton />
-  }
-
-  const ringSize = 180
-  const progress = ringProgress
-  // Breakdown rows — icon accent, label, formatted value and value color.
-  // In tracker mode: "spent today" is the headline, no "safe to spend" concept.
-  const breakdownRows: {
-    key: string
-    icon: IconName
-    label: string
-    value: string
-    valueColor: string
-    accentColor: string
-  }[] = isTrackerMode
-    ? [
-        {
-          key: "spent-today",
-          icon: "breakdown:spent",
-          label: "Spent today",
-          value: formatCurrency(spentToday),
-          valueColor: "var(--text)",
-          accentColor: colorRamp.warning[600],
-        },
-        ...(dailyBudget > 0
-          ? [{
-              key: "daily-avg",
-              icon: "breakdown:daily-budget" as IconName,
-              label: "Your typical day",
-              value: `${formatCurrency(dailyBudget)}/day`,
-              valueColor: "var(--sub)",
-              accentColor: colorRamp.accent[500],
-            }]
-          : []),
-        ...(reservedForBills !== undefined && reservedForBills > 0 && upcomingBillCount !== undefined && upcomingBillCount > 0
-          ? [{
-              key: "reserved-bills",
-              icon: "breakdown:reserved" as IconName,
-              label: "Set aside for bills",
-              value: `${formatCurrency(reservedForBills)} for ${t('plural.bills', { count: upcomingBillCount })}`,
-              valueColor: "var(--sub)",
-              accentColor: colorRamp.blue[500],
-            }]
-          : []),
-      ]
-    : [
-        {
-          key: "daily-budget",
-          icon: "breakdown:daily-budget",
-          label: "Daily budget",
-          value: `${formatCurrency(dailyBudget)}/day`,
-          valueColor: "var(--text)",
-          accentColor: colorRamp.accent[500],
-        },
-        {
-          key: "rollover",
-          icon: "breakdown:rollover",
-          label: "Rollover",
-          value: formatRollover(rollover),
-          valueColor: rollover >= 0 ? "var(--success)" : "var(--sub)",
-          accentColor: rollover >= 0 ? colorRamp.success[500] : colorRamp.warning[500],
-        },
-        {
-          key: "spent-today",
-          icon: "breakdown:spent",
-          label: "Spent today",
-          value: `${formatCurrency(spentToday)} spent today`,
-          valueColor: "var(--text)",
-          accentColor: colorRamp.warning[600],
-        },
-        // Reserved for bills row — only included when there are upcoming bills
-        ...(reservedForBills !== undefined && reservedForBills > 0 && upcomingBillCount !== undefined && upcomingBillCount > 0
-          ? [{
-              key: "reserved-bills",
-              icon: "breakdown:reserved" as IconName,
-              label: "Set aside for bills",
-              value: `${formatCurrency(reservedForBills)} for ${t('plural.bills', { count: upcomingBillCount })}`,
-              valueColor: "var(--sub)",
-              accentColor: colorRamp.blue[500],
-            }]
-          : []),
-        // Scheduled expenses row — only included when there are future-dated transactions (task 90.1)
-        ...(reservedForScheduled !== undefined && reservedForScheduled > 0 && scheduledCount !== undefined && scheduledCount > 0
-          ? [{
-              key: "reserved-scheduled",
-              icon: "breakdown:scheduled" as IconName,
-              label: "Scheduled",
-              value: `${formatCurrency(reservedForScheduled)} for ${t('plural.items', { count: scheduledCount })}`,
-              valueColor: "var(--sub)",
-              accentColor: colorRamp.blue[400],
-            }]
-          : []),
-        // Combined total reserved row (Task 90.2) — shown when BOTH bills and scheduled items exist
-        ...(reservedForBills !== undefined && reservedForBills > 0 && reservedForScheduled !== undefined && reservedForScheduled > 0
-          ? [{
-              key: "reserved-total",
-              icon: "breakdown:total-locked" as IconName,
-              label: "Total reserved",
-              value: formatCurrency(reservedForBills + reservedForScheduled),
-              valueColor: "var(--sub)",
-              accentColor: colorRamp.accent[400],
-            }]
-          : []),
-      ]
-
-  function handleTap() {
-    // Task 484.3: If long-press was triggered, don't fire tap handler
-    if (longPressTriggeredRef.current) {
-      longPressTriggeredRef.current = false
-      return
-    }
-    // Task 483.2: dismiss period transition on any interaction
-    if (showPeriodTransition) {
-      setShowPeriodTransition(false)
-      onDismissPeriodTransition?.()
-    }
-    // Task 483.3: route to income logging when in estimated mode
-    if (isEstimated && onLogIncome) {
-      triggerHaptic()
-      onLogIncome()
-      return
-    }
-    setShowBreakdown((prev) => !prev)
-    triggerHaptic()
-    onTapForDetails()
-  }
+  const projection = runway.projectedRemaining >= 0
+    ? `At this pace, you’ll have about ${formatCurrency(runway.projectedRemaining)} left by ${runway.monthEndLabel}.`
+    : `At this pace, you may be about ${formatCurrency(runway.projectedRemaining)} short by ${runway.monthEndLabel}.`
 
   return (
     <GlassCard
       elevation="high"
-      className="monthly-runway-hero w-full relative"
-      style={{ padding: "28px 20px", overflow: "visible" }}
+      className="monthly-runway-hero w-full"
+      style={{ padding: "28px 20px" }}
     >
       <motion.button
         type="button"
-        className="flex flex-col items-center gap-2 w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-lg"
-        style={{ background: "transparent", border: "none", cursor: "pointer" }}
-        onClick={handleTap}
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerLeave}
-        aria-label={hasCustomDisplay
-          ? `${heroDisplay!.label}: ${formatCurrency(heroDisplay!.displayAmount)}. ${message}. Tap for details.`
-          : isTrackerMode
-            ? `Spent today: ${formatCurrency(spentToday)}. ${instantStatus.phrase}. ${message}. Tap for details.`
-            : `Daily allowance: ${formatCurrency(allowanceLeft)}. Status: ${instantStatus.phrase}. You've spent ${formatCurrency(spentToday)} today.${reservedForBills && reservedForBills > 0 && upcomingBillCount ? ` ${formatCurrency(reservedForBills)} set aside for ${upcomingBillCount} upcoming bill${upcomingBillCount === 1 ? '' : 's'}.` : ''} Tap for details. Hold to check affordability.`}
-        aria-expanded={showBreakdown}
+        className="focus-ring interactive-control flex w-full flex-col items-start gap-3 rounded-lg text-left"
+        style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer" }}
+        onClick={onTapForDetails}
+        aria-label={`Monthly Runway. Spent this month: ${formatCurrency(runway.spentThisMonth)}. ${projection} Tap for details.`}
         aria-live="polite"
         aria-atomic="true"
-        initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
-        animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-        transition={prefersReducedMotion ? timings.fast : timings.slow}
+        initial={prefersReducedMotion ? "initial" : { opacity: 0, y: 8 }}
+        animate={prefersReducedMotion ? "enter" : { opacity: 1, y: 0 }}
+        variants={prefersReducedMotion ? reducedFade : undefined}
+        transition={prefersReducedMotion ? undefined : monthlyRunwayTransition}
       >
-        {/* Task 484.3: First-use tooltip — "Hold to check affordability" */}
-        <AnimatePresence>
-          {showLongPressTooltip && onLongPress && (
-            <motion.span
-              role="tooltip"
-              aria-live="polite"
-              style={{
-                position: 'absolute',
-                top: -28,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                fontSize: typography.caption.fontSize,
-                color: 'var(--text)',
-                background: fills[6],
-                border: `1px solid ${fills[10]}`,
-                borderRadius: 'var(--radius-full)',
-                padding: '4px 12px',
-                whiteSpace: 'nowrap',
-                pointerEvents: 'none',
-                zIndex: 10,
-              }}
-              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 4 }}
-              transition={timings.normal}
-            >
-              Hold to check affordability
-            </motion.span>
-          )}
-        </AnimatePresence>
-
-        {/* Instant status — emoji + phrase, the first thing the eye catches */}
-        <p
-          className="text-center"
-          style={{
-            fontSize: pxToRem(22),
-            fontWeight: fontWeights.semibold,
-            color,
-            lineHeight: 1.3,
-            margin: 0,
-            letterSpacing: "-0.01em",
-          }}
-          aria-label={isTrackerMode ? `Tracker: ${instantStatus.phrase}` : `Status: ${instantStatus.phrase}`}
-        >
-          <span
-            aria-hidden="true"
-            style={{ marginInlineEnd: 6, display: "inline-flex", verticalAlign: "middle" }}
-          >
-            <Icon name={instantStatus.iconName} size={20} />
+        <span style={{ ...typographyRoles.labelButton, color: "var(--text-secondary)" }}>
+          Monthly Runway
+        </span>
+        <div>
+          <span style={{ ...typographyRoles.caption, color: "var(--text-secondary)", display: "block", marginBottom: 4 }}>
+            Spent this month
           </span>
-          {instantStatus.phrase}
-        </p>
-
-        {/* Travel mode badge — "✈ London" or "✈ EUR" (task 424.3) */}
-        {travelBadge && (
-          <motion.div
-            className="flex items-center gap-1"
-            style={{
-              padding: "4px 10px",
-              background: colorRamp.accent[50],
-              border: `1px solid ${colorRamp.accent[200]}`,
-              borderRadius: "var(--radius-full)",
-              marginTop: 2,
-            }}
-            initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={timings.normal}
-            aria-label={`Travel mode active: ${travelBadge.label}`}
-          >
-            <span style={{ fontSize: pxToRem(11), color: textColors.text, fontWeight: fontWeights.medium }}>
-              {travelBadge.label}
-            </span>
-          </motion.div>
-        )}
-
-        {/* Hero label — in tracker mode or custom hero meaning, show a label below the badge */}
-        {(heroLabel) && (
-          <p
-            style={{
-              fontSize: pxToRem(12),
-              color: "var(--sub)",
-              opacity: 0.7,
-              margin: 0,
-              fontVariantNumeric: "tabular-nums",
-            }}
-            aria-hidden="true"
-          >
-            {heroLabel}
-          </p>
-        )}
-
-        {/* The runway ring remains flat; the card carries the sole tonal wash. */}
-        <div className="relative" style={{ width: ringSize, height: ringSize }}>
-          <AllowanceRing
-            progress={progress}
-            status={status}
-            size={ringSize}
-            strokeWidth={8}
-          >
-            {/* Task 483.3: Show "~" prefix when estimated */}
-            {isEstimated && (
-              <span
-                aria-hidden="true"
-                style={{
-                  fontSize: pxToRem(16),
-                  color: "var(--sub)",
-                  opacity: 0.7,
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-150%, -85%)",
-                  fontWeight: fontWeights.medium,
-                }}
-              >
-                ~
-              </span>
-            )}
-            <AnimatedAmount
-              value={heroValue}
-              status={status}
-              prefersReducedMotion={prefersReducedMotion}
-            />
-          </AllowanceRing>
+          <AnimatedRunwayAmount amount={runway.spentThisMonth} prefersReducedMotion={prefersReducedMotion} />
         </div>
-
-        {/* Encouraging message */}
-        <motion.p
-          className="text-center text-sm"
-          style={{
-            color: "var(--sub)",
-            maxWidth: 280,
-            overflowWrap: "break-word",
-          }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={timings.normal}
-        >
-          {message}
-        </motion.p>
-
-        {/* Task 483.2: Period transition subtitle — temporary, auto-dismisses after 5s */}
-        <AnimatePresence>
-          {showPeriodTransition && periodTransitionText && (
-            <motion.p
-              role="status"
-              aria-live="polite"
-              className="text-center"
-              style={{
-                fontSize: pxToRem(12),
-                color: "var(--accent)",
-                opacity: 0.9,
-                margin: 0,
-                marginTop: 4,
-                maxWidth: 260,
-                fontWeight: fontWeights.medium,
-              }}
-              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: -4 }}
-              animate={{ opacity: 0.9, y: 0 }}
-              exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
-              transition={timings.normal}
-            >
-              <span aria-hidden="true">✨</span> {periodTransitionText}
-            </motion.p>
-          )}
-        </AnimatePresence>
-
-        {/* Task 483.3: Estimation label — subtle "(est.)" suffix when isEstimated */}
-        {isEstimated && (
-          <motion.p
-            className="text-center"
-            style={{
-              fontSize: pxToRem(11),
-              color: "var(--sub)",
-              opacity: 0.7,
-              margin: 0,
-              marginTop: 2,
-            }}
-            initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
-            animate={{ opacity: 0.7 }}
-            transition={timings.normal}
-            aria-label="Estimated budget — tap to log income for accuracy"
-          >
-            estimated · tap to log income
-          </motion.p>
-        )}
-
-        {/* Travel mode equivalent — "≈ €X" beneath the allowance (task 422.3) */}
-        {travelEquivalent && (
-          <motion.p
-            className="text-center"
-            style={{
-              fontSize: pxToRem(12),
-              color: "var(--sub)",
-              opacity: 0.7,
-              margin: 0,
-              marginTop: 2,
-              fontVariantNumeric: "tabular-nums",
-              fontFamily: undefined,
-            }}
-            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -2 }}
-            animate={{ opacity: 0.7, y: 0 }}
-            transition={timings.normal}
-            aria-label={`Approximately ${formatCurrencyUtil(travelEquivalent.amount, travelEquivalent.currency)} in travel currency`}
-          >
-            ≈ {formatCurrencyUtil(travelEquivalent.amount, travelEquivalent.currency)}
-          </motion.p>
-        )}
-
-        {/* Confidence band pill (Task 164.2) — subtle "usually $X–$Y/day" range
-            for users with variable income. Only shown in guided/structured mode
-            when the band is significant enough to warrant display. */}
-        {confidenceBand && confidenceBand.isSignificant && !isTrackerMode && (
-          <motion.div
-            className="flex items-center gap-1.5"
-            style={{
-              padding: "6px 12px",
-              background: fills[4],
-              border: `1px solid ${fills[8]}`,
-              borderRadius: "var(--radius-full)",
-              marginTop: 4,
-            }}
-            initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={timings.normal}
-            aria-label={`Usually ${formatBandAmount(confidenceBand.low)} to ${formatBandAmount(confidenceBand.high)} per day`}
-          >
-            <span aria-hidden="true" style={{ opacity: 0.7, display: "inline-flex" }}>
-              <Icon name="status:tracking" size={16} />
-            </span>
-            <span style={{ fontSize: pxToRem(12), color: "var(--sub)", opacity: 0.85 }}>
-              Usually {formatBandAmount(confidenceBand.low)}–{formatBandAmount(confidenceBand.high)}/day
-            </span>
-          </motion.div>
-        )}
-
-        {/* Combined "total reserved" pill (Task 90.2) — shows a unified total when
-            BOTH recurring bills and scheduled items exist, giving users a single at-a-glance
-            number. The individual breakdowns still appear below for transparency. */}
-        {reservedForBills !== undefined && reservedForBills > 0 && reservedForScheduled !== undefined && reservedForScheduled > 0 && (
-          <motion.div
-            className="flex items-center gap-1.5"
-            style={{
-              padding: "6px 12px",
-              background: fills[5],
-              border: `1px solid ${fills[10]}`,
-              borderRadius: "var(--radius-full)",
-              marginTop: 4,
-            }}
-            initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={timings.normal}
-            aria-label={`${formatCurrency(reservedForBills + reservedForScheduled)} total reserved for upcoming bills and scheduled items`}
-          >
-            <span aria-hidden="true" style={{ opacity: 0.8, display: "inline-flex" }}>
-              <Icon name="breakdown:total-locked" size={16} />
-            </span>
-            <span style={{ fontSize: pxToRem(12), color: "var(--sub)", opacity: 0.9 }}>
-              {formatCurrency(reservedForBills + reservedForScheduled)} reserved total
-            </span>
-          </motion.div>
-        )}
-
-        {/* Reserved for bills notice — warm, informational pill */}
-        {reservedForBills !== undefined && reservedForBills > 0 && upcomingBillCount !== undefined && upcomingBillCount > 0 && (
-          <motion.div
-            className="flex items-center gap-1.5"
-            style={{
-              padding: "6px 12px",
-              background: fills[4],
-              border: `1px solid ${fills[8]}`,
-              borderRadius: "var(--radius-full)",
-              marginTop: 4,
-            }}
-            initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={timings.normal}
-            aria-label={`${formatCurrency(reservedForBills)} set aside for ${upcomingBillCount} upcoming bill${upcomingBillCount === 1 ? '' : 's'}`}
-          >
-            <span aria-hidden="true" style={{ opacity: 0.7, display: "inline-flex" }}>
-              <Icon name="breakdown:reserved" size={16} />
-            </span>
-            <span style={{ fontSize: pxToRem(12), color: "var(--sub)", opacity: 0.85 }}>
-              {formatCurrency(reservedForBills)} set aside for {t('plural.bills', { count: upcomingBillCount })}
-            </span>
-          </motion.div>
-        )}
-
-        {/* Deferred spending indicator (Task 82) */}
-        {deferredSpending !== undefined && deferredSpending > 0 && (
-          <motion.div
-            className="flex items-center gap-1.5"
-            style={{
-              padding: "6px 12px",
-              background: fills[4],
-              border: `1px solid ${fills[8]}`,
-              borderRadius: "var(--radius-full)",
-              marginTop: 4,
-            }}
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={timings.normal}
-            aria-label={`On credit: ${formatCurrency(deferredSpending)}`}
-          >
-            <span aria-hidden="true" style={{ opacity: 0.7, display: "inline-flex" }}>
-              <Icon name="tool:debt" size={16} />
-            </span>
-            <span style={{ fontSize: pxToRem(12), color: "var(--sub)", opacity: 0.85 }}>
-              On credit: {formatCurrency(deferredSpending)}
-            </span>
-          </motion.div>
-        )}
-
-        {/* Scheduled expenses indicator (Task 90.1) */}
-        {reservedForScheduled !== undefined && reservedForScheduled > 0 && scheduledCount !== undefined && scheduledCount > 0 && (
-          <motion.div
-            className="flex items-center gap-1.5"
-            style={{
-              padding: "6px 12px",
-              background: fills[4],
-              border: `1px solid ${fills[8]}`,
-              borderRadius: "var(--radius-full)",
-              marginTop: 4,
-            }}
-            initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={timings.normal}
-            aria-label={`${formatCurrency(reservedForScheduled)} scheduled for ${scheduledCount} upcoming item${scheduledCount === 1 ? '' : 's'}`}
-          >
-            <span aria-hidden="true" style={{ opacity: 0.7, display: "inline-flex" }}>
-              <Icon name="breakdown:scheduled" size={16} />
-            </span>
-            <span style={{ fontSize: pxToRem(12), color: "var(--sub)", opacity: 0.85 }}>
-              {formatCurrency(reservedForScheduled)} scheduled
-            </span>
-          </motion.div>
-        )}
-
-        {/* Breakdown panel */}
-        <AnimatePresence>
-          {showBreakdown && (
-            <motion.div
-              className="w-full mt-3"
-              style={{
-                background: fills[4],
-                borderRadius: "var(--radius-md)",
-                padding: "12px 16px",
-                overflow: "hidden",
-              }}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={prefersReducedMotion ? timings.fast : timings.normal}
-              role="region"
-              aria-label="Allowance breakdown"
-            >
-              <motion.div
-                className="flex flex-col"
-                variants={listContainer}
-                initial="hidden"
-                animate="visible"
-              >
-                {breakdownRows.map((row, index) => (
-                  <motion.div
-                    key={row.key}
-                    variants={listItem}
-                    className="flex justify-between items-center text-sm"
-                    style={{
-                      padding: "12px 0",
-                      borderBottom:
-                        index < breakdownRows.length - 1
-                          ? `1px solid ${fills[6]}`
-                          : "none",
-                      color: "var(--sub)",
-                    }}
-                  >
-                    <span className="flex items-center" style={{ gap: 10, minWidth: 0, flex: 1 }}>
-                      <span
-                        aria-hidden="true"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: 28,
-                          height: 28,
-                          borderRadius: 'var(--radius-sm)',
-                          background: `${row.accentColor}15`,
-                          color: row.accentColor,
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Icon name={row.icon} size={16} />
-                      </span>
-                      <span style={{ fontFamily: 'var(--font-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {row.label}
-                      </span>
-                    </span>
-                    <span style={{ color: row.valueColor, fontVariantNumeric: 'tabular-nums', fontWeight: fontWeights.medium, flexShrink: 0 }}>{row.value}</span>
-                  </motion.div>
-                ))}
-              </motion.div>
-
-              {/* "How is this calculated?" explainer toggle */}
-              <div className="flex justify-center mt-2 mb-1">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowExplainer((prev) => !prev)
-                  }}
-                  className="text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded px-2 py-1"
-                  style={{
-                    color: "var(--sub)",
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                    opacity: 0.8,
-                    textDecoration: "underline",
-                    textDecorationStyle: "dotted",
-                    textUnderlineOffset: "3px",
-                  }}
-                  aria-label="How is this calculated? Toggle formula explanation"
-                  aria-expanded={showExplainer}
-                >
-                  {showExplainer ? "Hide formula" : "How is this calculated?"}
-                </button>
-              </div>
-
-              {/* Explainer content */}
-              <AnimatePresence>
-                {showExplainer && (
-                  <motion.div
-                    className="mt-1"
-                    style={{
-                      background: fills[2],
-                      borderRadius: "var(--radius-md)",
-                      padding: "12px 14px",
-                      border: "1px solid var(--border)",
-                    }}
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={prefersReducedMotion ? timings.fast : timings.normal}
-                    role="region"
-                    aria-label="Daily allowance formula explanation"
-                  >
-                    {isTrackerMode ? (
-                      <ol
-                        className="flex flex-col gap-2 text-xs"
-                        style={{ color: "var(--sub)", margin: 0, paddingInlineStart: 16 }}
-                      >
-                        <li>
-                          <strong style={{ color: "var(--text)" }}>Spent today</strong> = sum of all expenses you logged for today
-                        </li>
-                        <li>
-                          <strong style={{ color: "var(--text)" }}>Typical day</strong> = your average daily spending based on your history (used as a reference, not a limit)
-                        </li>
-                        <li>
-                          You&apos;re in tracking mode — there&apos;s no limit, just a clear picture of what you&apos;re spending.
-                        </li>
-                      </ol>
-                    ) : (
-                      <ol
-                        className="flex flex-col gap-2 text-xs"
-                        style={{ color: "var(--sub)", margin: 0, paddingInlineStart: 16 }}
-                      >
-                        <li>
-                          <strong style={{ color: "var(--text)" }}>Daily budget</strong> = (monthly income − fixed bills) ÷ days in month
-                        </li>
-                        <li>
-                          <strong style={{ color: "var(--text)" }}>Rollover</strong> = what you saved or spent extra from previous days (capped at ±2 days)
-                        </li>
-                        <li>
-                          <strong style={{ color: "var(--text)" }}>Today&apos;s allowance</strong> = daily budget + rollover − spent today
-                        </li>
-                        <li>
-                          The number is always $0 or more — if you overspend, tomorrow resets.
-                        </li>
-                      </ol>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div className="w-full">
+          <span style={{ ...typographyRoles.caption, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>
+            Daily pace · {runway.daysElapsed} {runway.daysElapsed === 1 ? "day" : "days"} so far
+          </span>
+          <SpendingSparkline values={runway.cumulativeSpend} prefersReducedMotion={prefersReducedMotion} />
+        </div>
+        <p style={{ ...typographyRoles.body, color: "var(--text-primary)", margin: 0, maxWidth: 360 }}>
+          {projection}
+        </p>
       </motion.button>
     </GlassCard>
   )

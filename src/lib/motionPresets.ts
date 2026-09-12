@@ -23,6 +23,13 @@ export const motionTransitions = {
   scroll: { type: 'spring', stiffness: 260, damping: 32, mass: 0.8 } satisfies Transition,
 } as const
 
+/** One-time 300ms enter used by the Monthly Runway figure and sparkline. */
+export const monthlyRunwayTransition = {
+  type: 'tween',
+  duration: motionDurations.slow,
+  ease: enterEase,
+} as const satisfies Transition
+
 export const slideUpSheet: Variants = {
   hidden: { y: '100%' },
   visible: { y: '0%', transition: motionTransitions.enter },

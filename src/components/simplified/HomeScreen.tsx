@@ -1052,6 +1052,7 @@ export const HomeScreen = memo(function HomeScreen({
             rollover={allowance?.rollover ?? 0}
             isOverBudget={allowance?.status === "over"}
             isLoading={isLoading}
+            transactions={transactions}
             deferredSpending={allowance?.deferredSpending}
             reservedForBills={allowance?.reservedForBills}
             upcomingBillCount={allowance?.upcomingBillCount}

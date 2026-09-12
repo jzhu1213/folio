@@ -6,8 +6,8 @@
  * Top-level layout wrapper for the simplified Folio experience. It stitches
  * together the premium visual chrome:
  *
- *   - a fixed {@link GradientMesh} background (drives the ambient mesh)
- *   - a minimal floating glass **top bar** (user avatar left, settings right)
+ *   - a flat warm-neutral canvas background
+ *   - a minimal raised-surface **top bar** (user avatar left, settings right)
  *   - a scrollable content area for the current screen
  *   - a floating dock-style **glass navigation** (home / history / tools / settings)
  *
@@ -44,13 +44,14 @@ import { motion, AnimatePresence, useTransform, useMotionValue, useSpring } from
 import { GradientMesh, type GradientMeshVariant } from './GradientMesh'
 import { Icon } from './Icon'
 import { NavigationDock } from './composed/NavigationDock'
-import { useReducedMotion, springs } from '@/lib/animations'
+import { useReducedMotion } from '@/lib/animations'
+import { motionTransitions } from '@/lib/motionPresets'
 import { sheetPresentationConfig } from '@/lib/transitions'
 import { useRubberBand } from '@/hooks/useRubberBand'
 import { useScrollProgress } from '@/hooks/useScrollProgress'
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation'
 import { useScrollPreservation } from '@/hooks/useScrollPreservation'
-import { typography, fontWeights } from '@/styles/typography'
+import { typographyRoles } from '@/styles/typography'
 
 /**
  * App navigation keys.
@@ -204,11 +205,10 @@ export function AppShell({
           overflow: 'hidden',
           zIndex: 100,
           padding: '8px 16px',
-          background: 'var(--surface)',
-          color: 'var(--text)',
+          background: 'var(--color-raised)',
+          color: 'var(--text-primary)',
           borderRadius: '8px',
-          fontSize: typography.body.fontSize,
-          fontWeight: fontWeights.medium,
+          ...typographyRoles.labelButton,
           textDecoration: 'none',
         }}
         onFocus={(e) => {
@@ -228,10 +228,10 @@ export function AppShell({
         Skip to main content
       </a>
 
-      {/* Fixed animated mesh background */}
+      {/* Compatibility boundary: GradientMesh is intentionally inert on the flat canvas. */}
       <GradientMesh variant={meshVariant} />
 
-      {/* ── Floating glass top bar ─────────────────────────────── */}
+      {/* ── Raised top bar ─────────────────────────────────────── */}
       {!hideTopBar && (
         <motion.header
           className="app-topbar"
@@ -273,7 +273,7 @@ export function AppShell({
 
           <button
             type="button"
-            className="app-topbar__btn"
+            className="app-topbar__btn focus-ring interactive-control"
             onClick={handleSettingsTop}
             aria-label="Open settings"
           >
@@ -302,7 +302,6 @@ export function AppShell({
           <motion.button
             key="quick-log-fab"
             type="button"
-            className="app-dock-fab"
             onClick={onQuickLog}
             aria-label="Log expense"
             aria-hidden={hideDock ? true : undefined}
@@ -310,8 +309,9 @@ export function AppShell({
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.6 }}
-            whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
-            transition={springs.snappy}
+            className="app-dock-fab focus-ring interactive-control"
+            whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+            transition={motionTransitions.toastEnter}
             style={
               prefersReducedMotion
                 ? undefined

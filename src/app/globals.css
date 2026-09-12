@@ -434,7 +434,7 @@ body::before {
 .focus-ring:focus-visible {
   outline: var(--focus-ring-width) solid var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
-  box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.15);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .focus-ring:focus:not(:focus-visible) {
@@ -520,9 +520,9 @@ textarea:focus-visible,
 [role="button"]:focus-visible,
 [role="tab"]:focus-visible,
 [tabindex]:focus-visible {
-  outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #818cf8);
+  outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, var(--accent));
   outline-offset: var(--focus-ring-offset, 2px);
-  box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.15);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 button:focus:not(:focus-visible),
@@ -1758,6 +1758,7 @@ input[type="date"] {
   position: relative;
   min-height: 100%;
   min-height: 100dvh;
+  background: var(--color-canvas);
 }
 
 /* Safe-area spacing tokens (overridden in @supports below when available) */
@@ -1783,6 +1784,7 @@ input[type="date"] {
   box-sizing: content-box;
   background: var(--color-raised);
   border-bottom: var(--border-default);
+  box-shadow: var(--shadow-sm);
 }
 
 /*
@@ -1820,7 +1822,7 @@ input[type="date"] {
   inset-inline: 0;
   bottom: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(129, 140, 248, 0.22) 30%, rgba(255, 255, 255, 0.10) 50%, rgba(129, 140, 248, 0.22) 70%, transparent);
+  background: var(--border-strong-color);
   pointer-events: none;
 }
 
@@ -1832,23 +1834,18 @@ input[type="date"] {
   justify-content: center;
   width: 44px;
   height: 44px;
-  border-radius: 50%;
-  color: var(--sub);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  transition: color 0.15s, background 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  border: var(--border-default);
+  background: var(--surface-quiet);
 }
 
-.app-topbar__avatar:hover,
-.app-topbar__btn:hover {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.16);
-}
-
-.app-topbar__avatar:active,
-.app-topbar__btn:active {
-  transform: scale(0.94);
+@media (hover: hover) {
+  .app-topbar__btn:hover {
+    color: var(--accent-hover);
+    background: var(--accent-muted);
+    border-color: var(--accent);
+  }
 }
 
 /*
@@ -1861,9 +1858,7 @@ input[type="date"] {
 .app-topbar__avatar {
   overflow: hidden;
   padding: 0;
-  box-shadow:
-    0 0 0 1.5px rgba(129, 140, 248, 0.45),
-    0 2px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-sm);
 }
 
 /*
@@ -1873,13 +1868,7 @@ input[type="date"] {
  * the minimal chrome aesthetic.
  */
 .app-topbar__btn {
-  background: rgba(129, 140, 248, 0.06);
-  border-color: rgba(129, 140, 248, 0.14);
-}
-
-.app-topbar__btn:hover {
-  background: rgba(129, 140, 248, 0.12);
-  border-color: rgba(129, 140, 248, 0.28);
+  background: var(--surface-quiet);
 }
 
 .app-topbar__avatar-img {
@@ -1901,43 +1890,32 @@ input[type="date"] {
  *
  * Treatment: DM Sans at a medium optical weight with slightly tightened tracking
  * (brand feel vs. the wide label tracking it had before), a subtle top-lit
- * gradient that fades from bright white into the soft-purple accent, and a
- * glowing accent "mark" dot that echoes the "folio · …" lockup used elsewhere.
- *
- * Accessibility: `color: var(--text)` is set first as a solid high-contrast
- * fallback for engines that don't support `background-clip: text`. The gradient
- * only ever ranges white → #a5b4fc, both of which clear WCAG 2.1 AA against the
- * dark glass top bar. No animation is used, so there is nothing for
- * `prefers-reduced-motion` to disable (the dot's glow is a static shadow).
+ * solid warm-neutral title and a small terracotta marker. It is intentionally
+ * free of the retired gradient and glow effects.
  */
 .app-topbar__wordmark {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-family: var(--font-body);
-  font-size: 1.125rem;
+  font-family: var(--font-display);
+  font-size: var(--type-card-headline-size);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  line-height: var(--type-card-headline-line-height);
+  letter-spacing: -0.02em;
   text-transform: lowercase;
   user-select: none;
   pointer-events: none;
-  /* Solid fallback (contrast-safe) before the gradient clip is applied. */
-  color: var(--text);
-  background: linear-gradient(135deg, #ffffff 45%, #a5b4fc 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-primary);
 }
 
-/* Small brand mark — a soft-purple accent dot sitting near the baseline. */
+/* Small brand mark — terracotta accent without a glow. */
 .app-topbar__wordmark-dot {
   width: 5px;
   height: 5px;
   align-self: flex-end;
   margin-bottom: 4px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #a78bfa);
-  box-shadow: 0 0 6px rgba(129, 140, 248, 0.5);
+  background: var(--accent);
 }
 
 /* ── Scrollable content ─────────────────────────────────────────── */
@@ -1958,6 +1936,7 @@ input[type="date"] {
   /* Ensure a stable minimum height so tab switching doesn't cause the page
    * to collapse/jump when shorter screens are displayed. */
   min-height: 100dvh;
+  background: var(--color-canvas);
 }
 
 .app-content--no-topbar {
@@ -1999,7 +1978,7 @@ input[type="date"] {
   /* Dock morph transitions (245.2) — padding is a layout property but only
    * triggers on rare dock state changes (not during scroll/animation loops).
    * Acceptable trade-off: keeps dock item spacing correct without transform hacks. */
-  transition: padding 0.2s ease;
+  transition: padding var(--duration-base) var(--ease-enter);
 }
 
 .app-dock::before { content: none; }
@@ -2037,26 +2016,24 @@ input[type="date"] {
 }
 
 .app-dock__item.is-active {
-  color: var(--text);
+  color: var(--accent);
 }
 
 .app-dock__item:not(.is-active):hover {
-  color: var(--text);
+  color: var(--text-secondary);
 }
 
-/* Active item glow — a soft purple halo behind the icon */
+/* Active item uses the compact terracotta-muted surface, without a glow. */
 .app-dock__glow {
   position: absolute;
   inset: 4px;
   z-index: 0;
   border-radius: var(--radius-md);
   pointer-events: none;
-  background: rgba(129, 140, 248, 0.10);
-  border: 0.5px solid rgba(129, 140, 248, 0.22);
-  box-shadow:
-    inset 0 0 6px rgba(129, 140, 248, 0.10),
-    0 0 8px 1px rgba(129, 140, 248, 0.12);
-  transition: box-shadow 0.2s ease, background 0.2s ease;
+  background: var(--accent-muted);
+  border: var(--border-accent);
+  box-shadow: none;
+  transition: background var(--duration-fast) var(--ease-enter), border-color var(--duration-fast) var(--ease-enter);
 }
 
 .app-dock__icon {
@@ -2065,7 +2042,7 @@ input[type="date"] {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--duration-fast) var(--ease-enter);
 }
 
 /* ── Quick-log FAB (centered, elevated above dock) ─────────────── */
@@ -2085,51 +2062,14 @@ input[type="date"] {
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  /* Refined warm purple gradient — richer tones ensuring WCAG AA white icon contrast */
-  background: linear-gradient(135deg, #9b7af8 0%, #8b5cf6 40%, #6d28d9 100%);
-  color: #fff;
-  /* Core shadow + outer glow ring */
-  box-shadow:
-    0 0 0 4px rgba(139, 92, 246, 0.2),
-    0 0 20px rgba(139, 92, 246, 0.35),
-    0 4px 14px rgba(109, 40, 217, 0.4),
-    0 2px 6px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: var(--accent);
+  color: var(--color-raised);
+  box-shadow: var(--shadow-md);
   /* Prevent text selection */
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   touch-action: manipulation;
-  /* Dock morph transition (245.2) — GPU composited scale */
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  /* Phase 6 (260.1): Remove idle breathing — hero AmbientGlow is the single
-   * focal glow on the home screen. Breathing only activates on hover. */
-}
-
-/* Hover-only breathing — desktop users get the subtle pulse on hover */
-@media (hover: hover) {
-  .app-dock-fab:hover {
-    animation: fab-breathe 3.5s ease-in-out infinite;
-  }
-}
-
-/* Breathing keyframe — pulses the outer glow ring opacity */
-@keyframes fab-breathe {
-  0%, 100% {
-    box-shadow:
-      0 0 0 4px rgba(139, 92, 246, 0.2),
-      0 0 20px rgba(139, 92, 246, 0.35),
-      0 4px 14px rgba(109, 40, 217, 0.4),
-      0 2px 6px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  }
-  50% {
-    box-shadow:
-      0 0 0 6px rgba(139, 92, 246, 0.35),
-      0 0 28px rgba(139, 92, 246, 0.5),
-      0 4px 14px rgba(109, 40, 217, 0.4),
-      0 2px 6px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  }
+  /* State transition is supplied by .interactive-control. */
 }
 
 /* Legacy compact class — FAB scale is now motion-driven via useScrollProgress (Task 14.2) */
@@ -2138,12 +2078,7 @@ input[type="date"] {
 }
 
 .app-dock-fab:active {
-  box-shadow:
-    0 0 0 3px rgba(139, 92, 246, 0.15),
-    0 0 12px rgba(139, 92, 246, 0.25),
-    0 2px 8px rgba(109, 40, 217, 0.35),
-    0 1px 3px rgba(0, 0, 0, 0.2);
-  animation: none;
+  box-shadow: var(--shadow-sm);
 }
 
 /* Reduced motion — disable dock morph transitions and breathing animation */
@@ -2915,8 +2850,8 @@ input[type="date"] {
   .app-topbar {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    background: var(--color-surface) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.20);
+    background: var(--color-raised) !important;
+    border-bottom: var(--border-default);
   }
 
   .app-topbar::after {
@@ -2924,16 +2859,16 @@ input[type="date"] {
   }
 
   .app-topbar__btn {
-    border: 1px solid rgba(255, 255, 255, 0.25) !important;
-    background: rgba(129, 140, 248, 0.12) !important;
+    border: var(--border-default) !important;
+    background: var(--surface-quiet) !important;
   }
 
   /* ── Dock — solid, no blur ────────────────────────────────────── */
   .app-dock {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    background: var(--color-surface) !important;
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: var(--color-raised) !important;
+    border: var(--border-default);
   }
 
   .app-dock::before {
@@ -2945,9 +2880,9 @@ input[type="date"] {
   }
 
   .app-dock__item.is-active {
-    border-color: rgba(129, 140, 248, 0.40);
-    background: rgba(129, 140, 248, 0.12);
-    border-radius: 8px;
+    border-color: var(--accent);
+    background: var(--accent-muted);
+    border-radius: var(--radius-md);
   }
 
   .app-dock__glow {
@@ -3029,7 +2964,7 @@ input[type="date"] {
   [role="tab"]:focus-visible,
   [tabindex]:focus-visible {
     outline-width: 3px;
-    box-shadow: 0 0 0 5px rgba(129, 140, 248, 0.25);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 25%, transparent);
   }
 
   /* ── Bottom sheet — solid border ──────────────────────────────── */
@@ -3041,12 +2976,12 @@ input[type="date"] {
   /* ── Accent border shimmer → solid ────────────────────────────── */
   .accent-border-shimmer {
     border-image: none;
-    border: 1px solid rgba(129, 140, 248, 0.50);
+    border: var(--border-accent);
   }
 
   /* ── FAB — solid outline ──────────────────────────────────────── */
   .app-dock-fab {
-    border: 2px solid rgba(129, 140, 248, 0.50) !important;
+    border: 2px solid var(--accent) !important;
   }
 }
 

@@ -32,7 +32,7 @@ import { getInsightsEnabled, getSavingsRateBadgeEnabled } from "@/lib/uiPreferen
 import { getPaceIndicatorEnabled } from "@/lib/paceIndicatorPreferences"
 import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings, STAGGER_STEP, layoutTransition, useReducedMotion as useAppReducedMotion } from "@/lib/animations"
-import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
+import { FONT_FAMILY, spacing, typography, typographyRoles, fontWeights } from '@/styles/typography'
 import { formatMoney } from '@/lib/localeFormat'
 import type { SpendingMode } from "@/lib/spendingModes"
 import {
@@ -40,11 +40,9 @@ import {
   HORIZONTAL_PADDING,
   DOCK_PADDING_BOTTOM,
   SECTION_SPACING,
-  sectionHeader,
   linkButton,
   chipButton,
   borderRadius,
-  progressTrack,
   getCategoryAccent,
   colorRamp,
   shadows,
@@ -549,12 +547,31 @@ export const HomeScreen = memo(function HomeScreen({
     })
   }, [budgets, transactions, currentMonth])
 
-  // Arrow key navigation for category budget grid (task 511.4)
+  const categorySnapshotRows = useMemo(() => categoryRows.slice(0, 4), [categoryRows])
+
+  // The snapshot is one horizontal, keyboard-operable row rather than the
+  // previous two-by-two dashboard grid.
   const categoryGridRoving = useRovingTabindex({
-    itemCount: Math.min(categoryRows.length, 4),
-    orientation: "both",
-    columns: 2,
+    itemCount: categorySnapshotRows.length,
+    orientation: "horizontal",
   })
+
+  // Placeholder until the dedicated insights phase: choose the most relevant
+  // current category signal from data already available on the home screen.
+  const dashboardInsight = useMemo(() => {
+    const category = categoryRows.find((row) => row.overWeekly)
+      ?? categoryRows.find((row) => row.nearLimit)
+      ?? categoryRows.find((row) => row.weeklySpent > 0)
+
+    if (!category) return "Add an expense to start shaping this month’s runway."
+    if (category.overWeekly) {
+      return `${category.label} is ${formatMoney(Math.abs(category.weeklyLeft))} over its weekly limit.`
+    }
+    if (category.nearLimit) {
+      return `${category.label} has ${formatMoney(Math.max(0, category.weeklyLeft))} left this week.`
+    }
+    return `${category.label} is your highest-spend category this week at ${formatMoney(category.weeklySpent)}.`
+  }, [categoryRows])
 
   // Memoize recent repeats for "Log Again" section
   const repeats = useMemo(
@@ -1071,60 +1088,101 @@ export const HomeScreen = memo(function HomeScreen({
             onLongPress={() => setShowAffordabilitySheet(true)}
           />
 
-          {/* ── Consolidated context row (task 482) — all sub-hero indicators ── */}
-          <HeroContextRow
-            isLoading={isLoading}
-            streakDays={streakData.currentStreak}
-            streaksEnabled={streaksEnabled}
-            onOpenStreakDetail={() => setShowStreakDetail(true)}
-            periodContext={periodContext}
-            savingsRate={savingsRate}
-            savingsRateBadgeEnabled={savingsRateBadgeEnabled}
-            paceIndicatorEnabled={paceIndicatorEnabled}
-            transactions={transactions}
-            todayStr={todayStr}
-            timeHorizonStats={timeHorizonStats}
-            activeSpendDown={activeSpendDown}
-            allowanceAmount={allowance?.amount ?? 0}
-            suggestedEntriesTotal={suggestedEntriesTotal}
-            suggestionsIncludedInAllowance={suggestionsIncludedInAllowance}
-            suggestedEntriesCount={suggestedEntries?.length ?? 0}
-            comingUpEnabled={comingUpEnabled}
-            comingUpItems={comingUpItems}
-            overBudgetMessage={
-              !isLoading && spendingMode !== 'tracker' && allowance?.status === 'over'
-                ? t('home.overBudgetShort')
-                : undefined
-            }
-            noTransactionsToday={!hasTodayTransactions}
-            isTodayZeroSpend={isTodayZeroSpend}
-            graceDayMessage={graceDayMessage}
-            outstandingSplits={outstandingSplits}
-            onOpenReimbursements={onOpenReimbursements}
-          />
-
-          {/* Period transition — MOVED into DailyAllowanceHero subtitle (task 483.2) */}
-
-          {/* Suggestion allowance impact — MOVED into HeroContextRow (task 482.8) */}
-
-          {/* Coming-up awareness — MOVED into HeroContextRow (task 482.9) */}
-
-          {/* Savings-rate badge — MOVED into HeroContextRow (task 482.4) */}
-
-          {/* Spending-pace indicator — MOVED into HeroContextRow (task 482.5) */}
-
-          {/* "New day" celebration — MOVED to hero ring glow (task 483.1) */}
-
-          {/* Estimation indicator — MOVED into hero label (task 483.3) */}
-
-          {/* Over-budget messaging — simplified to hero color + HeroContextRow line (task 483.4) */}
-
-          {/* Time horizon pills — MOVED into HeroContextRow (task 482.6) */}
-
-          {/* Spend-down plan indicator — MOVED into HeroContextRow (task 482.7) */}
         </motion.section>
 
-        {/* ── 2. Quick Actions (thumb zone — immediately after hero) ── */}        <motion.section variants={homeSection} aria-label="Quick actions">
+        {/* ── 2. Category snapshot — a glanceable route to category detail ── */}
+        <motion.section variants={homeSection} aria-label="Category snapshot">
+          <div className="flex items-center justify-between" style={{ marginBottom: spacing.sm }}>
+            <h2 style={{ ...typographyRoles.sectionHeadline, color: "var(--text-primary)", margin: 0 }}>
+              Spending snapshot
+            </h2>
+            {categoryRows.length > 4 && onOpenBudgetSettings && (
+              <button
+                type="button"
+                onClick={onOpenBudgetSettings}
+                className="focus-ring interactive-control"
+                style={{ ...linkButton, ...typographyRoles.caption, color: "var(--accent)" }}
+              >
+                {t('home.seeAll')}
+              </button>
+            )}
+          </div>
+          {categorySnapshotRows.length === 0 ? (
+            <GlassCard elevation="low" style={{ padding: "16px" }}>
+              <p style={{ ...typographyRoles.body, color: "var(--text-secondary)", margin: 0 }}>
+                Add category limits to see your spending snapshot here.
+              </p>
+            </GlassCard>
+          ) : (
+            <div
+              role="toolbar"
+              aria-label="Category spending snapshot"
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${categorySnapshotRows.length}, minmax(0, 1fr))`,
+                gap: spacing.xs,
+              }}
+            >
+              {categorySnapshotRows.map((row, index) => {
+                const statusColor = row.overWeekly
+                  ? "var(--danger)"
+                  : row.nearLimit
+                    ? "var(--warning)"
+                    : "var(--text-secondary)"
+                const detail = row.hasLimit
+                  ? row.overWeekly
+                    ? `${formatMoney(Math.abs(row.weeklyLeft))} over`
+                    : `${formatMoney(Math.max(0, row.weeklyLeft))} left`
+                  : `${formatMoney(row.weeklySpent)} spent`
+                const rovingProps = categoryGridRoving.getItemProps(index)
+
+                return (
+                  <button
+                    key={row.category}
+                    ref={rovingProps.ref as React.Ref<HTMLButtonElement>}
+                    type="button"
+                    onClick={() => setSelectedRow(row)}
+                    onKeyDown={rovingProps.onKeyDown as unknown as React.KeyboardEventHandler<HTMLButtonElement>}
+                    tabIndex={rovingProps.tabIndex}
+                    className="focus-ring interactive-control"
+                    aria-label={`${row.label}: ${detail}. Open category details.`}
+                    style={{
+                      minWidth: 0,
+                      padding: "12px 8px",
+                      background: "var(--surface-quiet)",
+                      border: "var(--border-default)",
+                      borderRadius: "var(--radius-lg)",
+                      boxShadow: "var(--shadow-sm)",
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <CategoryIcon category={row.category} size={32} />
+                    <span style={{ ...typographyRoles.caption, color: "var(--text-primary)", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {row.label}
+                    </span>
+                    <span style={{ ...typographyRoles.caption, color: statusColor, fontVariantNumeric: "tabular-nums" }}>
+                      {detail}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </motion.section>
+
+        {/* ── 3. Single home insight (temporary signal until the insights phase) ── */}
+        <motion.section variants={homeSection} aria-label="Monthly insight">
+          <p style={{ ...typographyRoles.body, color: "var(--text-secondary)", margin: 0 }}>
+            {dashboardInsight}
+          </p>
+        </motion.section>
+
+        {/* ── 4. Quick actions — retained as a secondary action group ── */}
+        <motion.section variants={homeSection} aria-label="Quick actions">
           {isFirstRun ? (
             /* First-run: single prominent CTA (task 391.2) */
             <motion.button
@@ -1207,12 +1265,40 @@ export const HomeScreen = memo(function HomeScreen({
           )}
         </motion.section>
 
-        {/* ── "$0 Day" marker MOVED to StreakDetailView (task 485.1) ── */}
-        {/* ── "$0 Day" confirmation feedback MOVED to StreakDetailView (task 485.1) ── */}
-
-        {/* ── Grace day notification MOVED to StreakDetailView + HeroContextRow (task 485.2) ── */}
-
-        {/* ── Outstanding Splits — MOVED to HeroContextRow expanded section (task 487.2) ── */}
+        {/* Supporting status stays available, but no longer competes with the
+            hero, snapshot, and one primary insight in the opening hierarchy. */}
+        <motion.section variants={homeSection} aria-label="Supporting status">
+          <HeroContextRow
+            isLoading={isLoading}
+            streakDays={streakData.currentStreak}
+            streaksEnabled={streaksEnabled}
+            onOpenStreakDetail={() => setShowStreakDetail(true)}
+            periodContext={periodContext}
+            savingsRate={savingsRate}
+            savingsRateBadgeEnabled={savingsRateBadgeEnabled}
+            paceIndicatorEnabled={paceIndicatorEnabled}
+            transactions={transactions}
+            todayStr={todayStr}
+            timeHorizonStats={timeHorizonStats}
+            activeSpendDown={activeSpendDown}
+            allowanceAmount={allowance?.amount ?? 0}
+            suggestedEntriesTotal={suggestedEntriesTotal}
+            suggestionsIncludedInAllowance={suggestionsIncludedInAllowance}
+            suggestedEntriesCount={suggestedEntries?.length ?? 0}
+            comingUpEnabled={comingUpEnabled}
+            comingUpItems={comingUpItems}
+            overBudgetMessage={
+              !isLoading && spendingMode !== 'tracker' && allowance?.status === 'over'
+                ? t('home.overBudgetShort')
+                : undefined
+            }
+            noTransactionsToday={!hasTodayTransactions}
+            isTodayZeroSpend={isTodayZeroSpend}
+            graceDayMessage={graceDayMessage}
+            outstandingSplits={outstandingSplits}
+            onOpenReimbursements={onOpenReimbursements}
+          />
+        </motion.section>
 
         {/* ══════════════════════════════════════════════════════════
             ── BELOW THE FOLD ──────────────────────────────────────────
@@ -1313,189 +1399,6 @@ export const HomeScreen = memo(function HomeScreen({
         {/* Tips now fire via the toast system (see useEffect below the render tree).
             No inline ContextualTipCard renders in the home scroll area. */}
 
-        {/* ── 3. Category Budget Cards (top 4 only for cleanliness) ────────────────────────────── */}
-        <motion.section variants={homeSection} aria-label="Budget categories">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: spacing.sm,
-            }}
-          >
-            <h2 style={sectionHeader}>
-              {t('home.sectionCategories')}
-            </h2>
-            {categoryRows.length > 4 && (
-              <button
-                type="button"
-                onClick={() => onOpenBudgetSettings?.()}
-                style={{
-                  ...linkButton,
-                  fontSize: typography['body-sm'].fontSize,
-                  opacity: 0.7,
-                }}
-                aria-label="See all categories"
-              >
-                {t('home.seeAll')}
-              </button>
-            )}
-          </div>
-          {categoryRows.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={timings.slow}
-            >
-              <GlassCard elevation="low" style={{ padding: "4px 0", borderRadius: borderRadius.lg }}>
-                <EmptyState
-                  illustration="budget"
-                  title={t('home.categoryEmptyTitle')}
-                  subtitle={t('home.categoryEmptySubtitle')}
-                  actionLabel={onOpenBudgetSettings ? t('home.categoryEmptyAction') : undefined}
-                  onAction={onOpenBudgetSettings ?? undefined}
-                  actionAriaLabel="Set up category limits"
-                />
-              </GlassCard>
-            </motion.div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing.sm }} role="grid" aria-label="Category budgets">
-              {categoryRows.slice(0, 4).map((row, gridIdx) => {
-                const barColor = row.overWeekly
-                  ? "var(--error)"
-                  : row.nearLimit
-                  ? "var(--warning)"
-                  : "var(--success)"
-
-                const budgetLabel = row.hasLimit
-                  ? row.overWeekly
-                    ? `${row.label}: $${Math.abs(Math.round(row.weeklyLeft))} over this week`
-                    : `${row.label}: $${Math.max(0, Math.round(row.weeklyLeft))} left this week`
-                  : `${row.label}: no limit set${row.weeklySpent > 0 ? `, $${Math.round(row.weeklySpent)} spent` : ""}`
-
-                const rovingProps = categoryGridRoving.getItemProps(gridIdx)
-
-                return (
-                  <motion.button
-                    key={row.category}
-                    ref={rovingProps.ref as React.Ref<HTMLButtonElement>}
-                    type="button"
-                    onClick={() => setSelectedRow(row)}
-                    onKeyDown={rovingProps.onKeyDown as unknown as React.KeyboardEventHandler<HTMLButtonElement>}
-                    tabIndex={rovingProps.tabIndex}
-                    whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
-                    transition={springs.bouncy}
-                    aria-label={budgetLabel}
-                    style={{
-                      all: "unset",
-                      cursor: "pointer",
-                      display: "block",
-                      width: "100%",
-                    }}
-                  >
-                    <GlassCard
-                      elevation="low"
-                      style={{
-                        padding: "14px",
-                        borderRadius: borderRadius.lg,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: spacing.xxs,
-                      }}
-                    >
-                      {/* Category icon chip */}
-                      <CategoryIcon category={row.category} size={44} />
-
-                      {/* Category name */}
-                      <span
-                        style={{
-                          fontSize: typography['body-sm'].fontSize,
-                          fontWeight: fontWeights.medium,
-                          color: "var(--text)",
-                          fontFamily: FONT_FAMILY,
-                          maxWidth: "100%",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {row.label}
-                      </span>
-
-                      {/* Progress bar or "no limit" */}
-                      {row.hasLimit ? (
-                        <>
-                          <div
-                            style={{
-                              ...progressTrack,
-                              marginTop: 2,
-                            }}
-                            role="progressbar"
-                            aria-valuenow={Math.min(row.weekPct, 100)}
-                            aria-valuemin={0}
-                            aria-valuemax={100}
-                            aria-label={`${row.label} budget usage: ${Math.round(Math.min(row.weekPct, 100))}%`}
-                          >
-                            <motion.div
-                              animate={{ scaleX: Math.min(row.weekPct, 100) / 100 }}
-                              transition={springs.gentle}
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                borderRadius: 2,
-                                background: barColor,
-                                transformOrigin: "left center",
-                              }}
-                            />
-                          </div>
-                          <span
-                            style={{
-                              fontSize: typography.caption.fontSize,
-                              color: barColor,
-                              fontFamily: FONT_FAMILY,
-                              fontWeight: fontWeights.medium,
-                            }}
-                          >
-                            {row.overWeekly
-                              ? t('home.overThisWeek', { amount: Math.abs(Math.round(row.weeklyLeft)) })
-                              : t('home.leftThisWeek', { amount: Math.max(0, Math.round(row.weeklyLeft)) })}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <span
-                            style={{
-                              fontSize: typography.caption.fontSize,
-                              color: "var(--sub)",
-                              opacity: 0.6,
-                              fontFamily: FONT_FAMILY,
-                              marginTop: 2,
-                            }}
-                          >
-                            {t('home.noLimit')}
-                          </span>
-                          {row.weeklySpent > 0 && (
-                            <span
-                              style={{
-                                fontSize: typography.caption.fontSize,
-                                color: "var(--sub)",
-                                fontFamily: FONT_FAMILY,
-                              }}
-                            >
-                              {t('home.spentAmount', { amount: Math.round(row.weeklySpent) })}
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </GlassCard>
-                  </motion.button>
-                )
-              })}
-            </div>
-          )}
-        </motion.section>
-
         {/* ── 4. Recent Transactions ──────────────────────────────── */}
         <motion.section variants={homeSection} aria-label="Recent transactions">
 
@@ -1509,7 +1412,7 @@ export const HomeScreen = memo(function HomeScreen({
               marginBottom: spacing.sm,
             }}
           >
-            <h2 style={sectionHeader}>
+            <h2 style={{ ...typographyRoles.sectionHeadline, color: "var(--text-primary)", margin: 0 }}>
               {t('home.sectionRecent')}
             </h2>
             {recentTransactions.length > 0 && (

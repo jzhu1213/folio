@@ -3,11 +3,10 @@
 /**
  * NavigationDock — Composed component
  *
- * A 4-tab floating navigation dock (Home, History, Tools, Settings) at the
- * overlay elevation tier. Uses spring-driven shared highlight (layoutId) with
- * the responsive spring preset (stiffness 600, damping 35, mass 0.8).
+ * A 4-tab raised navigation dock (Home, History, Tools, Settings) using the
+ * flat surface hierarchy and a token-timed shared active highlight.
  *
- * - Floating overlay-tier: uses --color-overlay, --shadow-xl, 32px blur
+ * - Floating raised tier: uses --color-raised, --shadow-md, no blur
  * - Hit targets ≥44px per destination
  * - aria-current on active item
  * - Reduced motion: highlight transitions via opacity crossfade
@@ -20,10 +19,9 @@ import { motion } from 'motion/react'
 import { Icon } from "@/components/ui/Icon"
 import { elevations, radius } from "@/styles/surfaces"
 import { spacingScale, safeArea } from "@/styles/layout"
-import { textColors, colorRamp } from "@/styles/colors"
-import { springPresets } from "@/styles/motion"
-import { springs, timings, useReducedMotion } from "@/lib/animations"
-import { typography, FONT_FAMILY } from "@/styles/typography"
+import { motionTransitions } from "@/lib/motionPresets"
+import { useReducedMotion } from "@/lib/animations"
+import { typographyRoles } from "@/styles/typography"
 import type { IconName } from "@/lib/icons"
 
 // ============================================================================
@@ -57,14 +55,6 @@ const DOCK_ITEMS: DockItem[] = [
   { id: "tools", label: "Tools", icon: "nav:tools" },
   { id: "settings", label: "Settings", icon: "nav:settings" },
 ]
-
-/** Shared highlight spring (responsive preset). */
-const highlightSpring = {
-  type: "spring" as const,
-  stiffness: springPresets.responsive.stiffness,
-  damping: springPresets.responsive.damping,
-  mass: springPresets.responsive.mass,
-}
 
 // ============================================================================
 // Component
@@ -104,7 +94,7 @@ export function NavigationDock({ active, onNavigate, hidden = false }: Navigatio
 
   if (hidden) return null
 
-  const tier = elevations.overlay
+  const tier = elevations.raised
 
   const dockStyle: React.CSSProperties = {
     position: "fixed",
@@ -116,11 +106,9 @@ export function NavigationDock({ active, onNavigate, hidden = false }: Navigatio
     justifyContent: "space-around",
     padding: `${spacingScale["8"]} ${spacingScale["12"]}`,
     background: tier.fill,
-    border: `1px solid ${tier.border}`,
+    border: tier.border,
     borderRadius: radius.sheet,
     boxShadow: tier.shadow,
-    backdropFilter: `blur(${tier.blur})`,
-    WebkitBackdropFilter: `blur(${tier.blur})`,
     zIndex: 50,
   }
 
@@ -140,7 +128,7 @@ export function NavigationDock({ active, onNavigate, hidden = false }: Navigatio
             onClick={() => onNavigate(item.id)}
             aria-current={isActive ? "page" : undefined}
             aria-label={item.label}
-            className="focus-ring"
+            className="focus-ring interactive-control"
             style={{
               position: "relative",
               display: "flex",
@@ -154,22 +142,24 @@ export function NavigationDock({ active, onNavigate, hidden = false }: Navigatio
               background: "transparent",
               border: "none",
               cursor: "pointer",
-              color: isActive ? colorRamp.accent[500] : textColors.muted,
+              color: isActive ? "var(--accent)" : "var(--text-muted)",
               WebkitTapHighlightColor: "transparent",
               borderRadius: radius.control,
-              transition: "color 0.15s ease-out",
             }}
           >
-            {/* Spring-driven shared highlight */}
+            {/* Token-timed shared active highlight */}
             {isActive && (
               <motion.div
-                layoutId="dock-highlight"
-                transition={prefersReducedMotion ? timings.fast : highlightSpring}
+                layoutId={prefersReducedMotion ? undefined : "dock-highlight"}
+                initial={prefersReducedMotion ? { opacity: 0 } : false}
+                animate={prefersReducedMotion ? { opacity: 1 } : undefined}
+                transition={motionTransitions.toastEnter}
                 style={{
                   position: "absolute",
                   inset: spacingScale["2"],
                   borderRadius: radius.control,
-                  background: colorRamp.accent[100],
+                  background: "var(--accent-muted)",
+                  border: "var(--border-accent)",
                   zIndex: -1,
                 }}
               />
@@ -179,11 +169,9 @@ export function NavigationDock({ active, onNavigate, hidden = false }: Navigatio
 
             <span
               style={{
-                fontFamily: FONT_FAMILY,
-                fontSize: typography.caption.fontSize,
+                ...typographyRoles.labelButton,
                 fontWeight: isActive ? 600 : 500,
-                lineHeight: 1,
-                letterSpacing: typography.caption.letterSpacing,
+                color: "inherit",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",

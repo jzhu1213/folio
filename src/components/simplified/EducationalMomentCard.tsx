@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from 'motion/react'
 import { GlassCard } from "@/components/ui/GlassCard"
+import { Icon } from "@/components/ui/Icon"
 import { useReducedMotion } from "@/lib/animations"
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { radius } from "@/styles/surfaces"
@@ -164,21 +165,7 @@ export function EducationalMomentCard({
                       aria-label={action.label}
                     >
                       {action.label}
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 14 14"
-                        fill="none"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M2.5 7h9M8 3.5L11.5 7 8 10.5"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
+                      <Icon name="action:forward" size={14} strokeWidth={1.5} />
                     </motion.button>
                   )}
                 </div>

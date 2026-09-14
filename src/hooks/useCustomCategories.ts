@@ -16,9 +16,9 @@ import {
 export interface UseCustomCategoriesReturn {
   customCategories: CustomCategory[]
   isLoading: boolean
-  addCustomCategory: (label: string, emoji: string, icon?: string) => Promise<CustomCategory | null>
+  addCustomCategory: (label: string, emoji: string, icon?: string, options?: { illustration?: string; color?: string }) => Promise<CustomCategory | null>
   removeCustomCategory: (id: string) => Promise<boolean>
-  renameCustomCategory: (id: string, updates: { label?: string; emoji?: string; icon?: string }) => Promise<CustomCategory | null>
+  renameCustomCategory: (id: string, updates: { label?: string; emoji?: string; icon?: string; illustration?: string; color?: string; archived?: boolean }) => Promise<CustomCategory | null>
 }
 
 export function useCustomCategories(userId: string | null | undefined): UseCustomCategoriesReturn {
@@ -49,10 +49,10 @@ export function useCustomCategories(userId: string | null | undefined): UseCusto
     return () => { cancelled = true }
   }, [userId])
 
-  const addCustomCategory = useCallback(async (label: string, emoji: string, icon?: string): Promise<CustomCategory | null> => {
+  const addCustomCategory = useCallback(async (label: string, emoji: string, icon?: string, options?: { illustration?: string; color?: string }): Promise<CustomCategory | null> => {
     if (!userId) return null
 
-    const result = await createCustomCategory(userId, label, emoji, icon)
+    const result = await createCustomCategory(userId, label, emoji, icon, options)
     if (result) {
       setCustomCategories((prev) => [...prev, result])
     }
@@ -67,7 +67,7 @@ export function useCustomCategories(userId: string | null | undefined): UseCusto
     return success
   }, [])
 
-  const renameCustomCategory = useCallback(async (id: string, updates: { label?: string; emoji?: string; icon?: string }): Promise<CustomCategory | null> => {
+  const renameCustomCategory = useCallback(async (id: string, updates: { label?: string; emoji?: string; icon?: string; illustration?: string; color?: string; archived?: boolean }): Promise<CustomCategory | null> => {
     const result = await updateCustomCategory(id, updates)
     if (result) {
       setCustomCategories((prev) => prev.map((c) => c.id === id ? result : c))

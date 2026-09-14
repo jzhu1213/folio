@@ -72,13 +72,12 @@ const sheetVariantsFabOrigin = {
 const sheetVariantsReduced = reducedFade
 
 const backdropVariants = {
-  hidden: { opacity: 0, backdropFilter: "blur(0px)" },
+  hidden: { opacity: 0 },
   visible: {
     opacity: sheetPresentationConfig.backdropDimOpacity,
-    backdropFilter: `blur(${sheetPresentationConfig.backdropBlur})`,
     transition: motionTransitions.enter,
   },
-  exit: { opacity: 0, backdropFilter: "blur(0px)", transition: motionTransitions.exit },
+  exit: { opacity: 0, transition: motionTransitions.exit },
 }
 
 // ============================================================================

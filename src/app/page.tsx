@@ -171,8 +171,8 @@ const SharingScreen = dynamic(
   () => import('@/components/simplified/SharingScreen').then(m => ({ default: m.SharingScreen })),
   { ssr: false, loading: () => <DepthSurfaceSkeleton /> }
 )
-const CategoryHubScreen = dynamic(
-  () => import('@/components/simplified/CategoryHubScreen').then(m => ({ default: m.CategoryHubScreen })),
+const CategoryManagementScreen = dynamic(
+  () => import('@/components/simplified/CategoryManagementScreen').then(m => ({ default: m.CategoryManagementScreen })),
   { ssr: false, loading: () => <DepthSurfaceSkeleton /> }
 )
 const CashFlowForecastScreen = dynamic(
@@ -529,7 +529,7 @@ export default function FolioApp() {
   const gatedComingUpItems = automationPrefs.showComingUp ? comingUpItems : []
 
   // ── Custom Categories ──────────────────────────────────────────
-  const { customCategories, addCustomCategory, removeCustomCategory, renameCustomCategory } = useCustomCategories(user?.id)
+  const { customCategories, addCustomCategory, renameCustomCategory } = useCustomCategories(user?.id)
 
   // ── Error Toast: notify user when initial data load fails ──────
   useEffect(() => {
@@ -2801,11 +2801,10 @@ export default function FolioApp() {
       >
         <DepthSurfaceLoadGuard onClose={handleCloseDepthSurface}>
         <div className="min-h-screen" style={{ paddingTop: 60 }}>
-          <CategoryHubScreen
+          <CategoryManagementScreen
             customCategories={customCategories}
             onAddCustomCategory={addCustomCategory}
-            onRemoveCustomCategory={removeCustomCategory}
-            onRenameCustomCategory={renameCustomCategory}
+            onUpdateCustomCategory={renameCustomCategory}
             onClose={handleCloseDepthSurface}
           />
         </div>
@@ -3015,7 +3014,7 @@ export default function FolioApp() {
         avatarUrl={undefined}
         avatarInitial={user?.email?.charAt(0)}
         meshVariant="home"
-        onQuickLog={anySheetOpen ? undefined : () => overlay.openSheet('expense', { defaultCategory: undefined, splitPreEnabled: false, originFromFab: true })}
+        onQuickLog={anySheetOpen ? undefined : () => overlay.openSheet('expense', { defaultCategory: undefined, splitPreEnabled: false })}
         hideDock={anySheetOpen}
       >
         {/* Main content landmark for skip link (task 452.1) */}
@@ -3246,7 +3245,6 @@ export default function FolioApp() {
         categorizationRules={categorizationRules}
         onAddCategorizationRule={handleAddCategorizationRule}
         dailyAllowanceAmount={allowance?.amount}
-        originFromFab={overlay.getSheetPayload('expense')?.originFromFab ?? false}
       />
 
       {/* ── Quick-log confirm sheet (task 180.1 — share sheet & assistant) ── */}
@@ -3273,8 +3271,8 @@ export default function FolioApp() {
             maxWidth: 360,
             width: 'calc(100% - 40px)',
             padding: '12px 16px',
-            background: 'rgba(26, 26, 46, 0.96)',
-            border: '1px solid rgba(129, 140, 248, 0.25)',
+            background: 'var(--surface-raised)',
+            border: 'var(--border-default)',
             borderRadius: radius.control,
             display: 'flex',
             alignItems: 'center',

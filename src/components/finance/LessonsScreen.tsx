@@ -18,6 +18,7 @@ import { CreditPayoffCalculator } from './CreditPayoffCalculator'
 import { CompoundGrowthCalculator } from './CompoundGrowthCalculator'
 import { CreditScoreCheckin } from './CreditScoreCheckin'
 import { GlassCard } from '@/components/ui/GlassCard'
+import { Icon } from '@/components/ui/Icon'
 import type { Lesson, UserLessonProgress, LessonTopic } from '@/types'
 import { LESSON_TOPICS } from '@/types'
 import { LESSONS } from '@/lib/lessonsContent'
@@ -31,7 +32,7 @@ import { getTriggerHistory } from '@/lib/lessonTriggerEngine'
 import type { TriggerHistoryEntry } from '@/lib/lessonTriggerEngine'
 import { renderLesson, buildLessonTemplateData } from '@/lib/lessonTemplateRenderer'
 import type { BuildTemplateDataParams } from '@/lib/lessonTemplateRenderer'
-import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
+import { FONT_FAMILY, spacing, typography, typographyRoles, fontWeights } from '@/styles/typography'
 import {
   CONTENT_MAX_WIDTH,
   HORIZONTAL_PADDING,
@@ -220,9 +221,7 @@ export function LessonsScreen({
             padding: 0,
           }}
         >
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
+          <Icon name="action:back" size={16} strokeWidth={1.5} />
           Back to learning path
         </button>
 
@@ -230,7 +229,7 @@ export function LessonsScreen({
           <div style={{ padding: spacing.lg }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, marginBottom: 16 }}>
               <span style={{ fontSize: 28 }}>{rendered.emoji}</span>
-              <h2 style={{ fontSize: typography.subhead.fontSize, fontWeight: fontWeights.semibold, color: 'var(--text)', fontFamily: FONT_FAMILY, margin: 0 }}>
+              <h2 style={{ ...typographyRoles.cardHeadline, color: 'var(--text)', margin: 0 }}>
                 {rendered.title}
               </h2>
             </div>
@@ -309,7 +308,7 @@ export function LessonsScreen({
           </p>
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: spacing.xs, marginBottom: 12 }}>
-            <span style={{ fontSize: 36, fontWeight: fontWeights.light, color: 'var(--text)', fontFamily: FONT_FAMILY }}>
+            <span style={{ fontSize: 'var(--type-data-figure-size)', lineHeight: 'var(--type-data-figure-line-height)', fontWeight: fontWeights.light, color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
               {totalUnlocked}
             </span>
             <span style={{ fontSize: typography.body.fontSize, color: 'var(--muted)', fontFamily: FONT_FAMILY }}>
@@ -374,9 +373,7 @@ export function LessonsScreen({
                   {mostRecentLesson.microContent.slice(0, 80)}…
                 </p>
               </div>
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} style={{ color: 'var(--sub)', flexShrink: 0 }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+              <Icon name="action:forward" size={20} strokeWidth={1.5} style={{ color: 'var(--sub)', flexShrink: 0 }} />
             </button>
           </GlassCard>
         </div>
@@ -433,9 +430,7 @@ export function LessonsScreen({
                         : `2px solid ${fills[10]}`,
                   }}>
                     {isComplete ? (
-                      <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="var(--success)" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
+                      <Icon name="status:complete" size={12} color="var(--success)" strokeWidth={3} />
                     ) : (
                       <span style={{ fontSize: typography.caption.fontSize }}>{group.emoji}</span>
                     )}
@@ -515,9 +510,7 @@ export function LessonsScreen({
                               {isUnlocked ? (
                                 <span style={{ fontSize: typography['body-sm'].fontSize }}>{lesson.emoji}</span>
                               ) : (
-                                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="var(--muted)" strokeWidth={2}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
+                                <Icon name="status:locked" size={12} color="var(--muted)" strokeWidth={2} />
                               )}
                             </div>
 
@@ -552,9 +545,7 @@ export function LessonsScreen({
 
                             {/* Chevron or lock */}
                             {isUnlocked ? (
-                              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} style={{ color: 'var(--muted)', flexShrink: 0 }}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                              </svg>
+                              <Icon name="action:forward" size={14} strokeWidth={1.5} style={{ color: 'var(--muted)', flexShrink: 0 }} />
                             ) : (
                               <span style={{ fontSize: typography.caption.fontSize, color: 'var(--muted)', fontFamily: FONT_FAMILY, flexShrink: 0 }}>
                                 locked
@@ -607,9 +598,7 @@ export function LessonsScreen({
                     {tool.sub}
                   </p>
                 </div>
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} style={{ color: 'var(--muted)', flexShrink: 0 }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <Icon name="action:forward" size={16} strokeWidth={1.5} style={{ color: 'var(--muted)', flexShrink: 0 }} />
               </button>
             </GlassCard>
           ))}
@@ -639,9 +628,7 @@ export function LessonsScreen({
                   Track your score over time
                 </p>
               </div>
-              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} style={{ color: 'var(--muted)', flexShrink: 0 }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+              <Icon name="action:forward" size={16} strokeWidth={1.5} style={{ color: 'var(--muted)', flexShrink: 0 }} />
             </button>
           </GlassCard>
         </div>

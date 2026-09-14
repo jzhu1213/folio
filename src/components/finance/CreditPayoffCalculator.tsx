@@ -1,6 +1,7 @@
 "use client"
 import { useState, useMemo } from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
+import { Icon } from '@/components/ui/Icon'
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { radius } from '@/styles/surfaces'
 import { getPayoffMonths, getTotalInterestPaid } from '@/lib/debtUtils'
@@ -117,15 +118,13 @@ export function CreditPayoffCalculator({ onBack, debts }: CreditPayoffCalculator
         onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--fill-15)'; e.currentTarget.style.color = 'var(--text)' }}
         onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--fill-10)'; e.currentTarget.style.color = 'var(--sub)' }}
       >
-        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-        </svg>
+        <Icon name="action:back" size={14} strokeWidth={1.5} />
         Back
       </button>
 
       <div style={{ marginBottom: spacing.lg }}>
         <p style={{ fontSize: typography.caption.fontSize, fontFamily: FONT_FAMILY, fontWeight: fontWeights.medium, letterSpacing: '0.02em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 }}>Calculator</p>
-        <h1 style={{ fontSize: 28, fontFamily: FONT_FAMILY, fontWeight: fontWeights.semibold, color: 'var(--text)' }}>Credit Payoff</h1>
+        <h1 style={{ fontSize: 'var(--type-screen-title-size)', lineHeight: 'var(--type-screen-title-line-height)', fontFamily: 'var(--font-display)', fontWeight: fontWeights.semibold, color: 'var(--text)' }}>Credit Payoff</h1>
       </div>
 
       {/* Tracked debts summary */}

@@ -9,12 +9,11 @@
  *   - a flat warm-neutral canvas background
  *   - a minimal raised-surface **top bar** (user avatar left, settings right)
  *   - a scrollable content area for the current screen
- *   - a floating dock-style **glass navigation** (home / history / tools / settings)
+ *   - a floating dock-style navigation (home / history / tools / settings)
  *
  * The chrome is intentionally low-clutter: icon-only controls, generous
  * safe-area-aware spacing for notched / Dynamic Island devices, subtle
- * divider gradients between sections, and a soft upward shadow + blur backdrop
- * on the dock so it reads as floating above the mesh.
+ * dividers between sections, and a soft upward shadow on the dock.
  *
  * Motion: the active nav item gets a spring scale + glow micro-interaction via
  * motion/react, and a shared-layout highlight pill slides between items. All
@@ -28,8 +27,7 @@
  * when scroll returns to ≤24px. Reduced-motion users see static resting state.
  *
  * Accessibility: the dock is a real `<nav>` with `aria-current="page"` on the
- * active item; every icon-only control carries an `aria-label`. The mesh is
- * decorative (`aria-hidden` inside GradientMesh).
+ * active item; every icon-only control carries an `aria-label`.
  *
  * The dock/top-bar visual treatment lives in `.app-shell*`, `.app-topbar*`,
  * `.app-dock*` and `.section-divider` classes in globals.css.
@@ -41,7 +39,7 @@
 
 import { type ReactNode, useCallback, useRef } from 'react'
 import { motion, AnimatePresence, useTransform, useMotionValue, useSpring } from 'motion/react'
-import { GradientMesh, type GradientMeshVariant } from './GradientMesh'
+import type { GradientMeshVariant } from './GradientMesh'
 import { Icon } from './Icon'
 import { NavigationDock } from './composed/NavigationDock'
 import { useReducedMotion } from '@/lib/animations'
@@ -81,7 +79,7 @@ export interface AppShellProps {
    * when `avatarUrl` is not provided. Defaults to a generic person icon.
    */
   avatarInitial?: string
-  /** Mesh intensity for the current screen, passed through to GradientMesh. */
+  /** @deprecated Kept for call-site compatibility; the retired mesh has no visual output. */
   meshVariant?: GradientMeshVariant
   /** Hide the floating top bar (e.g. for full-bleed screens). Defaults false. */
   hideTopBar?: boolean
@@ -118,6 +116,8 @@ export function AppShell({
   onQuickLog,
   hideDock = false,
 }: AppShellProps) {
+  // Preserve the public prop while the flat surface system intentionally omits meshes.
+  void meshVariant
   const { prefersReducedMotion } = useReducedMotion()
 
   // ── Underlying surface scale-down during sheet presentation (Task 14.4) ────
@@ -227,9 +227,6 @@ export function AppShell({
       >
         Skip to main content
       </a>
-
-      {/* Compatibility boundary: GradientMesh is intentionally inert on the flat canvas. */}
-      <GradientMesh variant={meshVariant} />
 
       {/* ── Raised top bar ─────────────────────────────────────── */}
       {!hideTopBar && (

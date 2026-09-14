@@ -16,6 +16,7 @@
 
 import { useState, useEffect, useRef, useCallback, useId } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
+import { Icon } from '@/components/ui/Icon'
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { fills, shadows } from '@/styles/shared'
 import { radius } from '@/styles/surfaces'
@@ -248,21 +249,7 @@ export function HistorySearchBar({
         }}
       >
         {/* Search icon */}
-        <svg
-          width={18}
-          height={18}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="var(--sub)"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ flexShrink: 0, opacity: 0.7 }}
-          aria-hidden
-        >
-          <circle cx="11" cy="11" r="8" />
-          <path d="M21 21l-4.35-4.35" />
-        </svg>
+        <Icon name="action:search" size={18} color="var(--sub)" strokeWidth={2} style={{ flexShrink: 0, opacity: 0.7 }} />
 
         <input
           ref={inputRef}
@@ -326,18 +313,7 @@ export function HistorySearchBar({
               padding: 0,
             }}
           >
-            <svg
-              width={12}
-              height={12}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--text)"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              aria-hidden
-            >
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
+            <Icon name="action:close" size={12} color="var(--text)" strokeWidth={2.5} />
           </motion.button>
         )}
       </div>
@@ -436,19 +412,7 @@ export function HistorySearchBar({
                         e.currentTarget.style.background = 'transparent'
                       }}
                     >
-                      <svg
-                        width={14}
-                        height={14}
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="var(--muted)"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        aria-hidden
-                      >
-                        <polyline points="1 4 1 10 7 10" />
-                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-                      </svg>
+                      <Icon name="action:history" size={14} color="var(--muted)" strokeWidth={2} />
                       <span
                         style={{
                           fontSize: typography['body-sm'].fontSize,

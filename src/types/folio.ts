@@ -593,6 +593,12 @@ export interface CustomCategory {
    * `@/lib/icons` from the domain types — callers narrow it to `IconName`.
    */
   icon?: string
+  /** Curated Phase 2.2 illustration name used by category-management surfaces. */
+  illustration?: string
+  /** One approved chart-category palette swatch. */
+  color?: string
+  /** Soft-delete state: excluded from active pickers while retaining its record. */
+  archived?: boolean
 }
 
 // ============================================================================

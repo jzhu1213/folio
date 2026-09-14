@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { motion } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
 import { BottomSheet } from "@/components/ui/BottomSheet"
+import { Icon } from "@/components/ui/Icon"
 import type { Goal } from "@/types"
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { shadows, fills, colorRamp, HORIZONTAL_PADDING } from "@/styles/shared"
@@ -181,9 +182,7 @@ export function GoalContributeSheet({ isOpen, goal, onClose, onContribute }: Goa
                     cursor: submitting ? "not-allowed" : "pointer",
                   }}
                 >
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <Icon name="action:close" size={16} strokeWidth={2} />
                 </button>
               </div>
 

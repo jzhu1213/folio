@@ -160,8 +160,6 @@ export const cardRaised: CSSProperties = {
   background: elevations.raised.fill,
   border: elevations.raised.border,
   boxShadow: elevations.raised.shadow,
-  backdropFilter: `blur(${elevations.raised.blur})`,
-  WebkitBackdropFilter: `blur(${elevations.raised.blur})`,
   borderRadius: radius.card,
 }
 

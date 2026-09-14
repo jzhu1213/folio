@@ -17,11 +17,8 @@
  * │ components and large text (18px+ bold). Verified via relative   │
  * │ luminance formula.                                              │
  * │                                                                 │
- * │   --color-text (#fff) on canvas/surface/raised: 15.8–19.2:1 ✓  │
- * │   --color-sub  (#b4b4d4) on all surfaces:       6.2–7.5:1  ✓  │
- * │   --color-muted(#9494b8) on all surfaces:       4.5–5.5:1  ✓  │
- * │   Semantic colors on all surfaces:              4.2–10.2:1  ✓  │
- * │   Button text (#000) on --accent (#818cf8):       10.9:1   ✓  │
+ * │   Warm-neutral text and semantic UI colors are checked against │
+ * │   their approved surface tiers; primary text meets AA.         │
  * │                                                                 │
  * │ Note: Semantic colors (success, warning, error, accent) exceed  │
  * │ 3:1 on all surfaces. When used as normal-size text (<18px),     │
@@ -95,8 +92,8 @@
   --gradient-ambient:     none;
   --hero-tonal-wash:      radial-gradient(circle at 82% 12%, rgba(229, 138, 99, 0.14), transparent 58%);
   --gradient-hero:        none;
-  --gradient-action:      linear-gradient(135deg, var(--accent-active), var(--accent));
-  --gradient-celebration: conic-gradient(from 180deg, var(--accent), var(--warning), var(--success), var(--accent));
+  --gradient-action:      var(--accent);
+  --gradient-celebration: var(--accent);
 
   /* ── 3. TYPOGRAPHY TOKENS (approved role scale) ─────────────────────── */
   /* next/font provides the first family; the second remains an offline-safe fallback. */
@@ -168,8 +165,8 @@
 
   /* ── 8. BLUR TOKENS (3 values) ─────────────────────────────────────── */
   --blur-none:    0px;
-  --blur-raised:  16px;
-  --blur-overlay: 32px;
+  --blur-raised:  0px;
+  --blur-overlay: 0px;
 
   /* ── 9. OPACITY TOKENS (6 steps) ───────────────────────────────────── */
   --opacity-0:   0;
@@ -356,8 +353,8 @@
   --gradient-ambient: none;
   --hero-tonal-wash: radial-gradient(circle at 82% 12%, rgba(182, 83, 50, 0.16), transparent 58%);
   --gradient-hero: none;
-  --gradient-action: linear-gradient(135deg, var(--accent-active), var(--accent));
-  --gradient-celebration: conic-gradient(from 180deg, var(--accent), var(--warning), var(--success), var(--accent));
+  --gradient-action: var(--accent);
+  --gradient-celebration: var(--accent);
 
   --border-subtle: var(--border-default);
   --border-default: 1px solid var(--border-default-color);
@@ -427,7 +424,7 @@ body::before {
 /* ── Focus-visible utility for primitives (Req 18.4) ────────────── */
 /*
  * Visible focus indicator: ≥2px thick, ≥3:1 contrast against adjacent bg.
- * accent-500 (#818cf8) on darkest surface (#0e0e1a) = 5.7:1 ✓
+ * The approved terracotta accent is used only for focus and interactive UI.
  * Applied via the .focus-ring class on all interactive primitives.
  * A subtle shadow accompanies the outline for visibility on glass/blurred surfaces.
  */
@@ -683,7 +680,7 @@ input[type="date"] {
   @apply flex items-center justify-center px-6 font-medium transition-all;
   min-height: 52px;
   background: var(--accent);
-  color: #000;
+  color: var(--surface-canvas);
   font-family: var(--font-body);
   font-size: 0.875rem;
   font-weight: 500;
@@ -694,13 +691,13 @@ input[type="date"] {
 
 .btn-primary:hover {
   background: color-mix(in srgb, var(--accent) 85%, white);
-  border-color: rgba(129, 140, 248, 0.5);
-  box-shadow: 0 0 8px rgba(129, 140, 248, 0.15);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:active {
   transform: scale(0.97);
-  box-shadow: 0 0 10px rgba(129, 140, 248, 0.25);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:disabled {
@@ -723,14 +720,14 @@ input[type="date"] {
 
 .btn-ghost:hover {
   color: var(--text);
-  border-color: rgba(129, 140, 248, 0.4);
-  background: rgba(129, 140, 248, 0.05);
+  border-color: var(--accent);
+  background: var(--accent-muted);
 }
 
 .btn-ghost:active {
   transform: scale(0.97);
-  border-color: rgba(129, 140, 248, 0.6);
-  box-shadow: 0 0 10px rgba(129, 140, 248, 0.2);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
 }
 
 /* ── Tab navigation ─────────────────────────────────────────────── */
@@ -772,12 +769,12 @@ input[type="date"] {
   width: 52px;
   height: 52px;
   background: var(--text);
-  color: #000;
+  color: var(--surface-canvas);
   border-radius: var(--radius-sm);
-  box-shadow: 0 8px 32px rgba(255,255,255,0.08);
+  box-shadow: var(--shadow-md);
 }
 
-.t-fab:hover  { background: #f0f0f0; }
+.t-fab:hover  { background: var(--text-secondary); }
 .t-fab:active { transform: scale(0.92); }
 
 /* ── Category pill (Phase 6 task 252 — icon-centric redesign) ────── */
@@ -793,12 +790,12 @@ input[type="date"] {
 
 .cat-pill.selected {
   background: var(--raised);
-  border-color: rgba(129, 140, 248, 0.4);
-  box-shadow: 0 0 8px rgba(129, 140, 248, 0.12);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
 }
 
 .cat-pill:not(.selected):hover {
-  border-color: rgba(129, 140, 248, 0.25);
+  border-color: var(--accent);
   background: var(--raised);
 }
 
@@ -823,20 +820,20 @@ input[type="date"] {
   /* Phase 6 (task 237.2): resting chips have no outline; the border only
    * appears on hover/active to signal selection. */
   border: 0.5px solid transparent;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-recessed);
   color: var(--sub);
   border-radius: var(--radius-md);
 }
 
 .amount-chip.active {
-  border-color: rgba(129, 140, 248, 0.5);
+  border-color: var(--accent);
   color: var(--text);
-  background: rgba(129, 140, 248, 0.08);
-  box-shadow: 0 0 8px rgba(129, 140, 248, 0.15);
+  background: var(--accent-muted);
+  box-shadow: var(--shadow-sm);
 }
 
 .amount-chip:hover:not(.active) {
-  border-color: rgba(129, 140, 248, 0.3);
+  border-color: var(--accent);
   color: var(--text);
 }
 
@@ -856,7 +853,7 @@ input[type="date"] {
 }
 
 .t-toggle[aria-checked="true"] {
-  background: rgba(167, 139, 250, 0.6);
+  background: var(--accent);
 }
 
 .t-toggle-knob {
@@ -1151,12 +1148,10 @@ input[type="date"] {
   0%, 100% {
     opacity: 0.65;
     transform: scale(1);
-    filter: drop-shadow(0 0 0 rgba(129, 140, 248, 0));
   }
   50% {
     opacity: 1;
     transform: scale(1.04);
-    filter: drop-shadow(0 0 14px rgba(129, 140, 248, 0.45));
   }
 }
 
@@ -1260,11 +1255,7 @@ input[type="date"] {
  * property and transitions smoothly (300ms ease) when the status changes.
  */
 .ambient-glow {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  overflow: visible;
-  pointer-events: none;
+  display: none;
 }
 
 .ambient-glow--fixed {
@@ -1278,7 +1269,7 @@ input[type="date"] {
   will-change: opacity;
   background: radial-gradient(
     circle at center,
-    var(--ambient-glow-color, rgba(129, 140, 248, 0.5)),
+    var(--ambient-glow-color, var(--accent)),
     transparent 70%
   );
   /* Smooth color + strength transition when status changes */
@@ -1419,16 +1410,6 @@ input[type="date"] {
   transform: translate(50%, 50%);
 }
 
-/* Non-backdrop-filter browsers: always use opaque fallback (Req 4.10) */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .ambient-glow__pool {
-    display: none;
-  }
-  .ambient-glow__fallback {
-    display: block;
-  }
-}
-
 /* Reduced motion — make the glow static (no color-transition animation) */
 @media (prefers-reduced-motion: reduce) {
   .ambient-glow__pool {
@@ -1507,7 +1488,7 @@ input[type="date"] {
   z-index: 2;
   border-radius: inherit;
   pointer-events: none;
-  border: 1.5px solid rgba(129, 140, 248, 0.6);
+  border: 1.5px solid var(--accent);
   animation: chip-ripple-ring1 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
@@ -1517,7 +1498,7 @@ input[type="date"] {
   position: absolute;
   inset: -2px;
   border-radius: inherit;
-  border: 1px solid rgba(129, 140, 248, 0.4);
+  border: 1px solid var(--accent);
   animation: chip-ripple-ring2 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.08s forwards;
   opacity: 0;
 }
@@ -1528,7 +1509,7 @@ input[type="date"] {
   position: absolute;
   inset: -4px;
   border-radius: inherit;
-  border: 0.5px solid rgba(129, 140, 248, 0.25);
+  border: 0.5px solid var(--accent);
   animation: chip-ripple-ring3 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.16s forwards;
   opacity: 0;
 }
@@ -1540,7 +1521,7 @@ input[type="date"] {
   z-index: 1;
   border-radius: inherit;
   pointer-events: none;
-  background: rgba(129, 140, 248, 0.18);
+  background: var(--accent-muted);
   animation: chip-flash 0.7s ease-out forwards;
 }
 
@@ -1572,7 +1553,7 @@ input[type="date"] {
   z-index: 1;
   border-radius: inherit;
   pointer-events: none;
-  border: 1.5px solid rgba(129, 140, 248, 0.5);
+  border: 1.5px solid var(--accent);
   animation: chip-pulse-ring 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
@@ -1592,7 +1573,7 @@ input[type="date"] {
   .chip-ripple {
     animation: chip-reduced-flash 0.4s ease-out forwards;
     border: none;
-    background: rgba(129, 140, 248, 0.12);
+    background: var(--accent-muted);
   }
   .chip-ripple::before,
   .chip-ripple::after {
@@ -2242,7 +2223,6 @@ input[type="date"] {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(2px);
   cursor: pointer;
 }
 
@@ -2303,8 +2283,8 @@ input[type="date"] {
   top: -6%;
   display: block;
   border-radius: 999px;
-  color: #fcd34d;
-  box-shadow: 0 0 8px currentColor;
+  color: var(--warning);
+  box-shadow: none;
   will-change: transform, opacity;
   opacity: 0;
   /* The trailing tail. */
@@ -2399,9 +2379,9 @@ input[type="date"] {
   font-family: var(--font-body);
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #1a1626;
-  background: linear-gradient(135deg, #fcd34d 0%, #fb923c 100%);
-  box-shadow: 0 6px 20px rgba(251, 146, 60, 0.35);
+  color: var(--surface-canvas);
+  background: var(--accent);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   position: relative;
   z-index: 1;
@@ -2519,18 +2499,14 @@ input[type="date"] {
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  color: #fff;
-  background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
-  box-shadow:
-    0 8px 24px rgba(99, 102, 241, 0.4),
-    0 2px 8px rgba(0, 0, 0, 0.2);
+  color: var(--surface-canvas);
+  background: var(--accent);
+  box-shadow: var(--shadow-md);
   transition: box-shadow 0.2s ease;
 }
 
 .history-screen__fab:hover {
-  box-shadow:
-    0 10px 28px rgba(99, 102, 241, 0.5),
-    0 2px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-lg);
 }
 
 .history-screen__fab:focus-visible {

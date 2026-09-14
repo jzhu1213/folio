@@ -5,7 +5,7 @@
  *
  * Catches render errors anywhere in the tree, reports them to the monitoring
  * service (PII-scrubbed), and shows a warm, non-judgmental fallback with a
- * one-tap reload. Uses the warm purple theme tokens with hardcoded fallbacks so
+ * one-tap reload. Uses the warm-neutral theme tokens with hardcoded fallbacks so
  * the fallback still looks right even if a provider or stylesheet failed to
  * load. No pure black.
  *
@@ -69,9 +69,9 @@ export class ErrorBoundary extends Component<
           padding: 24,
           textAlign: 'center',
           fontFamily: FONT_FAMILY,
-          // Warm purple tokens with safe fallbacks (never pure black).
-          background: 'var(--bg, #12121f)',
-          color: 'var(--text, #f4f4ff)',
+          // Warm-neutral tokens with safe fallbacks (never pure black).
+          background: 'var(--surface-canvas, #211F1B)',
+          color: 'var(--text-primary, #FFF9F0)',
         }}
       >
         <div
@@ -84,7 +84,7 @@ export class ErrorBoundary extends Component<
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: pxToRem(28),
-            background: 'var(--surface, #1a1a2e)',
+            background: 'var(--surface-quiet, #333029)',
           }}
         >
           🌱
@@ -95,7 +95,7 @@ export class ErrorBoundary extends Component<
             fontSize: pxToRem(20),
             fontWeight: 600,
             lineHeight: 1.3,
-            color: 'var(--text, #f4f4ff)',
+            color: 'var(--text-primary, #FFF9F0)',
           }}
         >
           Something went wrong
@@ -106,7 +106,7 @@ export class ErrorBoundary extends Component<
             maxWidth: 320,
             fontSize: pxToRem(15),
             lineHeight: 1.5,
-            color: 'var(--sub, #d4d4f0)',
+            color: 'var(--text-secondary, #CEC5B8)',
           }}
         >
           No worries — a quick reload usually sorts it out. Your data is safe.
@@ -124,8 +124,8 @@ export class ErrorBoundary extends Component<
             fontFamily: FONT_FAMILY,
             fontSize: pxToRem(15),
             fontWeight: 600,
-            color: '#ffffff',
-            background: 'var(--accent, #818cf8)',
+            color: 'var(--surface-canvas, #211F1B)',
+            background: 'var(--accent, #E58A63)',
           }}
         >
           Tap to reload

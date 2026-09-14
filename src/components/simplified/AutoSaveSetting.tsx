@@ -339,7 +339,7 @@ export function AutoSaveSetting({
           <span
             style={{
               fontSize: typography['body-sm'].fontSize,
-              color: "rgb(167, 139, 250)",
+              color: "var(--accent)",
               fontWeight: fontWeights.medium,
               fontFamily: FONT_FAMILY,
               fontVariantNumeric: "tabular-nums",

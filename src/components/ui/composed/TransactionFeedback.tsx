@@ -190,8 +190,6 @@ function UndoToast({
     border: `1px solid ${elevations.raised.border}`,
     borderRadius: radius.control,
     boxShadow: elevations.raised.shadow,
-    backdropFilter: `blur(${elevations.raised.blur})`,
-    WebkitBackdropFilter: `blur(${elevations.raised.blur})`,
     zIndex: 55,
   }
 

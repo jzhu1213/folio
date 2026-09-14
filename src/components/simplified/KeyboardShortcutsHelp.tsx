@@ -6,6 +6,7 @@ import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typograp
 import { fills, HORIZONTAL_PADDING } from '@/styles/shared'
 import { radius } from '@/styles/surfaces'
 import { springs } from '@/lib/animations'
+import { Icon } from '@/components/ui/Icon'
 
 // ============================================================================
 // Types
@@ -110,8 +111,6 @@ export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelp
             alignItems: 'center',
             justifyContent: 'center',
             background: 'var(--color-canvas)',
-            backdropFilter: 'blur(4px)',
-            WebkitBackdropFilter: 'blur(4px)',
           }}
           aria-hidden={!isOpen}
         >
@@ -176,20 +175,7 @@ export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelp
                   color: 'var(--muted)',
                 }}
               >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M3 3L11 11M11 3L3 11"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
+                <Icon name="action:close" size={14} strokeWidth={1.5} />
               </button>
             </div>
 

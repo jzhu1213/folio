@@ -10,6 +10,7 @@ import { getCategoryEmoji, PRESET_EMOJI } from '@/lib/vocabulary'
 import { HORIZONTAL_PADDING } from '@/styles/shared'
 import { radius } from '@/styles/surfaces'
 import { Card } from '@/components/ui/Card'
+import { Icon } from '@/components/ui/Icon'
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import type { PayCadence } from '@/lib/paySchedule'
 
@@ -1664,9 +1665,7 @@ function SetupBudgetStyleStep({ selected, onChange, monthlyIncome }: SetupBudget
                   className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ background: 'var(--accent)' }}
                 >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <Icon name="status:complete" size={12} strokeWidth={2} />
                 </div>
               )}
             </button>
@@ -3178,9 +3177,7 @@ function PayScheduleStep({ value, onChange, onSwitchToSimple }: PayScheduleStepP
                   className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ background: 'var(--accent)' }}
                 >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <Icon name="status:complete" size={12} strokeWidth={2} />
                 </div>
               )}
             </button>
@@ -3640,9 +3637,7 @@ function PaycheckModeStep({ mode, onModeChange }: PaycheckModeStepProps) {
                   className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ background: 'var(--accent)' }}
                 >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <Icon name="status:complete" size={12} strokeWidth={2} />
                 </div>
               )}
             </button>

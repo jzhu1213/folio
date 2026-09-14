@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { motion } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
 import { BottomSheet } from "@/components/ui/BottomSheet"
+import { Icon } from "@/components/ui/Icon"
 import type { Goal } from "@/types"
 import type { SavingsAccount } from "@/types/folio"
 import type { GoalFormData } from "./GoalsScreen"
@@ -198,9 +199,7 @@ export function GoalEditSheet({ isOpen, mode, goal, savingsAccounts, onClose, on
               cursor: submitting ? "not-allowed" : "pointer",
             }}
           >
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <Icon name="action:close" size={16} strokeWidth={2} />
           </button>
         </div>
 
@@ -360,9 +359,7 @@ export function GoalEditSheet({ isOpen, mode, goal, savingsAccounts, onClose, on
                       flexShrink: 0,
                     }}
                   >
-                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Icon name="action:close" size={12} strokeWidth={2} />
                   </button>
                 )}
               </div>

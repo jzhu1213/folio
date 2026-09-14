@@ -1,7 +1,8 @@
 "use client"
 import { useState } from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
+import { Icon } from '@/components/ui/Icon'
+import { FONT_FAMILY, spacing, typography, typographyRoles, fontWeights } from '@/styles/typography'
 import { radius } from '@/styles/surfaces'
 import type { Lesson } from '@/types'
 
@@ -97,9 +98,7 @@ export function LessonCard({ lesson, isCompleted, onComplete, onBack }: LessonCa
         transition: 'border-color 0.2s ease',
       }}
     >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-      </svg>
+      <Icon name="action:back" size={16} strokeWidth={1.5} />
       {label}
     </button>
   )
@@ -116,7 +115,7 @@ export function LessonCard({ lesson, isCompleted, onComplete, onBack }: LessonCa
 
         <div style={{ marginBottom: spacing.lg }}>
           <p style={sectionLabel}>Result</p>
-          <h2 style={{ fontSize: typography.headline.fontSize, fontWeight: fontWeights.medium, color: 'var(--text)', fontFamily: FONT_FAMILY, margin: '4px 0' }}>
+          <h2 style={{ ...typographyRoles.sectionHeadline, color: 'var(--text)', margin: '4px 0' }}>
             {passed ? 'Great job!' : 'Almost there!'}
           </h2>
           <p style={{ fontSize: typography.body.fontSize, fontFamily: FONT_FAMILY, marginTop: 4, color: passed ? 'var(--success)' : 'var(--warning)' }}>
@@ -246,7 +245,7 @@ export function LessonCard({ lesson, isCompleted, onComplete, onBack }: LessonCa
 
       <div style={{ marginBottom: spacing.lg }}>
         <p style={{ ...sectionLabel, marginBottom: spacing.xs }}>Lesson {lesson.order}</p>
-        <h1 style={{ fontSize: typography.headline.fontSize, fontWeight: fontWeights.medium, color: 'var(--text)', fontFamily: FONT_FAMILY, margin: '0 0 8px' }}>
+        <h1 style={{ ...typographyRoles.screenTitle, color: 'var(--text)', margin: '0 0 8px' }}>
           {lesson.title}
         </h1>
         <div style={{ width: 32, height: 2, borderRadius: radius.full, background: 'var(--muted)' }} />

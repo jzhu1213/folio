@@ -2,6 +2,7 @@
 import { useState, useMemo } from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { ChartFrame } from '@/components/ui/primitives/ChartFrame'
+import { Icon } from '@/components/ui/Icon'
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { radius } from '@/styles/surfaces'
 import { progressBar, chartLabel, chartValueLabel, chartMotion } from '@/styles/chartTokens'
@@ -99,15 +100,13 @@ export function CompoundGrowthCalculator({ onBack, savingsAccounts }: CompoundGr
         onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--fill-15)'; e.currentTarget.style.color = 'var(--text)' }}
         onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--fill-10)'; e.currentTarget.style.color = 'var(--sub)' }}
       >
-        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-        </svg>
+        <Icon name="action:back" size={14} strokeWidth={1.5} />
         Back
       </button>
 
       <div style={{ marginBottom: spacing.lg }}>
         <p style={{ fontSize: typography.caption.fontSize, fontFamily: FONT_FAMILY, fontWeight: fontWeights.medium, letterSpacing: '0.02em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 }}>Calculator</p>
-        <h1 style={{ fontSize: 28, fontFamily: FONT_FAMILY, fontWeight: fontWeights.semibold, color: 'var(--text)' }}>Compound Growth</h1>
+        <h1 style={{ fontSize: 'var(--type-screen-title-size)', lineHeight: 'var(--type-screen-title-line-height)', fontFamily: 'var(--font-display)', fontWeight: fontWeights.semibold, color: 'var(--text)' }}>Compound Growth</h1>
       </div>
 
       <GlassCard elevation="low" style={{ padding: 20, marginBottom: spacing.lg }}>
@@ -143,9 +142,7 @@ export function CompoundGrowthCalculator({ onBack, savingsAccounts }: CompoundGr
                 e.currentTarget.style.color = 'var(--sub)'
               }}
             >
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-16 0H3m4-8h2m4 0h2m-6 4h2m4 0h2" />
-              </svg>
+              <Icon name="tool:savings-projections" size={14} strokeWidth={1.5} />
               Use my portfolio
             </button>
           </div>
@@ -267,7 +264,7 @@ export function CompoundGrowthCalculator({ onBack, savingsAccounts }: CompoundGr
 
           <GlassCard elevation="medium" glow="healthy" style={{ padding: 24, marginBottom: spacing.md }}>
             <p style={{ fontSize: typography.caption.fontSize, fontFamily: FONT_FAMILY, fontWeight: fontWeights.medium, letterSpacing: '0.02em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: spacing.xs }}>Future Value</p>
-            <p style={{ fontSize: 40, fontFamily: FONT_FAMILY, fontWeight: fontWeights.semibold, color: 'var(--success)' }}>
+            <p style={{ fontSize: 'var(--type-data-figure-size)', lineHeight: 'var(--type-data-figure-line-height)', fontFamily: 'var(--font-body)', fontWeight: fontWeights.semibold, color: 'var(--success)' }}>
               ${result.finalAmount.toLocaleString()}
             </p>
           </GlassCard>

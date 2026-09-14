@@ -3,6 +3,15 @@ import { BUDGET_CATEGORIES } from '@/types'
 import type { CustomCategory } from '@/types/folio'
 import { getCategoryIconName, type IconName } from './icons'
 
+export interface CustomCategoryUpdates {
+  label?: string
+  emoji?: string
+  icon?: string
+  illustration?: string
+  color?: string
+  archived?: boolean
+}
+
 /**
  * Default icon for a newly created custom category when the user hasn't picked
  * a specific glyph (Phase 6, task 234.2). Kept neutral so it reads as
@@ -40,6 +49,9 @@ export interface CategoryDisplayItem {
   isCustom: boolean
   /** For custom categories, the original custom category ID */
   customId?: string
+  /** Optional presentation metadata for custom category management. */
+  illustration?: string
+  color?: string
   /**
    * Resolved icon name for this item (Phase 6, task 234.1/234.2). For built-in
    * categories this is the registry icon; for custom categories it is the
@@ -61,16 +73,16 @@ export function mergeCategories(customCategories: CustomCategory[]): CategoryDis
     iconName: getCategoryIconName(cat.category),
   }))
 
-  const custom: CategoryDisplayItem[] = customCategories.map((cat) => ({
-    categoryValue: 'other', // Maps to 'other' for budget/accounting
+  return [...builtIn, ...customCategories.filter((cat) => !cat.archived).map((cat) => ({
+    categoryValue: 'other',
     emoji: cat.emoji,
     label: cat.label,
     isCustom: true,
     customId: cat.id,
     iconName: resolveCustomCategoryIcon(cat),
-  }))
-
-  return [...builtIn, ...custom]
+    illustration: cat.illustration,
+    color: cat.color,
+  }))]
 }
 
 /**
@@ -97,6 +109,9 @@ export async function fetchCustomCategories(userId: string): Promise<CustomCateg
     // Forward-compatible: only present once an `icon` column exists; undefined
     // otherwise so existing emoji-only categories fall back gracefully.
     icon: row.icon ?? undefined,
+    illustration: row.illustration ?? undefined,
+    color: row.color ?? undefined,
+    archived: row.archived ?? false,
   }))
 }
 
@@ -107,9 +122,12 @@ export async function createCustomCategory(
   userId: string,
   label: string,
   emoji: string,
-  icon?: string
+  icon?: string,
+  options: Pick<CustomCategoryUpdates, 'illustration' | 'color'> = {}
 ): Promise<CustomCategory | null> {
   const basePayload: Record<string, string> = { user_id: userId, label, emoji }
+  if (options.illustration) basePayload.illustration = options.illustration
+  if (options.color) basePayload.color = options.color
 
   // Try with the chosen icon first. If the `icon` column doesn't exist yet in
   // the database, the insert errors — so we retry without it (task 234.2 keeps
@@ -142,6 +160,9 @@ export async function createCustomCategory(
     userId: data.user_id,
     createdAt: data.created_at,
     icon: data.icon ?? icon ?? undefined,
+    illustration: data.illustration ?? options.illustration,
+    color: data.color ?? options.color,
+    archived: data.archived ?? false,
   }
 }
 
@@ -167,12 +188,15 @@ export async function deleteCustomCategory(id: string): Promise<boolean> {
  */
 export async function updateCustomCategory(
   id: string,
-  updates: { label?: string; emoji?: string; icon?: string }
+  updates: CustomCategoryUpdates
 ): Promise<CustomCategory | null> {
   // Fields that always exist on the table.
   const basePayload: Record<string, string> = {}
   if (updates.label !== undefined) basePayload.label = updates.label
   if (updates.emoji !== undefined) basePayload.emoji = updates.emoji
+  if (updates.illustration !== undefined) basePayload.illustration = updates.illustration
+  if (updates.color !== undefined) basePayload.color = updates.color
+  if (updates.archived !== undefined) basePayload.archived = String(updates.archived)
 
   const withIcon: Record<string, string> = { ...basePayload }
   if (updates.icon !== undefined) withIcon.icon = updates.icon
@@ -210,5 +234,8 @@ export async function updateCustomCategory(
     userId: data.user_id,
     createdAt: data.created_at,
     icon: data.icon ?? updates.icon ?? undefined,
+    illustration: data.illustration ?? updates.illustration,
+    color: data.color ?? updates.color,
+    archived: data.archived ?? updates.archived ?? false,
   }
 }

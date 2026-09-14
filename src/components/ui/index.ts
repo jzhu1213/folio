@@ -150,6 +150,9 @@ export type { AppShellProps, AppNavKey } from './AppShell'
 export { Icon } from './Icon'
 export type { IconProps } from './Icon'
 
+export { Illustration } from './illustrations'
+export type { IllustrationName, IllustrationProps } from './illustrations'
+
 export { AmbientGlow } from './AmbientGlow'
 export type {
   AmbientGlowProps,

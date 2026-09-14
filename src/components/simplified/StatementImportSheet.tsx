@@ -481,7 +481,7 @@ function ReviewPhase({
             borderRadius: borderRadius.md,
             border: 'none',
             background: includedCount > 0 ? 'var(--accent)' : fills[6],
-            color: includedCount > 0 ? '#fff' : 'var(--muted)',
+            color: includedCount > 0 ? 'var(--surface-canvas)' : 'var(--muted)',
             fontSize: pxToRem(15),
             fontWeight: fontWeights.semibold,
             fontFamily: FONT_FAMILY,
@@ -577,7 +577,7 @@ function ImportRow({
               ...typography['body-sm'],
               fontWeight: fontWeights.semibold,
               fontVariantNumeric: 'tabular-nums',
-              color: candidate.type === 'income' ? 'var(--success, #4ade80)' : 'var(--text)',
+              color: candidate.type === 'income' ? 'var(--success)' : 'var(--text)',
               flexShrink: 0,
               marginInlineStart: spacing.xs,
             }}>

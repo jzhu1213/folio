@@ -6,6 +6,7 @@ import type { Transaction, TransactionCategory } from '@/types'
 import type { FundingSource } from '@/lib/fundingSources'
 import { shiftMonth, toMonthString } from '@/lib/budgetUtils'
 import { GlassCard } from '@/components/ui/GlassCard'
+import { Icon } from '@/components/ui/Icon'
 import { springs } from '@/lib/animations'
 import { SECTION_SPACING, DOCK_PADDING_BOTTOM } from '@/styles/shared'
 import { radius } from '@/styles/surfaces'
@@ -104,9 +105,7 @@ export function HistoryView({
               }}
               aria-label="Previous month"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
+              <Icon name="action:back" size={16} strokeWidth={2} />
             </motion.button>
 
             <p
@@ -140,9 +139,7 @@ export function HistoryView({
               }}
               aria-label="Next month"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+              <Icon name="action:forward" size={16} strokeWidth={2} />
             </motion.button>
           </div>
         </GlassCard>

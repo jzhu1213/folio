@@ -7,6 +7,7 @@ import type { FundingSource } from '@/lib/fundingSources'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SkeletonRow } from '@/components/ui/SkeletonRow'
+import { Icon } from '@/components/ui/Icon'
 import { springs, timings } from '@/lib/animations'
 import { computeDailyTotal } from '@/lib/transactionUtils'
 import { isForeignTransaction, formatTransactionAmount, getCurrencySymbol } from '@/lib/currencyUtils'
@@ -1102,9 +1103,7 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
                         transform: collapseSummaries ? 'rotate(-90deg)' : 'rotate(0deg)',
                       }}
                     >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M6 9l6 6 6-6"/>
-                      </svg>
+                      <Icon name="action:expand" size={12} strokeWidth={2} />
                     </button>
                     <p style={{
                       fontSize: typography['body-sm'].fontSize,
@@ -1289,9 +1288,7 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
                         aria-label={`Select ${tx.note || getLabel(tx.category)}`}
                       >
                         {isSelected && (
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                            <path d="M2.5 6L5 8.5L9.5 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
+                          <Icon name="status:complete" size={12} strokeWidth={2} />
                         )}
                       </div>
                     )}
@@ -1383,13 +1380,7 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
                             aria-label={`Split with ${splitMap.get(tx.id)!.participantCount} people`}
                           >
                             {/* Split fork icon */}
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <path d="M6 3v12"/>
-                              <path d="M18 3v6"/>
-                              <path d="M18 9a3 3 0 0 1-3 3H9"/>
-                              <circle cx="6" cy="18" r="2"/>
-                              <circle cx="18" cy="6" r="2" fill="none"/>
-                            </svg>
+                            <Icon name="status:split" size={12} strokeWidth={2.5} />
                             {splitMap.get(tx.id)!.participantCount}
                           </span>
                         )}
@@ -1465,13 +1456,13 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
                           </span>
                         )
                       })()}
-                      <svg
-                        className="w-3.5 h-3.5 transition-transform duration-150"
+                      <Icon
+                        name="action:expand"
+                        size={14}
+                        strokeWidth={2}
+                        className="transition-transform duration-150"
                         style={{ color: 'var(--sub)', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                      </svg>
+                      />
                     </div>
                   </motion.div>
 
@@ -1639,9 +1630,7 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
                   gap: 4,
                 }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-                </svg>
+                <Icon name="action:delete" size={14} strokeWidth={2} />
                 Delete
               </motion.button>
             )}
@@ -1713,9 +1702,7 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
                 gap: 4,
               }}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
+              <Icon name="action:download" size={14} strokeWidth={2} />
               Export
             </motion.button>
           </motion.div>

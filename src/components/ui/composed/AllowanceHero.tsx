@@ -38,7 +38,6 @@ import {
   useSpring,
 } from 'motion/react'
 import { ProgressRing } from "@/components/ui/primitives/ProgressRing"
-import { AmbientGlow } from "@/components/ui/AmbientGlow"
 import type { AmbientGlowStatus } from "@/components/ui/AmbientGlow"
 import { typography, FONT_FAMILY, TABULAR_NUMS, DISPLAY_GRADIENT_CLASS, fontWeights } from '@/styles/typography'
 import { textColors } from "@/styles/colors"
@@ -134,24 +133,6 @@ function formatBreakdownAmount(amount: number, prefix: "+" | "−" | ""): string
     maximumFractionDigits: 2,
   })}`
   return `${prefix}${formatted}`
-}
-
-/**
- * Map ring color prop to AmbientGlow status when not explicitly provided.
- */
-function ringColorToGlowStatus(
-  ringColor: "accent" | "success" | "warning" | "error"
-): AmbientGlowStatus {
-  switch (ringColor) {
-    case "success":
-      return "healthy"
-    case "warning":
-      return "caution"
-    case "error":
-      return "warning"
-    default:
-      return "neutral"
-  }
 }
 
 // ============================================================================
@@ -407,8 +388,8 @@ export function AllowanceHero({
   const { prefersReducedMotion } = useReducedMotion()
   const [showBreakdown, setShowBreakdown] = useState(false)
 
-  // Resolve glow status from explicit prop or ring color fallback
-  const resolvedGlowStatus = glowStatus ?? ringColorToGlowStatus(ringColor)
+  // Compatibility-only: flat surfaces no longer render ambient glows.
+  void glowStatus
 
   // Determine if we can show the breakdown (all values present)
   const canShowBreakdown = breakdownAvailable &&
@@ -553,15 +534,8 @@ export function AllowanceHero({
         )}
       </AnimatePresence>
 
-      {/* ─── Feedback group: ring + status + ambient glow ─── */}
+      {/* ─── Feedback group: ring + status ─── */}
       <div style={feedbackGroupStyle}>
-        <AmbientGlow
-          status={resolvedGlowStatus}
-          size="md"
-          intensity="subtle"
-          position="center"
-        />
-
         <ProgressRing
           progress={progress}
           size="hero"

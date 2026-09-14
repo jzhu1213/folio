@@ -91,6 +91,10 @@ import {
   Link,
   Sun,
   Moon,
+  Check,
+  Search,
+  Download,
+  GitFork,
   // Toast
   CircleCheck,
   CircleX,
@@ -131,6 +135,9 @@ export type IconName =
   | 'status:offline'
   | 'status:error'
   | 'status:retry'
+  | 'status:complete'
+  | 'status:locked'
+  | 'status:split'
   // ── Contextual tip indicators (mirror TipType + TIP_EMOJI vocabulary) ─────
   | 'tip:celebration'
   | 'tip:nudge'
@@ -198,6 +205,9 @@ export type IconName =
   | 'action:back'
   | 'action:expand'
   | 'action:link'
+  | 'action:search'
+  | 'action:download'
+  | 'action:history'
   | 'chrome:sun'
   | 'chrome:moon'
   // ── Toast status icons ───────────────────────────────────────────────────
@@ -239,6 +249,9 @@ export const ICON_REGISTRY = {
   'status:offline': WifiOff,
   'status:error': AlertCircle,
   'status:retry': RefreshCw,
+  'status:complete': Check,
+  'status:locked': Lock,
+  'status:split': GitFork,
   // ── Contextual tip indicators ─────────────────────────────────────────────
   'tip:celebration': PartyPopper,
   'tip:nudge': Lightbulb,
@@ -306,6 +319,9 @@ export const ICON_REGISTRY = {
   'action:back': ChevronLeft,
   'action:expand': ChevronDown,
   'action:link': Link,
+  'action:search': Search,
+  'action:download': Download,
+  'action:history': History,
   'chrome:sun': Sun,
   'chrome:moon': Moon,
   // ── Toast status icons ────────────────────────────────────────────────────

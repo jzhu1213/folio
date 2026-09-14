@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
+import { Icon } from '@/components/ui/Icon'
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { computeInvestmentProjection } from '@/lib/investmentExplorerUtils'
 import type { InvestmentProjection } from '@/lib/investmentExplorerUtils'
@@ -113,9 +114,7 @@ export function InvestmentExplorerScreen({ onBack }: InvestmentExplorerScreenPro
         onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--fill-15)'; e.currentTarget.style.color = 'var(--text)' }}
         onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--fill-10)'; e.currentTarget.style.color = 'var(--sub)' }}
       >
-        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-        </svg>
+        <Icon name="action:back" size={14} strokeWidth={1.5} />
         Back
       </button>
 
@@ -124,7 +123,7 @@ export function InvestmentExplorerScreen({ onBack }: InvestmentExplorerScreenPro
         <p style={{ fontSize: typography.caption.fontSize, fontFamily: FONT_FAMILY, fontWeight: fontWeights.medium, letterSpacing: '0.02em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 }}>
           Explorer
         </p>
-        <h1 style={{ fontSize: 28, fontFamily: FONT_FAMILY, fontWeight: fontWeights.semibold, color: 'var(--text)', marginBottom: spacing.xs }}>
+        <h1 style={{ fontSize: 'var(--type-screen-title-size)', lineHeight: 'var(--type-screen-title-line-height)', fontFamily: 'var(--font-display)', fontWeight: fontWeights.semibold, color: 'var(--text)', marginBottom: spacing.xs }}>
           What If I Invest?
         </h1>
         <p style={{ fontSize: typography.body.fontSize, fontFamily: FONT_FAMILY, color: 'var(--sub)', lineHeight: 1.5 }}>
@@ -249,7 +248,7 @@ export function InvestmentExplorerScreen({ onBack }: InvestmentExplorerScreenPro
             <p style={{ fontSize: typography.caption.fontSize, fontFamily: FONT_FAMILY, fontWeight: fontWeights.medium, letterSpacing: '0.02em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: spacing.xs }}>
               In {years} year{years > 1 ? 's' : ''} you could have
             </p>
-            <p style={{ fontSize: 36, fontFamily: FONT_FAMILY, fontWeight: fontWeights.semibold, color: 'var(--success)', fontVariantNumeric: 'tabular-nums' }}>
+            <p style={{ fontSize: 'var(--type-data-figure-size)', lineHeight: 'var(--type-data-figure-line-height)', fontFamily: 'var(--font-body)', fontWeight: fontWeights.semibold, color: 'var(--success)', fontVariantNumeric: 'tabular-nums' }}>
               ${projection.summary.finalAmount.toLocaleString()}
             </p>
           </GlassCard>

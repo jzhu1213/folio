@@ -63,7 +63,7 @@ function SavingsTree({ stage, palette, x }: { stage: number; palette: SeasonPale
         y={baseY - trunkHeight}
         width={4}
         height={trunkHeight}
-        fill="#8B6914"
+        fill="var(--text-muted)"
         rx={2}
       />
       {/* Canopy */}
@@ -114,7 +114,7 @@ function TrackingFlower({ stage, palette, x }: { stage: number; palette: SeasonP
         y1={baseY}
         x2={x}
         y2={baseY - stemHeight}
-        stroke="#4ade80"
+        stroke="var(--success)"
         strokeWidth={2}
         strokeLinecap="round"
       />
@@ -136,7 +136,7 @@ function TrackingFlower({ stage, palette, x }: { stage: number; palette: SeasonP
         )
       })}
       {/* Center */}
-      <circle cx={x} cy={baseY - stemHeight} r={petalRadius * 0.35} fill="#fbbf24" />
+      <circle cx={x} cy={baseY - stemHeight} r={petalRadius * 0.35} fill="var(--warning)" />
     </g>
   )
 }

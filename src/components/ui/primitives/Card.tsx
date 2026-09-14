@@ -74,8 +74,6 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
     background: tier.fill,
     border: tier.border,
     boxShadow: tier.shadow,
-    backdropFilter: elevation === "raised" ? `blur(${tier.blur})` : undefined,
-    WebkitBackdropFilter: elevation === "raised" ? `blur(${tier.blur})` : undefined,
     borderRadius: radius.card,
     overflow: "hidden",
     ...style,

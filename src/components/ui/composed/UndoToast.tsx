@@ -120,7 +120,6 @@ export function UndoToast({
             border: elevations.raised.border,
             borderRadius: radius.control,
             boxShadow: shadows.xl,
-            backdropFilter: `blur(${elevations.raised.blur})`,
             maxWidth: "calc(100vw - 40px)",
           }}
           role="alert"

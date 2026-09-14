@@ -179,20 +179,7 @@ export function ContextualTipCard({
             }}
             aria-label={`Dismiss tip: ${tip.title}. Won't show again.`}
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M3 3L11 11M11 3L3 11"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
+            <Icon name="action:close" size={14} strokeWidth={1.5} />
           </button>
 
           {/* Tip content */}
@@ -255,21 +242,7 @@ export function ContextualTipCard({
                 aria-label={tip.actionLabel}
               >
                 <span>{tip.actionLabel}</span>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M2.5 7h9M8 3.5L11.5 7 8 10.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <Icon name="action:forward" size={14} strokeWidth={1.5} />
               </motion.button>
             </div>
           )}

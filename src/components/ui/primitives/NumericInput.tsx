@@ -22,7 +22,7 @@ import { textColors, semanticColors, colorRamp } from '@/styles/colors'
 // Types
 // ============================================================================
 
-export type NumericInputSize = 'lg' | 'xl'
+export type NumericInputSize = 'lg' | 'xl' | 'hero'
 
 export interface NumericInputProps {
   size?: NumericInputSize
@@ -39,6 +39,11 @@ export interface NumericInputProps {
   max?: number
   min?: number
   disabled?: boolean
+  autoFocus?: boolean
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
+  className?: string
+  style?: React.CSSProperties
+  inputRef?: React.Ref<HTMLInputElement>
 }
 
 // ============================================================================
@@ -58,6 +63,13 @@ const sizeStyles: Record<NumericInputSize, React.CSSProperties> = {
     fontSize: typography.title.fontSize,
     fontWeight: typography.title.fontWeight,
     lineHeight: typography.title.lineHeight,
+    letterSpacing: typography.title.letterSpacing,
+  },
+  hero: {
+    minHeight: '96px',
+    fontSize: 'clamp(44px, 14vw, 56px)',
+    fontWeight: typography.title.fontWeight,
+    lineHeight: 1,
     letterSpacing: typography.title.letterSpacing,
   },
 }
@@ -81,6 +93,11 @@ export const NumericInput: React.FC<NumericInputProps> = ({
   max,
   min,
   disabled = false,
+  autoFocus = false,
+  onKeyDown,
+  className,
+  style,
+  inputRef,
 }) => {
   const [isFocused, setIsFocused] = useState(false)
 
@@ -132,10 +149,12 @@ export const NumericInput: React.FC<NumericInputProps> = ({
     // Focus ring via box-shadow (≥2px, ≥3:1 contrast) when focused
     boxShadow: 'none',
     ...sizeStyles[size],
+    ...style,
   }
 
   return (
     <input
+      ref={inputRef}
       type="text"
       inputMode="decimal"
       pattern="[0-9]*\\.?[0-9]*"
@@ -144,9 +163,11 @@ export const NumericInput: React.FC<NumericInputProps> = ({
       value={value}
       placeholder={placeholder}
       disabled={disabled}
+      autoFocus={autoFocus}
       onChange={onChange}
       onFocus={handleFocus}
       onBlur={handleBlur}
+      onKeyDown={onKeyDown}
       aria-label={ariaLabel ?? 'Amount'}
       aria-describedby={ariaDescribedBy}
       aria-invalid={error}
@@ -154,7 +175,7 @@ export const NumericInput: React.FC<NumericInputProps> = ({
       max={max}
       min={min}
       style={baseStyles}
-      className="focus-ring interactive-field"
+      className={`focus-ring interactive-field${className ? ` ${className}` : ''}`}
     />
   )
 }

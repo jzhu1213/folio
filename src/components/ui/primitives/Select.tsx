@@ -98,7 +98,6 @@ const dropdownStyles: React.CSSProperties = {
   borderRadius: radius.control,
   padding: spacingScale[4],
   overflow: "hidden",
-  backdropFilter: `blur(${elevations.overlay.blur})`,
 }
 
 const optionStyles: React.CSSProperties = {

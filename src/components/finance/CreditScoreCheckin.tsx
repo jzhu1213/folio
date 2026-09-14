@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
+import { Icon } from '@/components/ui/Icon'
 import {
   getCreditScoreHistory,
   addCreditScoreEntry,
@@ -10,7 +11,7 @@ import {
   isValidCreditScore,
 } from '@/lib/creditScoreCheckin'
 import type { CreditScoreEntry } from '@/lib/creditScoreCheckin'
-import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
+import { FONT_FAMILY, spacing, typography, typographyRoles, fontWeights } from '@/styles/typography'
 import {
   CONTENT_MAX_WIDTH,
   HORIZONTAL_PADDING,
@@ -90,14 +91,12 @@ export function CreditScoreCheckin({ onBack }: CreditScoreCheckinProps) {
         }}
         aria-label="Back to Lessons"
       >
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
+        <Icon name="action:back" size={16} strokeWidth={1.5} />
         Back
       </button>
 
       {/* Header */}
-      <h2 style={{ fontSize: typography.headline.fontSize, fontWeight: fontWeights.medium, color: 'var(--text)', fontFamily: FONT_FAMILY, marginBottom: spacing.xs }}>
+      <h2 style={{ ...typographyRoles.screenTitle, color: 'var(--text)', marginBottom: spacing.xs }}>
         Credit Score Check-In
       </h2>
       <p style={{ fontSize: typography.body.fontSize, color: 'var(--sub)', fontFamily: FONT_FAMILY, marginBottom: spacing.lg, lineHeight: 1.5 }}>
@@ -112,7 +111,8 @@ export function CreditScoreCheckin({ onBack }: CreditScoreCheckinProps) {
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: spacing.xs }}>
               <span
                 style={{
-                  fontSize: 48,
+                  fontSize: 'var(--type-data-figure-size)',
+                  lineHeight: 'var(--type-data-figure-line-height)',
                   fontWeight: fontWeights.light,
                   color: getScoreColor(latest.score),
                   fontFamily: FONT_FAMILY,

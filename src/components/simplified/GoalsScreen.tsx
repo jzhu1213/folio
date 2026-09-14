@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings, useReducedMotion } from "@/lib/animations"
 import { Card } from "@/components/ui/Card"
 import { EmptyState } from "@/components/ui/EmptyState"
+import { Icon } from "@/components/ui/Icon"
 import { GoalEditSheet } from "./GoalEditSheet"
 import { GoalContributeSheet } from "./GoalContributeSheet"
 import { SaveUpPlanSheet } from "./SaveUpPlanSheet"
@@ -566,9 +567,7 @@ export function GoalsScreen({
           }}
           aria-label="Back"
         >
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
+          <Icon name="action:back" size={16} strokeWidth={2} />
           Back
         </motion.button>
       )}
@@ -712,9 +711,7 @@ export function GoalsScreen({
           }}
           aria-label="Create a new goal"
         >
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
+          <Icon name="action:add" size={16} strokeWidth={2} />
           New goal{goals.length > 0 ? ` (${remainingSlots} left)` : ""}
         </motion.button>
       )}

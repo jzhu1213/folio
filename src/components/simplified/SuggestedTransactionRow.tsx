@@ -106,7 +106,7 @@ const actionBtnBase: React.CSSProperties = {
 const confirmBtnStyle: React.CSSProperties = {
   ...actionBtnBase,
   background: "var(--success-200)",
-  color: "var(--success, #4ade80)",
+  color: "var(--success)",
 }
 
 const dismissBtnStyle: React.CSSProperties = {

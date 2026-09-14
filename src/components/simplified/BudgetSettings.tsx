@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings } from "@/lib/animations"
 import { GlassCard } from "@/components/ui/GlassCard"
+import { Icon } from "@/components/ui/Icon"
 import { isCategoryRolloverEnabled, setCategoryRolloverEnabled } from "@/lib/budgetUtils"
 import { computeBudgetSummary, computeDailyEquivalent } from "@/lib/budgetSummary"
 import { getIncomeProjection } from "@/lib/incomePatterns"
@@ -403,9 +404,7 @@ export function BudgetSettings({ budgets, onUpdateBudget, onUpdateLimitType, onU
             fontSize: typography.body.fontSize,
           }}
         >
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
+          <Icon name="action:back" size={16} strokeWidth={2} />
           Back
         </motion.button>
       )}

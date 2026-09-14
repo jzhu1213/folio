@@ -571,7 +571,7 @@ export function ActivityHeatmap({
                   background:
                     idx === 0
                       ? "var(--fill-04)"
-                      : `rgba(129, 140, 248, ${alpha})`,
+                      : `color-mix(in srgb, var(--accent) ${alpha * 100}%, transparent)`,
                 }}
               />
             ))}

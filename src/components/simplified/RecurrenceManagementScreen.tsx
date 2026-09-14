@@ -59,9 +59,9 @@ function frequencyLabel(freq: RecurrenceFrequency): string {
 }
 
 function confidenceBadge(confidence: number): { label: string; color: string } {
-  if (confidence >= 0.8) return { label: "Very likely", color: "var(--success, #4ade80)" }
+  if (confidence >= 0.8) return { label: "Very likely", color: "var(--success)" }
   if (confidence >= 0.6) return { label: "Likely", color: "var(--accent)" }
-  return { label: "Maybe", color: "var(--muted, #6b7280)" }
+  return { label: "Maybe", color: "var(--muted)" }
 }
 
 function formatDateShort(dateStr: string): string {

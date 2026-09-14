@@ -196,8 +196,6 @@ export const Sheet = forwardRef<HTMLDivElement, SheetProps>(function Sheet(
     border: tier.border,
     borderBottom: "none",
     boxShadow: tier.shadow,
-    backdropFilter: `blur(${tier.blur})`,
-    WebkitBackdropFilter: `blur(${tier.blur})`,
     borderTopLeftRadius: radius.sheet,
     borderTopRightRadius: radius.sheet,
     borderBottomLeftRadius: 0,

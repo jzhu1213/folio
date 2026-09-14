@@ -4,6 +4,7 @@ import type { Transaction, TransactionCategory } from '@/types'
 import type { CategoryBudgetRow } from '@/lib/budgetUtils'
 import { weekStart } from '@/lib/budgetUtils'
 import { CategoryIcon } from '@/components/ui/CategoryIcon'
+import { Icon } from '@/components/ui/Icon'
 import { FONT_FAMILY, typography } from '@/styles/typography'
 
 interface CategoryDetailSheetProps {
@@ -64,9 +65,7 @@ export function CategoryDetailSheet({
             </div>
           </div>
           <button onClick={onClose} style={{ color: 'var(--muted)', padding: '4px' }}>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <Icon name="action:close" size={20} strokeWidth={1.5} />
           </button>
         </div>
 

@@ -44,8 +44,6 @@ const cardVariantsReduced = {
 /** Glass card inline styles matching the Toast component's aesthetic */
 const glassCardStyle: React.CSSProperties = {
   background: 'var(--color-surface)',
-  backdropFilter: 'blur(16px)',
-  WebkitBackdropFilter: 'blur(16px)',
   border: '1px solid var(--line)',
   borderRadius: 'var(--radius-md, 12px)',
   boxShadow: 'var(--shadow-lg)',

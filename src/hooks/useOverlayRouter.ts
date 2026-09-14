@@ -104,7 +104,7 @@ export interface OverlayPayloads {
 }
 
 export interface SheetPayloads {
-  expense: { defaultCategory?: TransactionCategory; splitPreEnabled?: boolean; originFromFab?: boolean }
+  expense: { defaultCategory?: TransactionCategory; splitPreEnabled?: boolean }
   income: undefined
   paycheck: { amount: number; isGigIncome: boolean }
   edit: { transaction: Transaction }

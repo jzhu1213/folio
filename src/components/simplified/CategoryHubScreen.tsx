@@ -145,7 +145,6 @@ function EmojiPicker({
         alignItems: "center",
         justifyContent: "center",
         background: "var(--color-canvas)",
-        backdropFilter: "blur(4px)",
       }}
       onClick={onClose}
     >

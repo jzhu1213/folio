@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence, type Variants } from 'motion/react'
 import { springs, useReducedMotion } from '@/lib/animations'
-import { Sheet } from '@/components/ui/primitives/Sheet'
+import { BottomSheet } from '@/components/ui/BottomSheet'
+import { NumericInput } from '@/components/ui/primitives/NumericInput'
 import { useTranslation } from '@/contexts/I18nContext'
 import { generateSmartSuggestions } from '@/lib/suggestionUtils'
 import { computeSplitAmount, computeOwedAmount, computePerFriendOwed, computePerFriendOwedCustom, computeShareSplit } from '@/lib/splitUtils'
@@ -26,8 +27,9 @@ import type { CategoryDisplayItem } from '@/lib/customCategories'
 import { mergeCategories } from '@/lib/customCategories'
 import { getCategoryEmoji } from '@/lib/vocabulary'
 import { Icon } from '@/components/ui/Icon'
+import { Illustration, ILLUSTRATION_REGISTRY, type IllustrationName } from '@/components/ui/illustrations'
 import { CUSTOM_CATEGORY_ICON_CHOICES, type IconName } from '@/lib/icons'
-import { FONT_FAMILY, spacing, pxToRem, typography, fontWeights } from '@/styles/typography'
+import { FONT_FAMILY, spacing, pxToRem, typography, typographyRoles, fontWeights } from '@/styles/typography'
 import { formatMoney } from '@/lib/localeFormat'
 import { roundButton, shadows, fills, colorRamp, HORIZONTAL_PADDING } from '@/styles/shared'
 import { radius } from '@/styles/surfaces'
@@ -96,11 +98,6 @@ interface ExpenseSheetProps {
    */
   dailyAllowanceAmount?: number
   /**
-   * When true, animates the sheet in from the FAB's center-bottom position
-   * (origin-scale) rather than the default slide-up. (Task 246.2)
-   */
-  originFromFab?: boolean
-  /**
    * Called when user taps "View settle-up" to navigate to the ReimbursementLedger (task 284.1).
    */
   onOpenSettleUp?: () => void
@@ -163,15 +160,30 @@ function isFutureDate(dateStr: string): boolean {
   return dateStr > todayStr
 }
 
-const CATEGORY_GRID: { category: TransactionCategory; emoji: string; label: string }[] = [
-  { category: 'food', emoji: getCategoryEmoji('food'), label: 'Food' },
-  { category: 'drinks', emoji: getCategoryEmoji('drinks'), label: 'Drinks' },
-  { category: 'transport', emoji: getCategoryEmoji('transport'), label: 'Transportation' },
-  { category: 'fun', emoji: getCategoryEmoji('fun'), label: 'Fun' },
-  { category: 'school', emoji: getCategoryEmoji('school'), label: 'School' },
-  { category: 'rent', emoji: getCategoryEmoji('rent'), label: 'Rent & Bills' },
-  { category: 'other', emoji: getCategoryEmoji('other'), label: 'Other' },
-]
+/** Maps the existing expense data model to the Phase 2.2 illustration registry. */
+const CATEGORY_ILLUSTRATIONS: Record<TransactionCategory, IllustrationName> = {
+  food: 'category:eating-out',
+  drinks: 'category:miscellaneous',
+  rent: 'category:rent-utilities',
+  transport: 'category:rideshare-gas',
+  school: 'category:textbooks',
+  fun: 'category:entertainment',
+  health: 'category:miscellaneous',
+  subscriptions: 'category:subscriptions',
+  gig: 'category:miscellaneous',
+  income: 'category:miscellaneous',
+  other: 'category:miscellaneous',
+}
+
+function getCategoryIllustration(item: CategoryDisplayItem): IllustrationName {
+  // Custom categories intentionally use the neutral artwork until Phase 2.5
+  // establishes custom-category illustration choices.
+  if (item.isCustom && item.illustration && item.illustration in ILLUSTRATION_REGISTRY) {
+    return item.illustration as IllustrationName
+  }
+  if (item.isCustom) return 'category:miscellaneous'
+  return CATEGORY_ILLUSTRATIONS[item.categoryValue as TransactionCategory] ?? 'category:miscellaneous'
+}
 
 const MAX_AMOUNT = 99999
 
@@ -196,7 +208,6 @@ export function ExpenseSheet({
   categorizationRules = [],
   onAddCategorizationRule,
   dailyAllowanceAmount,
-  originFromFab = false,
   onOpenSettleUp,
   sharedBudgets = [],
   onLogToSharedBudget,
@@ -206,9 +217,12 @@ export function ExpenseSheet({
   const t = useTranslation()
   const amountRef = useRef<HTMLInputElement>(null)
   const splitWithRef = useRef<HTMLInputElement>(null)
+  const categoryRowRef = useRef<HTMLDivElement>(null)
+  const shouldResetDraftOnOpenRef = useRef(true)
 
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState<TransactionCategory | null>(null)
+  const [selectedCategoryTileKey, setSelectedCategoryTileKey] = useState<string | null>(null)
   const [note, setNote] = useState('')
   const [showNoteField, setShowNoteField] = useState(false)
   const [tags, setTags] = useState<string[]>([])
@@ -285,6 +299,42 @@ export function ExpenseSheet({
     return mergeCategories(customCategories)
   }, [customCategories])
 
+  const selectCategory = useCallback((nextCategory: TransactionCategory | null, tileKey: string | null) => {
+    setCategory(nextCategory)
+    setSelectedCategoryTileKey(tileKey)
+    setManualCategorySelection(nextCategory !== null)
+    setIsAutoSuggested(false)
+    triggerHaptic('light')
+  }, [])
+
+  // Programmatic choices (defaults and merchant rules) use their matching
+  // built-in tile. A custom category retains its own UI selection while saving
+  // through the existing `other` category value.
+  useEffect(() => {
+    if (!category) {
+      setSelectedCategoryTileKey(spendingMode === 'tracker' ? 'general' : null)
+      return
+    }
+    setSelectedCategoryTileKey((current) => (
+      current?.startsWith('custom-') && category === 'other'
+        ? current
+        : `builtin-${category}`
+    ))
+  }, [category, spendingMode])
+
+  // Keep programmatic defaults and category changes visible in the one-row picker.
+  useEffect(() => {
+    if (!isOpen || !selectedCategoryTileKey) return
+    const selectedTile = Array.from(
+      categoryRowRef.current?.querySelectorAll<HTMLButtonElement>('[data-category-tile]') ?? [],
+    ).find((tile) => tile.dataset.categoryTileKey === selectedCategoryTileKey)
+    selectedTile?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'nearest',
+    })
+  }, [isOpen, selectedCategoryTileKey])
+
   // Compute effective default: explicit prop > most recently used > null
   const effectiveDefault = useMemo(() => {
     if (defaultCategory) return defaultCategory
@@ -310,7 +360,7 @@ export function ExpenseSheet({
 
   // Reset state when opening
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && shouldResetDraftOnOpenRef.current) {
       // Pre-fill from habit prediction if no explicit default
       const prefillCategory = effectiveDefault ?? habitPrediction?.category ?? null
       const prefillAmount = (!defaultCategory && habitPrediction?.amount)
@@ -319,6 +369,9 @@ export function ExpenseSheet({
 
       setAmount(prefillAmount)
       setCategory(prefillCategory)
+      setSelectedCategoryTileKey(
+        prefillCategory ? `builtin-${prefillCategory}` : (spendingMode === 'tracker' ? 'general' : null),
+      )
       setNote('')
       setShowNoteField(false)
       setTags([])
@@ -360,12 +413,18 @@ export function ExpenseSheet({
       setTrackAsIOU(false)
       setLogToSharedBudget(false)
       setSelectedCurrency(getTravelCurrency() || getHomeCurrency())
-      
-      // NOTE: Do NOT auto-focus the amount input here. On iOS, focusing an input
-      // triggers the virtual keyboard which resizes the viewport and pushes the
-      // fixed-position sheet up awkwardly. The user can tap the input when ready.
+      shouldResetDraftOnOpenRef.current = false
     }
-  }, [isOpen, effectiveDefault, defaultCategory, habitPrediction, splitPreEnabled, fundingSources, transactions])
+  }, [isOpen, effectiveDefault, defaultCategory, habitPrediction, splitPreEnabled, fundingSources, transactions, spendingMode])
+
+  // Quick-add is amount-first: bring up the decimal keypad after BottomSheet
+  // presents. BottomSheet's own focus management runs first, then this moves
+  // focus to the functional amount field on both desktop and mobile.
+  useEffect(() => {
+    if (!isOpen) return
+    const timer = setTimeout(() => amountRef.current?.focus({ preventScroll: true }), 120)
+    return () => clearTimeout(timer)
+  }, [isOpen])
 
   // ── Fetch exchange rate when selected currency changes (task 422.1) ────
   useEffect(() => {
@@ -648,6 +707,7 @@ export function ExpenseSheet({
       recordMerchant(note.trim(), effectiveCategory, submittedAmount)
     }
 
+    shouldResetDraftOnOpenRef.current = true
     onClose()
   }, [amount, category, spendingMode, note, tags, splitEnabled, splitCount, splitWith, splitFriends, splitMode, splitParticipants, percentInputs, shareInputs, customShareInput, selectedSourceId, selectedSourceIsBorrowed, trackAsIOU, selectedDate, displayCategories, onSubmit, onClose, onUndo, showToast, budgets, onAlertMessage, logToSharedBudget, matchingSharedBudget, onLogToSharedBudget, selectedCurrency, currencyRate])
 
@@ -751,8 +811,226 @@ export function ExpenseSheet({
     : { tap: { scale: 1.3 } }
 
   return (
-    <Sheet open={isOpen} onClose={onClose} size="full" aria-label="Log expense">
+    <BottomSheet isOpen={isOpen} onClose={onClose} maxHeight="95vh" ariaLabel="Log expense">
       <div style={{ padding: '0 24px 32px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: spacing.xs }}>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close quick add"
+            className="focus-ring interactive-control"
+            style={{
+              width: 44,
+              height: 44,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'var(--raised)',
+              border: '1px solid var(--border)',
+              borderRadius: radius.full,
+              boxShadow: shadows.sm,
+              color: 'var(--sub)',
+              cursor: 'pointer',
+            }}
+          >
+            <Icon name="action:close" size={18} strokeWidth={1.5} />
+          </button>
+        </div>
+
+        {/* Phase 2.3: Quick-add opens directly to amount entry. DM Sans keeps
+            this functional control distinct from the Fraunces Monthly Runway. */}
+        <div style={{ position: 'relative', marginBottom: spacing.lg }}>
+          <label
+            htmlFor="quick-add-amount"
+            style={{
+              position: 'absolute',
+              width: 1,
+              height: 1,
+              padding: 0,
+              margin: -1,
+              overflow: 'hidden',
+              clip: 'rect(0, 0, 0, 0)',
+              whiteSpace: 'nowrap',
+              border: 0,
+            }}
+          >
+            Expense amount in dollars
+          </label>
+          <span
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              zIndex: 1,
+              left: 24,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'var(--sub)',
+              fontFamily: FONT_FAMILY,
+              fontSize: 28,
+              fontWeight: fontWeights.medium,
+              pointerEvents: 'none',
+            }}
+          >
+            $
+          </span>
+          <NumericInput
+            inputRef={amountRef}
+            id="quick-add-amount"
+            size="hero"
+            value={amount}
+            placeholder="0.00"
+            onChange={handleAmountChange}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && canSubmit) {
+                e.preventDefault()
+                handleSubmit()
+              }
+            }}
+            aria-label="Expense amount in dollars"
+            aria-describedby="quick-add-amount-help"
+            style={{
+              paddingInlineStart: 52,
+              background: 'var(--surface-recessed)',
+              borderColor: 'var(--border)',
+              borderRadius: radius.card,
+              boxShadow: shadows.sm,
+              color: 'var(--text)',
+              fontFamily: FONT_FAMILY,
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          />
+          <p id="quick-add-amount-help" style={{ margin: `${spacing.xs}px 0 0`, color: 'var(--muted)', fontFamily: FONT_FAMILY, fontSize: typography.caption.fontSize, textAlign: 'center' }}>
+            Enter an amount, then choose a category.
+          </p>
+        </div>
+
+        <section
+          aria-labelledby="quick-add-category-title"
+          style={{ marginBottom: spacing.lg }}
+        >
+          <p
+            id="quick-add-category-title"
+            style={{
+              margin: `0 0 ${spacing.xs}px`,
+              color: 'var(--sub)',
+              ...typographyRoles.labelButton,
+            }}
+          >
+            {spendingMode === 'tracker' ? 'Category (optional)' : 'Category'}
+          </p>
+          <div
+            ref={categoryRowRef}
+            role="group"
+            aria-label={spendingMode === 'tracker' ? 'Category, optional' : 'Expense categories'}
+            onKeyDown={(event) => {
+              const tiles = Array.from(
+                event.currentTarget.querySelectorAll<HTMLButtonElement>('[data-category-tile]'),
+              )
+              const currentIndex = tiles.indexOf(document.activeElement as HTMLButtonElement)
+              if (currentIndex < 0) return
+
+              let nextIndex: number | null = null
+              if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tiles.length
+              if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tiles.length) % tiles.length
+              if (event.key === 'Home') nextIndex = 0
+              if (event.key === 'End') nextIndex = tiles.length - 1
+              if (nextIndex === null) return
+
+              event.preventDefault()
+              const nextTile = tiles[nextIndex]
+              nextTile?.focus({ preventScroll: true })
+              nextTile?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+            }}
+            style={{
+              display: 'flex',
+              gap: spacing.sm,
+              overflowX: 'auto',
+              overscrollBehaviorInline: 'contain',
+              padding: '2px 4px 12px',
+              marginInline: -4,
+              scrollPaddingInline: 4,
+              scrollSnapType: 'x proximity',
+              scrollBehavior: 'smooth',
+              touchAction: 'pan-x',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            {spendingMode === 'tracker' && (
+                <button
+                  type="button"
+                  data-category-tile
+                  data-category-tile-key="general"
+                  data-category-value=""
+                  onClick={() => selectCategory(null, 'general')}
+                  aria-label="No category — log without picking"
+                  aria-pressed={selectedCategoryTileKey === 'general'}
+                  className="focus-ring interactive-control"
+                  style={{
+                    flex: '0 0 104px',
+                    minHeight: 118,
+                    padding: '12px 8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: spacing.xs,
+                    background: selectedCategoryTileKey === 'general' ? 'var(--accent-muted)' : 'var(--surface-raised)',
+                    border: selectedCategoryTileKey === 'general' ? '2px solid var(--accent)' : '1px solid var(--border)',
+                    borderRadius: radius.card,
+                    boxShadow: selectedCategoryTileKey === 'general' ? shadows.sm : 'none',
+                    color: 'var(--text)',
+                    cursor: 'pointer',
+                    scrollSnapAlign: 'start',
+                  }}
+                >
+                  <Illustration name="category:miscellaneous" size={48} />
+                  <span style={{ ...typographyRoles.labelButton, color: 'var(--text)', textAlign: 'center' }}>General</span>
+                </button>
+            )}
+            {displayCategories.map((item) => {
+              const tileKey = item.isCustom ? `custom-${item.customId}` : `builtin-${item.categoryValue}`
+              const selected = selectedCategoryTileKey === tileKey
+              const illustrationName = getCategoryIllustration(item)
+
+              return (
+                <button
+                  key={tileKey}
+                  type="button"
+                  data-category-tile
+                  data-category-tile-key={tileKey}
+                  data-category-value={item.categoryValue}
+                  onClick={() => selectCategory(item.categoryValue as TransactionCategory, tileKey)}
+                  aria-label={`Select ${item.label} category`}
+                  aria-pressed={selected}
+                  className="focus-ring interactive-control"
+                  style={{
+                    flex: '0 0 104px',
+                    minHeight: 118,
+                    padding: '12px 8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: spacing.xs,
+                    background: selected ? 'var(--accent-muted)' : 'var(--surface-raised)',
+                    border: selected ? '2px solid var(--accent)' : (item.isCustom && item.color ? `2px solid ${item.color}` : '1px solid var(--border)'),
+                    borderRadius: radius.card,
+                    boxShadow: selected ? shadows.sm : 'none',
+                    color: 'var(--text)',
+                    cursor: 'pointer',
+                    scrollSnapAlign: 'start',
+                  }}
+                >
+                  <Illustration name={illustrationName} size={48} />
+                  <span style={{ ...typographyRoles.labelButton, color: 'var(--text)', textAlign: 'center' }}>
+                    {item.label}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
               {habitChips.length > 0 && (
                 <div
                   style={{
@@ -952,68 +1230,8 @@ export function ExpenseSheet({
                 )}
               </AnimatePresence>
 
-              {/* ── Amount Input (calculator-style) ─────────────────── */}
+              {/* Supporting transaction options remain below the amount-first entry. */}
               <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    justifyContent: 'center',
-                    gap: spacing.xxs,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 28,
-                      fontFamily: FONT_FAMILY,
-                      fontWeight: fontWeights.light,
-                      color: 'var(--muted)',
-                    }}
-                  >
-                    $
-                  </span>
-                  <input
-                    ref={amountRef}
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    value={amount}
-                    onChange={handleAmountChange}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && canSubmit) {
-                        e.preventDefault()
-                        handleSubmit()
-                      }
-                    }}
-                    aria-label="Expense amount"
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      outline: 'none',
-                      fontSize: 48,
-                      fontFamily: FONT_FAMILY,
-                      fontWeight: fontWeights.semibold,
-                      fontVariantNumeric: 'tabular-nums',
-                      color: 'var(--text)',
-                      textAlign: 'center',
-                      width: '100%',
-                      maxWidth: 240,
-                      caretColor: 'var(--accent)',
-                      lineHeight: 1.1,
-                    }}
-                  />
-                </div>
-                <p
-                  style={{
-                    fontSize: pxToRem(12),
-                    color: 'var(--muted)',
-                    marginTop: spacing.xs,
-                    fontFamily: FONT_FAMILY,
-                  }}
-                >
-                  How much did you spend?
-                </p>
-
                 {/* ── Currency Selector (task 422.1) — only shown when travel mode is active ── */}
                 {isTravelModeActive() && (
                   <div style={{ marginTop: spacing.xs }}>
@@ -1153,6 +1371,9 @@ export function ExpenseSheet({
                 )}
               </div>
 
+              {/* Legacy grid is non-rendered transition reference only. The
+                  illustrated horizontal row above is the active picker. */}
+              <div hidden aria-hidden="true">
               {/* ── Category Grid (3×2) with glass-pill glow ────────── */}
               {/* In tracker mode the entire section is optional — the label reflects that */}
               <div
@@ -1236,8 +1457,6 @@ export function ExpenseSheet({
                       overflow: 'hidden',
                       ...(category === null
                         ? {
-                            backdropFilter: 'blur(8px)',
-                            WebkitBackdropFilter: 'blur(8px)',
                             background: colorRamp.accent[100],
                             border: `1.5px solid ${colorRamp.accent[400]}`,
                             boxShadow: shadows.glowAccent,
@@ -1307,8 +1526,6 @@ export function ExpenseSheet({
                         // Glass-pill glow for selected, subtle surface for unselected
                         ...(selected
                           ? {
-                              backdropFilter: 'blur(8px)',
-                              WebkitBackdropFilter: 'blur(8px)',
                               background: colorRamp.accent[100],
                               border: `1.5px solid ${colorRamp.accent[400]}`,
                               boxShadow: shadows.glowAccent,
@@ -1377,6 +1594,7 @@ export function ExpenseSheet({
                     </span>
                   </motion.button>
                 )}
+              </div>
               </div>
 
               {/* ── Inline "Add custom category" form (task 69) ─────────────────── */}
@@ -3024,9 +3242,11 @@ export function ExpenseSheet({
 
               {/* ── Log Button (thumb zone — pinned at bottom of sheet) ── */}
               <motion.button
+                type="button"
                 onClick={handleSubmit}
                 disabled={!canSubmit}
                 aria-label="Log expense"
+                className="focus-ring interactive-control"
                 whileTap={canSubmit && !prefersReducedMotion ? { scale: 0.97 } : undefined}
                 transition={springs.bouncy}
                 style={{
@@ -3037,23 +3257,22 @@ export function ExpenseSheet({
                   justifyContent: 'center',
                   marginTop: 'auto',
                   background: canSubmit
-                    ? 'linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%)'
+                    ? 'var(--accent)'
                     : 'var(--dim)',
                   color: canSubmit ? 'var(--text)' : 'var(--muted)',
                   fontFamily: FONT_FAMILY,
                   fontSize: pxToRem(17),
                   fontWeight: fontWeights.semibold,
                   borderRadius: 'var(--radius-md)',
-                  border: 'none',
+                  border: canSubmit ? '1px solid var(--accent)' : '1px solid var(--border)',
                   cursor: canSubmit ? 'pointer' : 'not-allowed',
                   opacity: canSubmit ? 1 : 0.5,
-                  boxShadow: canSubmit ? shadows.glowAccentStrong : 'none',
-                  transition: 'opacity 0.2s ease, background 0.2s ease, box-shadow 0.2s ease',
+                  boxShadow: canSubmit ? shadows.md : 'none',
                 }}
               >
                 {t('expense.logButton')}
               </motion.button>
             </div>
-    </Sheet>
+    </BottomSheet>
   )
 }

@@ -37,6 +37,22 @@ const MAX_PULL = 120
 /** Number of dots in the accent ring */
 const DOT_COUNT = 8
 
+/**
+ * Return the scroll offset for the surface that can actually scroll. Home is
+ * part of the document scroll on mobile, so its pull-to-refresh wrapper often
+ * has no scroll range of its own. Reading only the wrapper's `scrollTop` in
+ * that case incorrectly reports "top" at the bottom of the page and traps an
+ * upward return gesture with `preventDefault()`.
+ */
+export function getPullToRefreshScrollTop(container: HTMLElement | null): number {
+  if (container && container.scrollHeight > container.clientHeight) {
+    return container.scrollTop
+  }
+
+  if (typeof window === "undefined") return 0
+  return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
+}
+
 export function PullToRefresh({ onRefresh, children, disabled = false }: PullToRefreshProps) {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -54,9 +70,7 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
   const glowOpacity = useTransform(pullY, [PULL_THRESHOLD * 0.5, PULL_THRESHOLD, MAX_PULL], [0, 0.3, 0.6])
 
   const isAtTop = (): boolean => {
-    const el = containerRef.current
-    if (!el) return true
-    return el.scrollTop <= 0
+    return getPullToRefreshScrollTop(containerRef.current) <= 0
   }
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
@@ -143,10 +157,10 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
       style={{
         position: "relative",
         width: "100%",
-        height: "100%",
-        overflowY: "auto",
-        overflowX: "hidden",
-        WebkitOverflowScrolling: "touch",
+        // Let Home participate in the document's single scroll surface. A
+        // nested `overflow-y: auto` wrapper can desynchronize its scrollTop
+        // from window.scrollY on mobile Safari/Chrome.
+        touchAction: "pan-y",
       }}
     >
       {/* Refresh indicator */}

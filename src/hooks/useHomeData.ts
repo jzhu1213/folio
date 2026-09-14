@@ -28,6 +28,7 @@ import {
 } from '@/lib/supabaseData'
 import { getHomeCache, setHomeCache, isCacheStale, addTransactionToCache, updateTransactionInCache, removeTransactionFromCache, reconcileTransactionInCache, updateBudgetsInCache, updateLastSyncedAt } from '@/lib/homeCache'
 import { addToOfflineQueue } from '@/lib/offlineQueue'
+import { formatDateLocal } from '@/lib/dateUtils'
 import type { AppAllocation } from '@/lib/supabaseData'
 import type { PaySchedule } from '@/lib/paySchedule'
 import type { SinkingFund } from '@/lib/sinkingFunds'
@@ -419,6 +420,8 @@ export interface UseHomeDataReturn {
       date: string
       note?: string
       fundingSourceId?: string
+      isRecurring?: boolean
+      recurringId?: string | null
     }
   ) => Promise<Transaction | null>
   
@@ -1145,6 +1148,8 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
       type: TransactionType
       date: string
       note?: string
+      isRecurring?: boolean
+      recurringId?: string | null
     }
   ) => {
     if (!userId) return null
@@ -1152,12 +1157,22 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
     // Find the old transaction to know what to rollback to
     const oldTx = transactionsRef.current.find(t => t.id === id)
     
-    // 1. Optimistic update — immediately apply changes to local state
-    setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...data } : t))
+    // 1. Optimistic update — immediately apply changes to local state. A null
+    // recurring id is the explicit request to clear its persisted linkage.
+    const transactionData: Partial<Transaction> = {
+      amount: data.amount,
+      category: data.category,
+      type: data.type,
+      date: data.date,
+      note: data.note,
+      ...(data.isRecurring === undefined ? {} : { isRecurring: data.isRecurring }),
+      ...(data.recurringId === undefined ? {} : { recurringId: data.recurringId ?? undefined }),
+    }
+    setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...transactionData } : t))
     
     // Incremental cache update (Task 470.2)
     if (userId) {
-      updateTransactionInCache(userId, id, data)
+      updateTransactionInCache(userId, id, transactionData)
     }
     
     try {
@@ -1171,12 +1186,17 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
         // 3. Reconcile — replace with authoritative server result
         setTransactions(prev => prev.map(t => t.id === id ? result : t))
         
-        // Recalculate budgets for affected categories
+        // Recalculate budget state from the same post-edit collection used by
+        // the Monthly Runway. Passing it explicitly avoids a stale React
+        // closure when an amount/category/date changes in one mutation.
+        const postEditTransactions = transactionsRef.current.map((transaction) => (
+          transaction.id === id ? result : transaction
+        ))
         if (oldTx?.type === 'expense') {
-          await recalculateBudgetSpentForCategory(oldTx.category)
+          await recalculateBudgetSpentForCategory(oldTx.category, postEditTransactions)
         }
         if (data.type === 'expense' && data.category !== oldTx?.category) {
-          await recalculateBudgetSpentForCategory(data.category)
+          await recalculateBudgetSpentForCategory(data.category, postEditTransactions)
         }
         
         return result
@@ -1196,6 +1216,8 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
             type: data.type,
             date: data.date,
             note: data.note,
+            isRecurring: data.isRecurring,
+            recurringId: data.recurringId,
           },
         })
         return null
@@ -1219,6 +1241,8 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
           type: data.type,
           date: data.date,
           note: data.note,
+          isRecurring: data.isRecurring,
+          recurringId: data.recurringId,
         },
       })
       return null
@@ -1239,6 +1263,7 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
     
     // Capture the transaction before removal for potential rollback
     const tx = transactionsRef.current.find(t => t.id === id)
+    const postDeleteTransactions = transactionsRef.current.filter((item) => item.id !== id)
     
     // 1. Optimistic remove — immediately filter from local state
     setTransactions(prev => prev.filter(t => t.id !== id))
@@ -1250,7 +1275,7 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
     
     // Recalculate budget spent eagerly if it was an expense
     if (tx?.type === 'expense') {
-      await recalculateBudgetSpentForCategory(tx.category)
+      await recalculateBudgetSpentForCategory(tx.category, postDeleteTransactions)
     }
     
     try {
@@ -1270,7 +1295,7 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
           // Rollback cache (Task 470.2)
           addTransactionToCache(userId, tx)
           if (tx.type === 'expense') {
-            await recalculateBudgetSpentForCategory(tx.category)
+            await recalculateBudgetSpentForCategory(tx.category, [tx, ...postDeleteTransactions])
           }
         }
         addToOfflineQueue(userId, {
@@ -1287,7 +1312,7 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
         // Rollback cache (Task 470.2)
         addTransactionToCache(userId, tx)
         if (tx.type === 'expense') {
-          await recalculateBudgetSpentForCategory(tx.category)
+            await recalculateBudgetSpentForCategory(tx.category, [tx, ...postDeleteTransactions])
         }
       }
       
@@ -1317,7 +1342,7 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
     if (!userId) return null
     
     // Capture prior state for rollback
-    const currentMonth = new Date().toISOString().slice(0, 7)
+    const currentMonth = formatDateLocal(new Date()).slice(0, 7)
     const oldBudgets = [...budgets]
     
     // 1. Optimistic update — immediately show new limit in state
@@ -1378,14 +1403,15 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
    * Helper to recalculate budget spent for a specific category
    */
   const recalculateBudgetSpentForCategory = useCallback(async (
-    category: TransactionCategory
+    category: TransactionCategory,
+    sourceTransactions: readonly Transaction[] = transactionsRef.current,
   ) => {
     if (!userId) return
     
     try {
       // Calculate spent for current month
-      const currentMonth = new Date().toISOString().slice(0, 7)
-      const monthExpenses = transactions.filter(
+      const currentMonth = formatDateLocal(new Date()).slice(0, 7)
+      const monthExpenses = sourceTransactions.filter(
         t => t.date.startsWith(currentMonth) && 
         t.type === 'expense' && 
         t.category === category
@@ -1406,7 +1432,7 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
     } catch (err) {
       console.error('Error recalculating budget spent:', err)
     }
-  }, [userId, transactions])
+  }, [userId])
   
   /**
    * Public API for recalculating budget spent
@@ -2141,7 +2167,7 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
    * Requirement 13.2: Only recalculate when budgets or transactions change
    */
   const categoryRows = useMemo<CategoryBudgetRow[]>(() => {
-    const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM
+    const currentMonth = formatDateLocal(new Date()).slice(0, 7) // YYYY-MM
     const rows = computeCategoryBudgets(budgets, transactions, currentMonth, true)
     
     // Sort by priority: over-budget first, then by least remaining
@@ -2203,7 +2229,7 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
    * Percent of income saved = (totalSetAside + monthly contributions) / total monthly income * 100
    */
   const savingsRate = useMemo<number>(() => {
-    const currentMonth = new Date().toISOString().slice(0, 7)
+    const currentMonth = formatDateLocal(new Date()).slice(0, 7)
     const totalMonthlyIncome = transactions
       .filter(t => t.date.startsWith(currentMonth) && t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0)

@@ -12,6 +12,7 @@
  */
 
 import type { CSSProperties } from "react"
+import type { TransactionCategory } from "@/types"
 import { FONT_FAMILY } from "./typography"
 
 // ============================================================================
@@ -51,6 +52,25 @@ export const chartColors = {
   /** Dot stroke color (matches line color contextually). */
   dotStroke: "var(--success)",
 } as const
+
+/**
+ * Curated category/data-visualization palette. Category management consumes
+ * this source directly so custom-category colors stay in sync with charts.
+ */
+export const categoryPalette: Record<TransactionCategory | "fallback", string> = {
+  food: "#fb923c",
+  drinks: "#7c3aed",
+  rent: "#a78bfa",
+  transport: "#3b82f6",
+  school: "#f59e0b",
+  fun: "#ec4899",
+  health: "#2dd4bf",
+  subscriptions: "#22d3ee",
+  gig: "#d946ef",
+  income: "#34d399",
+  other: "#94a3b8",
+  fallback: "#818cf8",
+}
 
 // ============================================================================
 // Chart dimensions

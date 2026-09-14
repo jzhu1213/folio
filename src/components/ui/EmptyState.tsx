@@ -44,7 +44,7 @@ import {
   colorRamp,
 } from "@/styles/shared"
 import { semanticColors } from "@/styles/colors"
-import { typography, fontWeights, FONT_FAMILY } from '@/styles/typography'
+import { typography, typographyRoles, fontWeights, FONT_FAMILY } from '@/styles/typography'
 
 // ============================================================================
 // Illustration types & SVGs
@@ -159,10 +159,10 @@ export function EmptyState({
       <div style={{ marginBottom: 4 }}>{illustrationNode}</div>
 
       {/* Title */}
-      <p style={emptyStateTitle}>{title}</p>
+      <p style={{ ...emptyStateTitle, ...typographyRoles.cardHeadline }}>{title}</p>
 
       {/* Subtitle */}
-      <p style={emptyStateSubtitle}>{subtitle}</p>
+      <p style={{ ...emptyStateSubtitle, ...typographyRoles.body }}>{subtitle}</p>
 
       {/* Primary action */}
       {actionLabel && onAction && (
@@ -177,6 +177,7 @@ export function EmptyState({
           className="focus-ring interactive-control"
           style={{
             ...emptyStateAction,
+            ...typographyRoles.labelButton,
             background: actionBg,
             border: actionBorder,
             color: actionTextColor,

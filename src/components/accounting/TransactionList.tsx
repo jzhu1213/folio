@@ -8,8 +8,10 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SkeletonRow } from '@/components/ui/SkeletonRow'
 import { Icon } from '@/components/ui/Icon'
+import { ListRow } from '@/components/ui/primitives/ListRow'
 import { springs, timings } from '@/lib/animations'
 import { computeDailyTotal } from '@/lib/transactionUtils'
+import { formatDateLocal, parseDateLocal } from '@/lib/dateUtils'
 import { isForeignTransaction, formatTransactionAmount, getCurrencySymbol } from '@/lib/currencyUtils'
 import { getHomeCurrency } from '@/lib/currencyPreferences'
 import { getTagsForTransaction, getRecentTags, parseTagInput } from '@/lib/tagUtils'
@@ -17,7 +19,7 @@ import { lookupMerchant } from '@/lib/merchantMemory'
 import { saveHistoryScrollPosition } from '@/lib/useScrollVirtualization'
 import { shadows, getCategoryAccent } from '@/styles/shared'
 import { radius } from '@/styles/surfaces'
-import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
+import { FONT_FAMILY, spacing, typography, typographyRoles, fontWeights } from '@/styles/typography'
 import { formatMoney } from '@/lib/localeFormat'
 
 // â”€â”€ Session storage key â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -142,7 +144,7 @@ function getDateRangeStart(preset: DateRangePreset): string | null {
       break
   }
 
-  return start.toISOString().slice(0, 10)
+  return formatDateLocal(start)
 }
 
 // â”€â”€ Match highlighting helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -323,9 +325,54 @@ interface TransactionListProps {
   onViewSplit?: (splitId: string) => void
   /** Whether the user is scrolling fast â€” shows skeleton placeholders (Task 404.3) */
   isScrollingFast?: boolean
+  /** The parent owns Phase 3 search/filter criteria, so legacy controls stay hidden. */
+  criteriaManagedExternally?: boolean
 }
 
-export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fundingSources = [], onBulkDelete, onBulkRecategorize, onBulkTag, onTagFilter, splitMap, onViewSplit, isScrollingFast = false }: TransactionListProps) {
+/** A consecutive run of transactions sharing one local calendar day. */
+export interface TransactionDayGroup {
+  dayKey: string
+  transactions: Transaction[]
+}
+
+/**
+ * Preserve the received transaction order while grouping adjacent records by
+ * their local calendar day. Date-only values are parsed at local midnight and
+ * normalized through formatDateLocal so UTC conversion cannot move a record
+ * across a day boundary.
+ */
+export function groupTransactionsByLocalDay(transactions: Transaction[]): TransactionDayGroup[] {
+  return transactions.reduce<TransactionDayGroup[]>((groups, transaction) => {
+    const dayKey = formatDateLocal(parseDateLocal(transaction.date))
+    const currentGroup = groups[groups.length - 1]
+
+    if (!currentGroup || currentGroup.dayKey !== dayKey) {
+      groups.push({ dayKey, transactions: [transaction] })
+    } else {
+      currentGroup.transactions.push(transaction)
+    }
+
+    return groups
+  }, [])
+}
+
+/** Formats the local day key used for group headings. */
+export function formatTransactionDayLabel(dateKey: string, now = new Date()): string {
+  const todayKey = formatDateLocal(now)
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+
+  if (dateKey === todayKey) return 'Today'
+  if (dateKey === formatDateLocal(yesterday)) return 'Yesterday'
+
+  return parseDateLocal(dateKey).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fundingSources = [], onBulkDelete, onBulkRecategorize, onBulkTag, onTagFilter, splitMap, onViewSplit, isScrollingFast = false, criteriaManagedExternally = false }: TransactionListProps) {
   // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -549,6 +596,8 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
 
   // â”€â”€ Filter chain â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const filtered = useMemo(() => {
+    if (criteriaManagedExternally) return transactions
+
     const dateStart = getDateRangeStart(dateRange)
 
     return transactions
@@ -579,23 +628,19 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
         if (String(Math.round(t.amount)).includes(searchNorm)) return true
         return false
       })
-  }, [transactions, typeFilter, activeFilter, sourceFilter, dateRange, searchNorm, sourceMap])
+  }, [transactions, typeFilter, activeFilter, sourceFilter, dateRange, searchNorm, sourceMap, criteriaManagedExternally])
 
-  const grouped = filtered.reduce((acc, tx) => {
-    if (!acc[tx.date]) acc[tx.date] = []
-    acc[tx.date].push(tx)
-    return acc
-  }, {} as Record<string, Transaction[]>)
-
-  const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a))
+  // Transactions arrive already sorted by the data layer. Preserve that order
+  // and only add a presentational grouping pass for consecutive local days.
+  const dayGroups = useMemo(() => groupTransactionsByLocalDay(filtered), [filtered])
 
   // Helper: get ISO week number for a date string (used for weekly total separators)
   const getWeekKey = (dateStr: string) => {
-    const d = new Date(dateStr + 'T00:00:00')
+    const d = parseDateLocal(dateStr)
     const dayOfWeek = d.getDay() // 0=Sun
     const monday = new Date(d)
     monday.setDate(d.getDate() - ((dayOfWeek + 6) % 7))
-    return monday.toISOString().slice(0, 10)
+    return formatDateLocal(monday)
   }
 
   // Compute weekly totals for filtered transactions
@@ -627,7 +672,7 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
   const monthlyData = useMemo(() => {
     const data: Record<string, { spent: number; count: number; transactions: Transaction[] }> = {}
     filtered.forEach(tx => {
-      const monthKey = tx.date.slice(0, 7) // "YYYY-MM"
+      const monthKey = formatDateLocal(parseDateLocal(tx.date)).slice(0, 7) // "YYYY-MM"
       if (!data[monthKey]) data[monthKey] = { spent: 0, count: 0, transactions: [] }
       if (tx.type === 'expense') data[monthKey].spent += tx.amount
       data[monthKey].count += 1
@@ -642,15 +687,6 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
 
   const getLabel = (cat: Transaction['category']) =>
     TRANSACTION_CATEGORIES.find(c => c.category === cat)?.label ?? cat
-
-  const formatDate = (s: string) => {
-    const d    = new Date(s + 'T00:00:00')
-    const now  = new Date()
-    const yest = new Date(now); yest.setDate(yest.getDate() - 1)
-    if (s === now.toISOString().split('T')[0])  return 'Today'
-    if (s === yest.toISOString().split('T')[0]) return 'Yesterday'
-    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
-  }
 
   // Check if a transaction was logged late (createdAt more than 1 day after date)
   const isLoggedLate = (tx: Transaction): boolean => {
@@ -681,6 +717,7 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
   return (
     <div>
       {/* â”€â”€ Search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {!criteriaManagedExternally && <>
       <GlassCard elevation="low" style={{ marginBottom: spacing.md }}>
         <input
           type="text"
@@ -725,6 +762,8 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
           </motion.button>
         </div>
       )}
+
+      </>}
 
       {/* â”€â”€ Select button / multi-select header (Task 131) â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {hasBulkActions && !isMultiSelectMode && transactions.length > 0 && (
@@ -839,6 +878,7 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
       )}
 
       {/* â”€â”€ Type filter pills (Income/Expense) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {!criteriaManagedExternally && <>
       <div className="flex gap-2 mb-3">
         <motion.button
           type="button"
@@ -1001,11 +1041,13 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
         </div>
       )}
 
+      </>}
+
       {/* â”€â”€ Rows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      {sortedDates.length > 0 ? (() => {
+      {dayGroups.length > 0 ? (() => {
         let lastWeekKey = ''
         let lastMonthKey = ''
-        return sortedDates.map((date, dateIdx) => {
+        return dayGroups.map(({ dayKey: date, transactions: dayTransactions }, dateIdx) => {
           const weekKey = getWeekKey(date)
           const monthKey = date.slice(0, 7) // "YYYY-MM"
           const showWeekHeader = weekKey !== lastWeekKey
@@ -1016,10 +1058,10 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
           const prevMonthKey = lastMonthKey
           lastMonthKey = monthKey
 
-          const dailyTotal = computeDailyTotal(grouped[date])
-          const dailyIncome = computeDailyIncome(grouped[date])
+          const dailyTotal = computeDailyTotal(dayTransactions)
+          const dailyIncome = computeDailyIncome(dayTransactions)
           // Estimate intrinsic height: header ~40px + rows ~56px each
-          const estimatedHeight = 40 + grouped[date].length * 56
+          const estimatedHeight = 40 + dayTransactions.length * 64
           return (
           <div
             key={date}
@@ -1064,7 +1106,7 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
                       : monthlyData[prevMonthKey].spent.toFixed(2)}
                   </p>
                 </div>
-                {showCategoryBars && (
+                {!criteriaManagedExternally && showCategoryBars && (
                   <CategorySpendingBar
                     transactions={monthlyData[prevMonthKey].transactions}
                     onCategoryTap={setActiveFilter}
@@ -1128,7 +1170,7 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
                   </p>
                 </div>
                 {/* Category spending bars for the week (Task 400.3) */}
-                {!collapseSummaries && showCategoryBars && weeklyTransactions[weekKey] && (
+                {!criteriaManagedExternally && !collapseSummaries && showCategoryBars && weeklyTransactions[weekKey] && (
                   <CategorySpendingBar
                     transactions={weeklyTransactions[weekKey]}
                     onCategoryTap={setActiveFilter}
@@ -1137,23 +1179,30 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
               </div>
             )}
 
-          {/* Day header (Task 400.1 â€” enhanced with income) */}
-          <div className="flex items-center justify-between mb-3">
+          {/* Day header */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: spacing.sm,
+              padding: `${spacing.xs}px ${spacing.xs}px`,
+              marginBottom: spacing.xs,
+              borderBottom: 'var(--border-default)',
+            }}
+          >
             <p style={{
-              fontSize: typography['body-sm'].fontSize,
-              fontWeight: fontWeights.medium,
-              color: 'var(--sub)',
-              fontFamily: FONT_FAMILY,
+              ...typographyRoles.sectionHeadline,
+              color: 'var(--text)',
+              margin: 0,
             }}>
-              {formatDate(date)}
+              {formatTransactionDayLabel(date)}
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               {dailyTotal > 0 && (
                 <span style={{
-                  fontSize: typography['body-sm'].fontSize,
-                  fontWeight: fontWeights.medium,
+                  ...typographyRoles.dataTableFigure,
                   color: 'var(--muted)',
-                  fontFamily: FONT_FAMILY,
                   fontVariantNumeric: 'tabular-nums',
                 }}>
                   ${dailyTotal.toFixed(2)} spent
@@ -1161,10 +1210,8 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
               )}
               {dailyIncome > 0 && (
                 <span style={{
-                  fontSize: typography['body-sm'].fontSize,
-                  fontWeight: fontWeights.medium,
+                  ...typographyRoles.dataTableFigure,
                   color: 'var(--success)',
-                  fontFamily: FONT_FAMILY,
                   fontVariantNumeric: 'tabular-nums',
                   opacity: 0.85,
                 }}>
@@ -1174,8 +1221,20 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
             </div>
           </div>
 
-          {/* Transactions in glass card with timeline (255.1) */}
-          <GlassCard elevation="low" style={{ padding: '4px 0', borderRadius: radius.control, marginBottom: spacing.md, position: 'relative' }}>
+          {/* Flat transaction group with timeline (255.1) */}
+          <div
+            role="group"
+            aria-label={`${formatTransactionDayLabel(date)} transactions`}
+            style={{
+              marginBottom: spacing.md,
+              position: 'relative',
+              overflow: 'hidden',
+              background: 'var(--color-surface)',
+              border: 'var(--border-default)',
+              borderRadius: radius.control,
+              boxShadow: 'var(--shadow-none)',
+            }}
+          >
             {/* Vertical timeline accent line */}
             <div
               aria-hidden
@@ -1193,15 +1252,19 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
             {/* Skeleton loading for fast scroll (Task 404.3) */}
             {isScrollingFast && dateIdx > 2 ? (
               <div aria-label="Loading transactions" role="status">
-                {grouped[date].slice(0, Math.min(grouped[date].length, 3)).map((_, skIdx) => (
+                {dayTransactions.slice(0, Math.min(dayTransactions.length, 3)).map((_, skIdx) => (
                   <SkeletonRow key={skIdx} />
                 ))}
               </div>
             ) : (
-            <>{grouped[date].map((tx, idx) => {
+            <>{dayTransactions.map((tx, idx) => {
               const isIncome = tx.type === 'income'
-              const expanded = !isMultiSelectMode && expandedId === tx.id
-              const isLast = idx === grouped[date].length - 1
+              // Current history rows now open the detail editor directly. The
+              // retained expansion remains a read-only fallback for contexts
+              // that do not supply an edit action.
+              const canOpenEditor = Boolean(onEdit)
+              const expanded = !isMultiSelectMode && !canOpenEditor && expandedId === tx.id
+              const isLast = idx === dayTransactions.length - 1
               const txSource = tx.fundingSourceId ? sourceMap.get(tx.fundingSourceId) : undefined
               const isSelected = selectedIds.has(tx.id)
               const row = (
@@ -1228,30 +1291,29 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
                     }}
                   />
                   {/* Main row */}
-                  <motion.div
-                    className="flex items-center justify-between gap-4 py-3 cursor-pointer transition-colors hover:bg-white/[0.03]"
+                  <ListRow
                     style={{
+                      minHeight: '64px',
+                      padding: `${spacing.sm}px ${spacing.md}px`,
                       paddingInlineStart: 36,
                       paddingInlineEnd: 16,
-                      borderBottom: (expanded || isLast) ? 'none' : '1px solid var(--fill-04)',
-                      background: isSelected ? 'var(--accent-100)' : undefined,
+                      border: 'none',
+                      borderBottom: (expanded || isLast) ? 'none' : 'var(--border-default)',
+                      borderRadius: 0,
+                      background: isSelected ? 'var(--accent-100)' : 'var(--color-surface)',
                     }}
-                    onClick={() => {
+                    onPress={() => {
                       if (isMultiSelectMode) {
                         toggleSelection(tx.id)
+                      } else if (canOpenEditor && onEdit) {
+                        saveHistoryScrollPosition()
+                        onEdit(tx)
                       } else {
                         setExpandedId(expanded ? null : tx.id)
                       }
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        if (isMultiSelectMode) {
-                          toggleSelection(tx.id)
-                        } else {
-                          setExpandedId(expanded ? null : tx.id)
-                        }
-                      } else if (e.key === 'ArrowDown') {
+                      if (e.key === 'ArrowDown') {
                         e.preventDefault()
                         const next = e.currentTarget.parentElement?.nextElementSibling?.querySelector<HTMLElement>('[role="button"]')
                         next?.focus()
@@ -1261,12 +1323,8 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
                         prev?.focus()
                       }
                     }}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`${tx.note || getLabel(tx.category)}: ${isIncome ? '+' : '-'}${formatMoney(tx.amount)}${expanded ? ', expanded' : ''}`}
-                    aria-expanded={expanded}
-                    whileTap={{ scale: 0.98 }}
-                    transition={springs.snappy}
+                    aria-label={`${tx.note || getLabel(tx.category)}: ${isIncome ? '+' : '-'}${formatMoney(tx.amount)}${onEdit ? ', edit transaction' : expanded ? ', expanded' : ''}`}
+                    aria-expanded={onEdit ? undefined : expanded}
                   >
                     {/* Checkbox in multi-select mode */}
                     {isMultiSelectMode && (
@@ -1457,14 +1515,14 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
                         )
                       })()}
                       <Icon
-                        name="action:expand"
+                        name={onEdit ? 'action:forward' : 'action:expand'}
                         size={14}
                         strokeWidth={2}
                         className="transition-transform duration-150"
-                        style={{ color: 'var(--sub)', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                        style={{ color: 'var(--sub)', transform: onEdit ? 'rotate(0deg)' : expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
                       />
                     </div>
-                  </motion.div>
+                  </ListRow>
 
                   {/* Expanded actions (Edit + Repeat + Delete for desktop / non-swipe fallback) */}
                   {expanded && (
@@ -1542,18 +1600,12 @@ export function TransactionList({ transactions, onDelete, onEdit, onRepeat, fund
                 </div>
               )
 
-              // Disable swipe-to-delete in multi-select mode
-              if (onDelete && !isMultiSelectMode) {
-                return (
-                  <SwipeableRow key={tx.id} onDelete={() => { onDelete(tx.id); setExpandedId(null) }}>
-                    {row}
-                  </SwipeableRow>
-                )
-              }
+              // Deletion is deliberately routed through the detail sheet's
+              // separate confirmation step instead of a one-gesture swipe.
               return <div key={tx.id}>{row}</div>
             })}</>
             )}
-          </GlassCard>
+          </div>
         </div>
         )
       })

@@ -13,6 +13,9 @@ import { DOCK_PADDING_BOTTOM } from "@/styles/shared"
 import { radius } from '@/styles/surfaces'
 import { HistoryView } from "@/components/accounting/HistoryView"
 import { Icon } from "@/components/ui/Icon"
+import { EmptyState } from "@/components/ui/EmptyState"
+import { HistoryGroupedSkeleton } from "@/components/ui/SkeletonRow"
+import { Illustration } from "@/components/ui/illustrations"
 import { InsightTrendCard } from "./InsightTrendCard"
 import { InsightBreakdownCard } from "./InsightBreakdownCard"
 import { HistorySearchBar } from "./HistorySearchBar"
@@ -124,6 +127,7 @@ export const HistoryScreen = memo(function HistoryScreen({
 }: HistoryScreenProps) {
   const t = useTranslation()
   const { prefersReducedMotion, listContainer, listItem } = useReducedMotion()
+  const phaseTransition = prefersReducedMotion ? { duration: 0 } : timings.fast
 
   // ── Search state ──────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("")
@@ -163,10 +167,22 @@ export const HistoryScreen = memo(function HistoryScreen({
     return searchTransactions(transactions, searchQuery)
   }, [transactions, searchQuery])
 
+  // Search ranks matches for discovery, while the timeline must retain the
+  // transaction order supplied by the data layer so local day groups remain
+  // contiguous. Keep the search result set, but restore that source order.
+  const orderedSearchResults = useMemo(() => {
+    if (!searchResults) return null
+    const resultsById = new Map(searchResults.map((result) => [result.transaction.id, result]))
+    return transactions.flatMap((transaction) => {
+      const result = resultsById.get(transaction.id)
+      return result ? [result] : []
+    })
+  }, [transactions, searchResults])
+
   // Memoized, optimized filter computation (Task 405.1)
   const filteredTransactions = useFilteredTransactions(
     transactions,
-    searchResults,
+    orderedSearchResults,
     historyFilters
   )
 
@@ -182,6 +198,22 @@ export const HistoryScreen = memo(function HistoryScreen({
 
   const handleFiltersChange = useCallback((newFilters: HistoryFilters) => {
     setHistoryFilters(newFilters)
+  }, [])
+
+  const hasActiveSearchOrFilters = Boolean(
+    searchQuery.trim() ||
+    historyFilters.categories.length > 0 ||
+    historyFilters.dateRange !== null ||
+    historyFilters.amountRange !== null ||
+    historyFilters.type !== "all" ||
+    historyFilters.currency !== null
+  )
+  const showNoResults = !isLoading && hasActiveSearchOrFilters && filteredTransactions.length === 0
+  const showTrueEmpty = !isLoading && !hasActiveSearchOrFilters && transactions.length === 0
+
+  const handleClearActiveCriteria = useCallback(() => {
+    setSearchQuery("")
+    setHistoryFilters(EMPTY_FILTERS)
   }, [])
 
   // Tag filter callback: when a tag chip is tapped in a transaction row,
@@ -301,7 +333,7 @@ export const HistoryScreen = memo(function HistoryScreen({
         <HistorySearchBar
           value={searchQuery}
           onChange={handleSearchChange}
-          resultCount={searchResults?.length}
+          resultCount={searchQuery.trim() ? filteredTransactions.length : undefined}
           totalCount={transactions.length}
           onQuickFilter={handleQuickFilter}
         />
@@ -328,6 +360,7 @@ export const HistoryScreen = memo(function HistoryScreen({
           <button
             onClick={handleExportClick}
             aria-label="Export transactions as CSV"
+            className="focus-ring interactive-control"
             style={{
               display: "flex",
               alignItems: "center",
@@ -403,19 +436,46 @@ export const HistoryScreen = memo(function HistoryScreen({
       )}
 
       <motion.div variants={listItem} style={{ marginTop: spacingScale["32"] }}>
-      {/* Conditional view rendering based on grouping mode (Task 402) */}
       <AnimatePresence mode="wait">
+      {showNoResults ? (
+        <EmptyState
+          key="filtered-empty"
+          illustration="filter"
+          title="No matches found"
+          subtitle="Try a different search or clear your filters to see your transactions."
+          actionLabel="Clear search and filters"
+          onAction={handleClearActiveCriteria}
+          analyticsContext="history-filtered-empty"
+        />
+      ) : showTrueEmpty ? (
+        <EmptyState
+          key="history-true-empty"
+          illustration={<Illustration name="empty:history-ledger" size={88} />}
+          title="Your history starts here"
+          subtitle="Log a first transaction and your spending story will begin to take shape."
+          actionLabel="Log your first expense"
+          onAction={onLogExpense}
+          analyticsContext="history-true-empty"
+        />
+      ) : isLoading ? (
+        <HistoryGroupedSkeleton key="history-loading" />
+      ) : (
+      /* Conditional view rendering based on grouping mode (Task 402) */
+      <>
         {groupingView === "timeline" && (
           <motion.div
             key="timeline"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={timings.fast}
+            transition={phaseTransition}
           >
             <HistoryView
               transactions={filteredTransactions}
               isLoading={isLoading}
+              noResultsMessage={hasActiveSearchOrFilters ? "No transactions match your search or filters this month." : undefined}
+              onClearCriteria={handleClearActiveCriteria}
+              onLogExpense={onLogExpense}
               onEditTransaction={onEditTransaction}
               onDeleteTransaction={onDeleteTransaction}
               onRepeatTransaction={onRepeatTransaction}
@@ -435,7 +495,7 @@ export const HistoryScreen = memo(function HistoryScreen({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={timings.fast}
+            transition={phaseTransition}
             style={{ padding: `0 ${spacing.md}px`, paddingBottom: DOCK_PADDING_BOTTOM }}
           >
             <HistoryByCategoryView
@@ -450,7 +510,7 @@ export const HistoryScreen = memo(function HistoryScreen({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={timings.fast}
+            transition={phaseTransition}
             style={{ padding: `0 ${spacing.md}px`, paddingBottom: DOCK_PADDING_BOTTOM }}
           >
             <HistoryByMerchantView
@@ -459,6 +519,8 @@ export const HistoryScreen = memo(function HistoryScreen({
             />
           </motion.div>
         )}
+      </>
+      )}
       </AnimatePresence>
       </motion.div>
 

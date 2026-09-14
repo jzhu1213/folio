@@ -27,6 +27,7 @@ import type { ActiveSession } from './sessionManagement'
 import type { BudgetPeriodPreference } from './budgetPeriod'
 import { getTotalDaysInPeriod } from './budgetPeriod'
 import type { TermSchedule } from './termSchedule'
+import { formatDateLocal } from './dateUtils'
 
 import type { OnboardingPath, UserPriority } from '@/types'
 
@@ -58,7 +59,7 @@ interface DbTransaction {
  *
  * Full records (all metadata) are fetched only for detail/edit views via getTransactionFull().
  */
-const TRANSACTION_LIST_FIELDS = 'id,user_id,date,type,amount,category,note,is_recurring,created_at,funding_source_id,updated_at' as const
+const TRANSACTION_LIST_FIELDS = 'id,user_id,date,type,amount,category,note,is_recurring,recurring_id,created_at,funding_source_id,updated_at' as const
 
 interface DbProfile {
   id: string
@@ -572,6 +573,7 @@ export async function insertTransaction(
     category: TransactionCategory
     note?: string
     isRecurring?: boolean
+    recurringId?: string | null
     accountType?: AccountType
     fundingSourceId?: string
   }
@@ -587,6 +589,7 @@ export async function insertTransaction(
         category: tx.category,
         note: tx.note ?? null,
         is_recurring: tx.isRecurring ?? false,
+        ...(tx.recurringId ? { recurring_id: tx.recurringId } : {}),
         account_type: tx.accountType ?? 'personal',
         ...(tx.fundingSourceId ? { funding_source_id: tx.fundingSourceId } : {}),
       })
@@ -610,6 +613,8 @@ export async function updateTransaction(
     type: TransactionType
     category: TransactionCategory
     note?: string
+    isRecurring?: boolean
+    recurringId?: string | null
   },
   /** The client's last-known updatedAt for conflict detection (task 524) */
   localUpdatedAt?: string
@@ -666,6 +671,8 @@ export async function updateTransaction(
         type: updates.type,
         category: updates.category,
         note: updates.note ?? null,
+        ...(updates.isRecurring === undefined ? {} : { is_recurring: updates.isRecurring }),
+        ...(updates.recurringId === undefined ? {} : { recurring_id: updates.recurringId }),
       })
       .eq('id', txId)
       .eq('user_id', userId)
@@ -701,7 +708,7 @@ export async function deleteTransaction(userId: string, txId: string): Promise<b
 // ============================================
 
 export async function getBudgets(userId: string): Promise<Budget[]> {
-  const currentMonth = new Date().toISOString().slice(0, 7)
+  const currentMonth = formatDateLocal(new Date()).slice(0, 7)
 
   const result = await withResilience(async () => {
     const { data, error } = await supabase
@@ -739,7 +746,7 @@ export async function carryForwardBudgetLimits(
   budgetPeriod?: BudgetPeriodPreference | null,
   termSchedule?: TermSchedule | null
 ): Promise<void> {
-  const currentMonth = new Date().toISOString().slice(0, 7)
+  const currentMonth = formatDateLocal(new Date()).slice(0, 7)
 
   // Fetch all current-month records
   const { data: current } = await supabase
@@ -845,7 +852,7 @@ export async function upsertBudget(
     perTransactionAlert?: number
   }
 ): Promise<Budget | null> {
-  const currentMonth = new Date().toISOString().slice(0, 7)
+  const currentMonth = formatDateLocal(new Date()).slice(0, 7)
   
   // If spent is not provided, fetch current spent value
   let currentSpent = spent ?? 0
@@ -900,7 +907,7 @@ export async function updateBudgetSpent(
   category: TransactionCategory,
   spentAmount: number
 ): Promise<Budget | null> {
-  const currentMonth = new Date().toISOString().slice(0, 7)
+  const currentMonth = formatDateLocal(new Date()).slice(0, 7)
   
   // Get existing budget or create one
   const { data: existing } = await supabase

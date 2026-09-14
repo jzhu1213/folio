@@ -53,6 +53,8 @@ export interface UpdatePayload {
   type: TransactionType
   date: string
   note?: string
+  isRecurring?: boolean
+  recurringId?: string | null
 }
 
 /** Payload for deleting an existing transaction */
@@ -675,6 +677,8 @@ async function _processQueueInternal(
             type: payload.type,
             category: payload.category,
             note: payload.note,
+            isRecurring: payload.isRecurring,
+            recurringId: payload.recurringId,
           })
           success = result !== null
           if (!success) {

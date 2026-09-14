@@ -17,10 +17,11 @@
 import { useState, useEffect, useRef, useCallback, useId } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Icon } from '@/components/ui/Icon'
+import { Input } from '@/components/ui/primitives/Input'
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { fills, shadows } from '@/styles/shared'
 import { radius } from '@/styles/surfaces'
-import { springs } from '@/lib/animations'
+import { springs, useReducedMotion } from '@/lib/animations'
 import {
   getRecentSearches,
   addRecentSearch,
@@ -107,6 +108,8 @@ export function HistorySearchBar({
   totalCount,
   onQuickFilter,
 }: HistorySearchBarProps) {
+  const { prefersReducedMotion } = useReducedMotion()
+  const motionTransition = prefersReducedMotion ? { duration: 0 } : springs.snappy
   const [localValue, setLocalValue] = useState(value)
   const [isFocused, setIsFocused] = useState(false)
   const [recentSearches, setRecentSearches] = useState<string[]>([])
@@ -155,6 +158,10 @@ export function HistorySearchBar({
   }, [])
 
   const handleClear = useCallback(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+      debounceRef.current = null
+    }
     setLocalValue('')
     onChange('')
     inputRef.current?.focus()
@@ -241,39 +248,41 @@ export function HistorySearchBar({
           display: 'flex',
           alignItems: 'center',
           gap: spacing.sm,
-          padding: '12px 16px',
-          background: fills[4],
-          border: `1px solid ${isFocused ? 'var(--accent-400)' : fills[8]}`,
-          borderRadius: radius.control,
-          transition: 'border-color 0.2s',
+          width: '100%',
         }}
       >
-        {/* Search icon */}
-        <Icon name="action:search" size={18} color="var(--sub)" strokeWidth={2} style={{ flexShrink: 0, opacity: 0.7 }} />
-
-        <input
-          ref={inputRef}
-          type="text"
-          role="combobox"
-          aria-expanded={showDropdown}
-          aria-controls={listboxId}
-          aria-autocomplete="list"
-          aria-label="Search transactions"
-          placeholder="Search your spending history..."
-          value={localValue}
-          onChange={handleInputChange}
-          onFocus={() => setIsFocused(true)}
-          style={{
-            flex: 1,
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            fontSize: typography.body.fontSize,
-            fontFamily: FONT_FAMILY,
-            color: 'var(--text)',
-            padding: 0,
-          }}
-        />
+        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+          <Icon
+            name="action:search"
+            size={18}
+            color="var(--sub)"
+            strokeWidth={2}
+            aria-hidden
+            style={{
+              position: 'absolute',
+              insetInlineStart: 14,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 1,
+              pointerEvents: 'none',
+              opacity: 0.7,
+            }}
+          />
+          <Input
+            inputRef={inputRef}
+            variant="search"
+            type="search"
+            role="combobox"
+            aria-expanded={showDropdown}
+            aria-controls={listboxId}
+            aria-autocomplete="list"
+            aria-label="Search transaction merchant or note"
+            placeholder="Search merchant or note"
+            value={localValue}
+            onChange={handleInputChange}
+            onFocus={() => setIsFocused(true)}
+          />
+        </div>
 
         {/* Match count */}
         {hasResults && (
@@ -297,23 +306,24 @@ export function HistorySearchBar({
             type="button"
             onClick={handleClear}
             whileTap={{ scale: 0.95 }}
-            transition={springs.snappy}
+            transition={motionTransition}
             aria-label="Clear search"
+            className="focus-ring interactive-control"
             style={{
               flexShrink: 0,
-              width: 24,
-              height: 24,
+              width: 44,
+              height: 44,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: fills[8],
-              border: 'none',
-              borderRadius: '50%',
+              background: 'var(--surface-recessed)',
+              border: 'var(--border-default)',
+              borderRadius: radius.control,
               cursor: 'pointer',
               padding: 0,
             }}
           >
-            <Icon name="action:close" size={12} color="var(--text)" strokeWidth={2.5} />
+            <Icon name="action:close" size={16} color="var(--text)" strokeWidth={2.5} />
           </motion.button>
         )}
       </div>
@@ -325,9 +335,9 @@ export function HistorySearchBar({
             id={listboxId}
             role="listbox"
             aria-label="Search suggestions"
-            initial={{ opacity: 0, y: -4 }}
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
+            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
             style={{
               position: 'absolute',
@@ -370,6 +380,7 @@ export function HistorySearchBar({
                     type="button"
                     onClick={handleClearRecent}
                     aria-label="Clear recent searches"
+                    className="focus-ring interactive-control"
                     style={{
                       background: 'none',
                       border: 'none',
@@ -392,6 +403,7 @@ export function HistorySearchBar({
                       role="option"
                       aria-selected={false}
                       onClick={() => handleRecentClick(search)}
+                      className="focus-ring interactive-control"
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -452,7 +464,8 @@ export function HistorySearchBar({
                     type="button"
                     onClick={() => handleQuickFilterClick(filter)}
                     whileTap={{ scale: 0.95 }}
-                    transition={springs.snappy}
+                    transition={motionTransition}
+                    className="focus-ring interactive-control"
                     style={{
                       padding: '7px 14px',
                       fontSize: typography['body-sm'].fontSize,

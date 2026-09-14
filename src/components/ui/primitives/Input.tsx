@@ -35,14 +35,21 @@ export interface InputProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void
+  inputRef?: React.Ref<HTMLInputElement>
   type?: string
+  role?: React.AriaRole
   'aria-label'?: string
   'aria-describedby'?: string
   'aria-invalid'?: boolean
+  'aria-expanded'?: boolean
+  'aria-controls'?: string
+  'aria-autocomplete'?: React.AriaAttributes['aria-autocomplete']
   id?: string
   name?: string
   autoComplete?: string
   inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']
+  maxLength?: number
+  style?: React.CSSProperties
 }
 
 // ============================================================================
@@ -59,14 +66,21 @@ export const Input: React.FC<InputProps> = ({
   onChange,
   onFocus,
   onBlur,
+  inputRef,
   type = 'text',
+  role,
   'aria-label': ariaLabel,
   'aria-describedby': ariaDescribedBy,
   'aria-invalid': ariaInvalid,
+  'aria-expanded': ariaExpanded,
+  'aria-controls': ariaControls,
+  'aria-autocomplete': ariaAutocomplete,
   id,
   name,
   autoComplete,
   inputMode,
+  maxLength,
+  style,
 }) => {
   const [isFocused, setIsFocused] = useState(false)
 
@@ -120,11 +134,14 @@ export const Input: React.FC<InputProps> = ({
     boxSizing: 'border-box',
     // Focus ring via box-shadow (≥2px, ≥3:1 contrast) when focused
     boxShadow: 'none',
+    ...style,
   }
 
   return (
     <input
+      ref={inputRef}
       type={type}
+      role={role}
       id={id}
       name={name}
       value={value}
@@ -137,9 +154,13 @@ export const Input: React.FC<InputProps> = ({
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}
       aria-invalid={ariaInvalid ?? error}
+      aria-expanded={ariaExpanded}
+      aria-controls={ariaControls}
+      aria-autocomplete={ariaAutocomplete}
       aria-disabled={disabled}
       autoComplete={autoComplete}
       inputMode={inputMode}
+      maxLength={maxLength}
       style={baseStyles}
       className="focus-ring interactive-field"
     />

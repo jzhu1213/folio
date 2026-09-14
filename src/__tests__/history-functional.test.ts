@@ -17,6 +17,7 @@ import {
 } from '@/lib/useFilteredTransactions'
 import type { PrecomputedFilterParams } from '@/lib/useFilteredTransactions'
 import type { Transaction, TransactionCategory } from '@/types'
+import { formatDateLocal } from '@/lib/dateUtils'
 
 // ============================================================================
 // Test data helpers
@@ -164,7 +165,7 @@ describe('408.1 Search accuracy (Requirements: 22.1)', () => {
     it('parseNaturalDate handles "today"', () => {
       const range = parseNaturalDate('today')
       expect(range).not.toBeNull()
-      const todayStr = new Date().toISOString().slice(0, 10)
+      const todayStr = formatDateLocal(new Date())
       expect(range!.start).toBe(todayStr)
       expect(range!.end).toBe(todayStr)
     })
@@ -174,14 +175,14 @@ describe('408.1 Search accuracy (Requirements: 22.1)', () => {
       expect(range).not.toBeNull()
       const yesterday = new Date()
       yesterday.setDate(yesterday.getDate() - 1)
-      expect(range!.start).toBe(yesterday.toISOString().slice(0, 10))
+      expect(range!.start).toBe(formatDateLocal(yesterday))
     })
 
     it('parseNaturalDate handles "this week"', () => {
       const range = parseNaturalDate('this week')
       expect(range).not.toBeNull()
       expect(range!.start).toBeDefined()
-      expect(range!.end).toBe(new Date().toISOString().slice(0, 10))
+      expect(range!.end).toBe(formatDateLocal(new Date()))
     })
 
     it('parseNaturalDate handles "last month"', () => {
@@ -189,7 +190,7 @@ describe('408.1 Search accuracy (Requirements: 22.1)', () => {
       expect(range).not.toBeNull()
       const now = new Date()
       const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-      expect(range!.start).toBe(startOfLastMonth.toISOString().slice(0, 10))
+      expect(range!.start).toBe(formatDateLocal(startOfLastMonth))
     })
 
     it('parseNaturalDate handles month names', () => {
@@ -213,7 +214,7 @@ describe('408.1 Search accuracy (Requirements: 22.1)', () => {
 
     it('date-based search matches transactions in the date range', () => {
       // Create transactions with today's date
-      const today = new Date().toISOString().slice(0, 10)
+      const today = formatDateLocal(new Date())
       const txsWithToday = [
         ...transactions,
         makeTx({ note: 'Today purchase', date: today, amount: 10 }),
@@ -448,7 +449,7 @@ describe('408.2 Filter combinations (Requirements: 22.2)', () => {
     it('returns today bounds for "today"', () => {
       const bounds = computeDateBounds('today', null)
       expect(bounds).not.toBeNull()
-      const todayStr = new Date().toISOString().slice(0, 10)
+      const todayStr = formatDateLocal(new Date())
       expect(bounds!.start).toBe(todayStr)
       expect(bounds!.end).toBe(todayStr)
     })
@@ -457,9 +458,9 @@ describe('408.2 Filter combinations (Requirements: 22.2)', () => {
       const bounds = computeDateBounds('this_month', null)
       expect(bounds).not.toBeNull()
       const now = new Date()
-      const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
+      const start = formatDateLocal(new Date(now.getFullYear(), now.getMonth(), 1))
       expect(bounds!.start).toBe(start)
-      expect(bounds!.end).toBe(now.toISOString().slice(0, 10))
+      expect(bounds!.end).toBe(formatDateLocal(now))
     })
 
     it('returns custom range bounds', () => {

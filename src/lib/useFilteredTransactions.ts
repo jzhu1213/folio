@@ -17,6 +17,7 @@ import type { HistoryFilters, DateRangePreset, CustomDateRange, AmountRangePrese
 import type { SearchResult } from "@/lib/transactionSearch"
 import { normalizeCode } from "@/lib/currencyUtils"
 import { getHomeCurrency } from "@/lib/currencyPreferences"
+import { formatDateLocal } from '@/lib/dateUtils'
 
 // ============================================================================
 // Precomputation helpers (exported for testing)
@@ -28,7 +29,7 @@ export function computeDateBounds(
 ): { start: string | null; end: string | null } | null {
   if (!preset) return null
   const now = new Date()
-  const todayStr = now.toISOString().slice(0, 10)
+  const todayStr = formatDateLocal(now)
 
   switch (preset) {
     case "today":
@@ -37,16 +38,16 @@ export function computeDateBounds(
       const start = new Date(now)
       const day = start.getDay()
       start.setDate(start.getDate() - ((day + 6) % 7)) // Monday
-      return { start: start.toISOString().slice(0, 10), end: todayStr }
+      return { start: formatDateLocal(start), end: todayStr }
     }
     case "this_month": {
       const start = new Date(now.getFullYear(), now.getMonth(), 1)
-      return { start: start.toISOString().slice(0, 10), end: todayStr }
+      return { start: formatDateLocal(start), end: todayStr }
     }
     case "last_month": {
       const start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
       const end = new Date(now.getFullYear(), now.getMonth(), 0)
-      return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) }
+      return { start: formatDateLocal(start), end: formatDateLocal(end) }
     }
     case "custom":
       if (custom) return { start: custom.start || null, end: custom.end || null }

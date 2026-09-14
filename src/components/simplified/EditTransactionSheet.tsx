@@ -1,471 +1,179 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { motion } from 'motion/react'
-import { springs, useReducedMotion } from '@/lib/animations'
-import { Sheet } from '@/components/ui/primitives/Sheet'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { BottomSheet } from '@/components/ui/BottomSheet'
+import { NumericInput } from '@/components/ui/primitives/NumericInput'
+import { Input } from '@/components/ui/primitives/Input'
+import { DatePickerChips } from '@/components/ui/DatePickerChips'
+import { Icon } from '@/components/ui/Icon'
+import { Illustration, type IllustrationName } from '@/components/ui/illustrations'
 import { triggerHaptic } from '@/lib/haptics'
-import { useToast } from '@/contexts/ToastContext'
-import { useTranslation } from '@/contexts/I18nContext'
-import type { Transaction, TransactionCategory } from '@/types'
-import { getCategoryEmoji } from '@/lib/vocabulary'
-import { FONT_FAMILY, spacing, pxToRem, typography, fontWeights } from '@/styles/typography'
-import { shadows, fills, colorRamp } from '@/styles/shared'
-import { gradients } from '@/styles/colors'
-import { DatePickerChips, getRelativeDateLabel } from '@/components/ui/DatePickerChips'
+import { formatDateLocal, parseDateLocal } from '@/lib/dateUtils'
+import { TRANSACTION_CATEGORIES, type Transaction, type TransactionCategory } from '@/types'
+import { FONT_FAMILY, fontWeights, spacing, typography, typographyRoles } from '@/styles/typography'
+import { radius } from '@/styles/surfaces'
+import { shadows } from '@/styles/shared'
 
 interface EditTransactionSheetProps {
   isOpen: boolean
   onClose: () => void
-  /** The transaction being edited */
   transaction: Transaction | null
-  /** Called with the updated fields — performs optimistic update */
-  onSave: (
-    id: string,
-    data: { amount: number; category: TransactionCategory; note?: string; date?: string }
-  ) => Promise<Transaction | null>
-  /** Called when user taps "Refund this" */
+  onSave: (id: string, data: { amount: number; category: TransactionCategory; note?: string; date: string; isRecurring: boolean }) => Promise<Transaction | null>
+  /** Called only after the explicit destructive confirmation state. */
+  onDelete: (transaction: Transaction) => Promise<boolean>
   onRefund?: (transaction: Transaction) => void
 }
 
-const CATEGORY_GRID: { category: TransactionCategory; emoji: string; label: string }[] = [
-  { category: 'food', emoji: getCategoryEmoji('food'), label: 'Food' },
-  { category: 'drinks', emoji: getCategoryEmoji('drinks'), label: 'Drinks' },
-  { category: 'transport', emoji: getCategoryEmoji('transport'), label: 'Transportation' },
-  { category: 'fun', emoji: getCategoryEmoji('fun'), label: 'Fun' },
-  { category: 'school', emoji: getCategoryEmoji('school'), label: 'School' },
-  { category: 'rent', emoji: getCategoryEmoji('rent'), label: 'Rent' },
-  { category: 'other', emoji: getCategoryEmoji('other'), label: 'Other' },
-]
-
 const MAX_AMOUNT = 99999
+const CATEGORY_ILLUSTRATIONS: Record<TransactionCategory, IllustrationName> = {
+  food: 'category:eating-out', drinks: 'category:miscellaneous', rent: 'category:rent-utilities',
+  transport: 'category:rideshare-gas', school: 'category:textbooks', fun: 'category:entertainment',
+  health: 'category:miscellaneous', subscriptions: 'category:subscriptions', gig: 'category:miscellaneous',
+  income: 'category:miscellaneous', other: 'category:miscellaneous',
+}
+const EXPENSE_CATEGORIES: TransactionCategory[] = ['food', 'drinks', 'rent', 'transport', 'school', 'fun', 'health', 'subscriptions', 'other']
+const INCOME_CATEGORIES: TransactionCategory[] = ['income', 'gig', 'other']
 
-/**
- * EditTransactionSheet — bottom sheet for editing an existing transaction.
- *
- * Allows editing amount, category, note, and date. Shows an undo toast after
- * saving for reversibility. Includes a "Refund this" link for quick refund flow.
- *
- * **Validates: Requirements 10.1, 10.5, Task 92.1**
- */
-export function EditTransactionSheet({
-  isOpen,
-  onClose,
-  transaction,
-  onSave,
-  onRefund,
-}: EditTransactionSheetProps) {
-  const { prefersReducedMotion } = useReducedMotion()
-  const { showToast } = useToast()
-  const t = useTranslation()
+function categoryLabel(category: TransactionCategory): string {
+  return TRANSACTION_CATEGORIES.find((item) => item.category === category)?.label ?? category
+}
+
+/** A draft-only editor: close, Escape, and swipe dismissal never commit fields. */
+export function EditTransactionSheet({ isOpen, onClose, transaction, onSave, onDelete, onRefund }: EditTransactionSheetProps) {
   const amountRef = useRef<HTMLInputElement>(null)
-
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState<TransactionCategory>('other')
   const [note, setNote] = useState('')
   const [date, setDate] = useState('')
-  const [showNoteField, setShowNoteField] = useState(false)
+  const [isRecurring, setIsRecurring] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Pre-populate with existing transaction values when opening
   useEffect(() => {
-    if (isOpen && transaction) {
-      setAmount(
-        transaction.amount % 1 === 0
-          ? String(transaction.amount)
-          : transaction.amount.toFixed(2)
-      )
-      setCategory(transaction.category)
-      setNote(transaction.note ?? '')
-      setDate(transaction.date)
-      setShowNoteField(!!transaction.note)
-      setIsSaving(false)
-      setError(null)
-    }
+    if (!isOpen || !transaction) return
+    setAmount(transaction.amount % 1 === 0 ? String(transaction.amount) : transaction.amount.toFixed(2))
+    setCategory(transaction.category)
+    setNote(transaction.note ?? '')
+    setDate(formatDateLocal(parseDateLocal(transaction.date)))
+    setIsRecurring(Boolean(transaction.isRecurring))
+    setIsSaving(false)
+    setIsDeleting(false)
+    setConfirmDelete(false)
+    setError(null)
   }, [isOpen, transaction])
 
-  const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/[^0-9.]/g, '')
+  const handleAmountChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = event.target.value.replace(/[^0-9.]/g, '')
     const parts = raw.split('.')
-    if (parts.length > 2) return
-    if (parts[1] && parts[1].length > 2) return
-    const numeric = parseFloat(raw)
-    if (numeric > MAX_AMOUNT) return
+    if (parts.length > 2 || (parts[1]?.length ?? 0) > 2 || Number.parseFloat(raw || '0') > MAX_AMOUNT) return
     setAmount(raw)
     setError(null)
   }, [])
 
-  const handleNoteChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const sanitized = e.target.value
-      .replace(/<[^>]*>/g, '')
-      .replace(/&[a-z]+;/gi, ' ')
-      .slice(0, 60)
-    setNote(sanitized)
-    if (sanitized && !showNoteField) {
-      setShowNoteField(true)
-    }
-  }, [showNoteField])
+  const handleCategoryKeys = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return
+    const tiles = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[data-category-tile]'))
+    const current = tiles.indexOf(document.activeElement as HTMLButtonElement)
+    if (current < 0 || tiles.length === 0) return
+    event.preventDefault()
+    const next = event.key === 'ArrowRight' ? (current + 1) % tiles.length
+      : event.key === 'ArrowLeft' ? (current - 1 + tiles.length) % tiles.length
+        : event.key === 'Home' ? 0 : tiles.length - 1
+    tiles[next]?.focus({ preventScroll: true })
+    tiles[next]?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [])
+
+  const parsedAmount = Number.parseFloat(amount)
+  const isAmountValid = Number.isFinite(parsedAmount) && parsedAmount > 0 && parsedAmount <= MAX_AMOUNT
+  const hasChanges = transaction !== null && isAmountValid && (
+    parsedAmount !== transaction.amount || category !== transaction.category || date !== transaction.date
+    || (note.trim() || undefined) !== (transaction.note || undefined)
+    || isRecurring !== Boolean(transaction.isRecurring)
+  )
+  const categories = transaction?.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
+  const dateLabel = date ? new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric' }).format(parseDateLocal(date)) : ''
 
   const handleSave = useCallback(async () => {
-    if (!transaction || isSaving) return
-    const parsed = parseFloat(amount)
-    if (!parsed || parsed <= 0) {
-      setError(t('editTransaction.errorPositive'))
+    if (!transaction || !hasChanges || isSaving) return
+    if (!isAmountValid) {
+      setError('Enter an amount between $0.01 and $99,999.')
       return
     }
-    if (parsed > MAX_AMOUNT) {
-      setError(t('editTransaction.errorMax'))
-      return
-    }
-
     setIsSaving(true)
     setError(null)
-
-    // Capture old values for undo
-    const oldAmount = transaction.amount
-    const oldCategory = transaction.category
-    const oldNote = transaction.note
-    const oldDate = transaction.date
-
-    const result = await onSave(transaction.id, {
-      amount: parsed,
-      category,
-      note: note.trim() || undefined,
-      date: date !== transaction.date ? date : undefined,
-    })
-
+    const result = await onSave(transaction.id, { amount: parsedAmount, category, note: note.trim() || undefined, date, isRecurring })
     setIsSaving(false)
+    if (result) onClose()
+    else setError('Could not save this transaction. Please try again.')
+  }, [category, date, hasChanges, isAmountValid, isRecurring, isSaving, note, onClose, onSave, parsedAmount, transaction])
 
-    if (result) {
-      showToast(t('editTransaction.updated'), 'success', {
-        label: t('editTransaction.undoLabel'),
-        onClick: () => {
-          // Revert to original values
-          onSave(transaction.id, {
-            amount: oldAmount,
-            category: oldCategory,
-            note: oldNote,
-            date: oldDate,
-          })
-          showToast(t('editTransaction.reverted'))
-        },
-      })
-      onClose()
-    } else {
-      showToast(t('editTransaction.failed'), 'error')
-    }
-  }, [transaction, amount, category, note, date, isSaving, onSave, onClose, showToast])
+  const handleDelete = useCallback(async () => {
+    if (!transaction || !confirmDelete || isDeleting) return
+    setIsDeleting(true)
+    const didDelete = await onDelete(transaction)
+    setIsDeleting(false)
+    if (didDelete) onClose()
+    else setError('Could not delete this transaction. Please try again.')
+  }, [confirmDelete, isDeleting, onClose, onDelete, transaction])
 
   const handleRefund = useCallback(() => {
     if (!transaction || !onRefund) return
     onClose()
-    // Small delay for sheet close animation before opening refund sheet
-    setTimeout(() => onRefund(transaction), 200)
-  }, [transaction, onRefund, onClose])
-
-  const canSubmit = (() => {
-    const parsed = parseFloat(amount)
-    return !!parsed && parsed > 0 && parsed <= MAX_AMOUNT && !isSaving
-  })()
-
-  // Check if anything changed
-  const hasChanges = (() => {
-    if (!transaction) return false
-    const parsed = parseFloat(amount)
-    if (!parsed) return false
-    return (
-      parsed !== transaction.amount ||
-      category !== transaction.category ||
-      date !== transaction.date ||
-      (note.trim() || undefined) !== (transaction.note || undefined)
-    )
-  })()
+    window.setTimeout(() => onRefund(transaction), 200)
+  }, [onClose, onRefund, transaction])
 
   return (
-    <Sheet open={isOpen && !!transaction} onClose={onClose} size="half" aria-label={t('editTransaction.title')}>
-      {transaction && (
-        <div style={{ padding: `0 ${spacing.lg}px ${spacing.xl}px` }}>
-              {/* ── Header ────────────────────────────────────── */}
-              <div style={{ textAlign: 'center', marginBottom: spacing.md }}>
-                <p style={{
-                  fontSize: pxToRem(18),
-                  fontFamily: FONT_FAMILY,
-                  fontWeight: fontWeights.bold,
-                  color: 'var(--text)',
-                }}>
-                  {t('editTransaction.title')}
-                </p>
-                <p style={{
-                  fontSize: pxToRem(12),
-                  fontFamily: FONT_FAMILY,
-                  color: 'var(--muted)',
-                  marginTop: spacing.xxs,
-                }}>
-                  {getRelativeDateLabel(date)}
-                </p>
-              </div>
+    <BottomSheet isOpen={isOpen && Boolean(transaction)} onClose={onClose} maxHeight="95vh" preventClose={isSaving || isDeleting} ariaLabel="Transaction details and edit">
+      {transaction && <div style={{ padding: `0 ${spacing.lg}px ${spacing.xl}px`, display: 'flex', flexDirection: 'column', gap: spacing.lg }}>
+        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
+          <div>
+            <p style={{ margin: 0, color: 'var(--text)', ...typographyRoles.sectionHeadline }}>Transaction details</p>
+            <p style={{ margin: `${spacing.xxs}px 0 0`, color: 'var(--sub)', fontFamily: FONT_FAMILY, fontSize: typography.caption.fontSize }}>{dateLabel}</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Cancel editing transaction" className="focus-ring interactive-control" style={{ width: 44, height: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-raised)', border: 'var(--border-default)', borderRadius: radius.full, boxShadow: shadows.sm, color: 'var(--sub)', cursor: 'pointer' }}><Icon name="action:close" size={18} strokeWidth={1.5} /></button>
+        </header>
 
-              {/* ── Date Picker ───────────────────────────────── */}
-              <div style={{ marginBottom: spacing.lg, textAlign: 'center' }}>
-                <DatePickerChips
-                  selectedDate={date}
-                  onDateChange={setDate}
-                  allowFutureDates={false}
-                />
-              </div>
+        <section aria-labelledby="edit-amount-label">
+          <p id="edit-amount-label" style={{ margin: `0 0 ${spacing.xs}px`, color: 'var(--sub)', ...typographyRoles.labelButton }}>Amount</p>
+          <div style={{ position: 'relative' }}>
+            <span aria-hidden style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', zIndex: 1, color: 'var(--sub)', fontFamily: FONT_FAMILY, fontSize: 24, pointerEvents: 'none' }}>$</span>
+            <NumericInput inputRef={amountRef} autoFocus size="xl" value={amount} onChange={handleAmountChange} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void handleSave() } }} error={Boolean(error)} aria-label="Transaction amount in dollars" aria-describedby={error ? 'edit-transaction-error' : undefined} style={{ width: '100%', textAlign: 'left', paddingInlineStart: 42, background: 'var(--surface-recessed)', borderRadius: radius.card, color: 'var(--text)', fontFamily: FONT_FAMILY, fontVariantNumeric: 'tabular-nums' }} />
+          </div>
+        </section>
 
-              {/* ── Amount Input ──────────────────────────────── */}
-              <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  justifyContent: 'center',
-                  gap: spacing.xxs,
-                }}>
-                  <span style={{
-                    fontSize: 28,
-                    fontFamily: FONT_FAMILY,
-                    fontWeight: fontWeights.light,
-                    color: transaction.type === 'income' ? 'var(--success)' : 'var(--muted)',
-                  }}>
-                    $
-                  </span>
-                  <input
-                    ref={amountRef}
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    value={amount}
-                    onChange={handleAmountChange}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && canSubmit && hasChanges) {
-                        e.preventDefault()
-                        handleSave()
-                      }
-                    }}
-                    aria-label="Transaction amount"
-                    aria-invalid={!!error}
-                    aria-describedby={error ? "edit-tx-error" : undefined}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      outline: 'none',
-                      fontSize: 48,
-                      fontFamily: FONT_FAMILY,
-                      fontWeight: fontWeights.semibold,
-                      fontVariantNumeric: 'tabular-nums',
-                      color: 'var(--text)',
-                      textAlign: 'center',
-                      width: '100%',
-                      maxWidth: 240,
-                      caretColor: 'var(--accent)',
-                      lineHeight: 1.1,
-                    }}
-                  />
-                </div>
-                {error && (
-                  <p
-                    id="edit-tx-error"
-                    role="alert"
-                    style={{
-                      fontSize: pxToRem(13),
-                      color: 'var(--error)',
-                      marginTop: spacing.xs,
-                      fontFamily: FONT_FAMILY,
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    {error}
-                  </p>
-                )}
-              </div>
-
-              {/* ── Category Grid ────────────────────────────── */}
-              {transaction.type === 'expense' && (
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: spacing.sm,
-                    marginBottom: spacing.lg,
-                  }}
-                  role="group"
-                  aria-label="Transaction category"
-                >
-                  {CATEGORY_GRID.map((cat) => {
-                    const selected = category === cat.category
-                    return (
-                      <motion.button
-                        key={cat.category}
-                        type="button"
-                        onClick={() => { setCategory(cat.category); triggerHaptic('light') }}
-                        aria-label={`Category: ${cat.label}`}
-                        aria-pressed={selected}
-                        whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
-                        transition={springs.snappy}
-                        style={{
-                          minHeight: 72,
-                          borderRadius: 'var(--radius-md)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: spacing.xs,
-                          cursor: 'pointer',
-                          ...(selected
-                            ? {
-                                background: colorRamp.accent[100],
-                                border: `1.5px solid ${colorRamp.accent[400]}`,
-                                boxShadow: shadows.glowAccent,
-                              }
-                            : {
-                                background: fills[3],
-                                border: `1px solid ${fills[6]}`,
-                              }),
-                        }}
-                      >
-                        <span style={{ fontSize: typography.headline.fontSize, lineHeight: 1 }} aria-hidden="true">
-                          {cat.emoji}
-                        </span>
-                        <span style={{
-                          fontFamily: FONT_FAMILY,
-                          fontSize: pxToRem(12),
-                          fontWeight: fontWeights.medium,
-                          color: selected ? 'var(--text)' : 'var(--sub)',
-                        }}>
-                          {cat.label}
-                        </span>
-                      </motion.button>
-                    )
-                  })}
-                </div>
-              )}
-
-              {/* ── Note Input ────────────────────────────────── */}
-              {!showNoteField && !note ? (
-                <div style={{ marginBottom: spacing.xl, textAlign: 'center' }}>
-                  <button
-                    type="button"
-                    onClick={() => setShowNoteField(true)}
-                    aria-label={t('editTransaction.addNote')}
-                    style={{
-                      background: 'var(--fill-04)',
-                      border: '1px solid var(--fill-08)',
-                      borderRadius: 'var(--radius-md)',
-                      padding: `${spacing.sm}px ${spacing.md}px`,
-                      minHeight: 44,
-                      fontSize: pxToRem(13),
-                      fontFamily: FONT_FAMILY,
-                      fontWeight: fontWeights.regular,
-                      color: 'var(--sub)',
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 6,
-                    }}
-                  >
-                    <span style={{ fontSize: typography.body.fontSize }}>+</span> {t('editTransaction.addNote')}
-                  </button>
-                </div>
-              ) : (
-                <div style={{ marginBottom: spacing.xl }}>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type="text"
-                      placeholder={t('editTransaction.notePlaceholder')}
-                      value={note}
-                      onChange={handleNoteChange}
-                      maxLength={60}
-                      aria-label="Transaction note"
-                      style={{
-                        width: '100%',
-                        background: 'transparent',
-                        border: 'none',
-                        borderBottom: '1.5px solid var(--line)',
-                        outline: 'none',
-                        fontSize: pxToRem(15),
-                        fontFamily: FONT_FAMILY,
-                        color: 'var(--text)',
-                        padding: `${spacing.sm}px 0`,
-                        caretColor: 'var(--accent)',
-                        transition: 'border-color 0.2s ease',
-                      }}
-                      onFocus={(e) => { e.currentTarget.style.borderBottomColor = 'var(--accent)' }}
-                      onBlur={(e) => { e.currentTarget.style.borderBottomColor = 'var(--line)' }}
-                    />
-                    {note.length >= 50 && (
-                      <span style={{
-                        position: 'absolute',
-                        right: 0,
-                        bottom: 14,
-                        fontSize: pxToRem(11),
-                        fontFamily: FONT_FAMILY,
-                        fontWeight: fontWeights.regular,
-                        color: 'var(--muted)',
-                      }}>
-                        {note.length}/60
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* ── Save Button ───────────────────────────────── */}
-              <button
-                onClick={handleSave}
-                disabled={!canSubmit || !hasChanges}
-                aria-label="Save changes"
-                style={{
-                  width: '100%',
-                  height: 52,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: canSubmit && hasChanges
-                    ? gradients.action
-                    : 'var(--dim)',
-                  color: canSubmit && hasChanges ? 'var(--color-canvas)' : 'var(--muted)',
-                  fontFamily: FONT_FAMILY,
-                  fontSize: pxToRem(16),
-                  fontWeight: fontWeights.semibold,
-                  borderRadius: 'var(--radius-md)',
-                  border: 'none',
-                  cursor: canSubmit && hasChanges ? 'pointer' : 'not-allowed',
-                  opacity: canSubmit && hasChanges ? 1 : 0.5,
-                  boxShadow: canSubmit && hasChanges ? shadows.glowAccentStrong : 'none',
-                  transition: 'opacity 0.2s ease, background 0.2s ease, box-shadow 0.2s ease',
-                }}
-              >
-                {isSaving ? t('editTransaction.saving') : t('editTransaction.save')}
+        <section aria-labelledby="edit-category-label">
+          <p id="edit-category-label" style={{ margin: `0 0 ${spacing.xs}px`, color: 'var(--sub)', ...typographyRoles.labelButton }}>Category</p>
+          <div role="group" aria-label="Transaction category" onKeyDown={handleCategoryKeys} style={{ display: 'flex', overflowX: 'auto', gap: spacing.sm, padding: '2px 2px 10px', marginInline: -2, scrollSnapType: 'x proximity' }}>
+            {categories.map((item) => {
+              const selected = category === item
+              return <button key={item} type="button" data-category-tile aria-pressed={selected} onClick={() => { setCategory(item); triggerHaptic('light') }} className="focus-ring interactive-control" style={{ flex: '0 0 104px', minHeight: 112, padding: '10px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, scrollSnapAlign: 'start', background: selected ? 'var(--accent-muted)' : 'var(--surface-raised)', border: selected ? '2px solid var(--accent)' : 'var(--border-default)', borderRadius: radius.card, boxShadow: selected ? shadows.sm : 'none', color: 'var(--text)', cursor: 'pointer' }}>
+                <Illustration name={CATEGORY_ILLUSTRATIONS[item]} size={44} /><span style={{ color: 'var(--text)', textAlign: 'center', ...typographyRoles.labelButton }}>{categoryLabel(item)}</span>
               </button>
+            })}
+          </div>
+        </section>
 
-              {/* ── Refund Link (only for expenses) ───────────── */}
-              {transaction.type === 'expense' && onRefund && (
-                <div style={{ textAlign: 'center', marginTop: spacing.md }}>
-                  <button
-                    type="button"
-                    onClick={handleRefund}
-                    aria-label="Refund this transaction"
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: pxToRem(13),
-                      fontFamily: FONT_FAMILY,
-                      fontWeight: fontWeights.medium,
-                      color: 'var(--success)',
-                      padding: `${spacing.xs}px ${spacing.md}px`,
-                      minHeight: 44,
-                      opacity: 0.9,
-                    }}
-                  >
-                    {t('editTransaction.refund')}
-                  </button>
-                </div>
-              )}
-            </div>
-      )}
-    </Sheet>
+        <section aria-labelledby="edit-date-label"><p id="edit-date-label" style={{ margin: `0 0 ${spacing.xs}px`, color: 'var(--sub)', ...typographyRoles.labelButton }}>Date</p><DatePickerChips selectedDate={date} onDateChange={setDate} allowFutureDates={false} /></section>
+        <section aria-labelledby="edit-note-label"><p id="edit-note-label" style={{ margin: `0 0 ${spacing.xs}px`, color: 'var(--sub)', ...typographyRoles.labelButton }}>Note</p><Input value={note} onChange={(event) => setNote(event.target.value.replace(/<[^>]*>/g, '').slice(0, 60))} maxLength={60} placeholder="Add a note" aria-label="Transaction note" style={{ background: 'var(--surface-recessed)', borderRadius: radius.control }} /></section>
+
+        {transaction.type === 'expense' && <button type="button" onClick={() => setIsRecurring((value) => !value)} aria-pressed={isRecurring} aria-label="This expense repeats monthly" className="focus-ring interactive-control" style={{ alignSelf: 'flex-start', minHeight: 36, padding: '0 12px', background: isRecurring ? 'var(--accent-muted)' : 'var(--surface-recessed)', border: isRecurring ? '1px solid var(--accent)' : 'var(--border-default)', borderRadius: radius.full, color: 'var(--sub)', cursor: 'pointer', ...typographyRoles.labelButton }}>This repeats · monthly</button>}
+        {error && <p id="edit-transaction-error" role="alert" style={{ margin: 0, color: 'var(--error)', fontFamily: FONT_FAMILY, fontSize: typography.caption.fontSize }}>{error}</p>}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.5fr)', gap: spacing.sm }}>
+          <button type="button" onClick={onClose} disabled={isSaving || isDeleting} className="focus-ring interactive-control" style={{ minHeight: 48, background: 'var(--surface-raised)', color: 'var(--sub)', border: 'var(--border-default)', borderRadius: radius.control, cursor: 'pointer', ...typographyRoles.labelButton }}>Cancel</button>
+          <button type="button" onClick={() => void handleSave()} disabled={!hasChanges || isSaving || isDeleting} className="focus-ring interactive-control" style={{ minHeight: 48, background: hasChanges ? 'var(--accent)' : 'var(--surface-recessed)', color: hasChanges ? 'var(--color-canvas)' : 'var(--muted)', border: '1px solid transparent', borderRadius: radius.control, cursor: hasChanges ? 'pointer' : 'not-allowed', ...typographyRoles.labelButton }}>{isSaving ? 'Saving…' : 'Save changes'}</button>
+        </div>
+
+        {transaction.type === 'expense' && onRefund && !confirmDelete && <button type="button" onClick={handleRefund} className="focus-ring interactive-control" style={{ minHeight: 44, background: 'transparent', border: 'none', color: 'var(--success)', cursor: 'pointer', ...typographyRoles.labelButton }}>Refund this transaction</button>}
+        <div style={{ borderTop: 'var(--border-default)', paddingTop: spacing.md }}>
+          {confirmDelete ? <div role="alert" style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm, padding: spacing.md, background: 'var(--error-muted)', border: '1px solid var(--error)', borderRadius: radius.control }}>
+            <p style={{ margin: 0, color: 'var(--text)', fontFamily: FONT_FAMILY, fontWeight: fontWeights.medium }}>Delete this transaction permanently?</p><p style={{ margin: 0, color: 'var(--sub)', fontFamily: FONT_FAMILY, fontSize: typography.caption.fontSize }}>This removes it from your history, runway, and category totals.</p>
+            <div style={{ display: 'flex', gap: spacing.sm }}><button type="button" onClick={() => setConfirmDelete(false)} disabled={isDeleting} className="focus-ring interactive-control" style={{ flex: 1, minHeight: 44, background: 'var(--surface-raised)', border: 'var(--border-default)', borderRadius: radius.control, color: 'var(--sub)', cursor: 'pointer', ...typographyRoles.labelButton }}>Keep it</button><button type="button" onClick={() => void handleDelete()} disabled={isDeleting} className="focus-ring interactive-control" style={{ flex: 1, minHeight: 44, background: 'var(--error)', border: '1px solid var(--error)', borderRadius: radius.control, color: 'var(--color-canvas)', cursor: 'pointer', ...typographyRoles.labelButton }}>{isDeleting ? 'Deleting…' : 'Yes, delete'}</button></div>
+          </div> : <button type="button" onClick={() => setConfirmDelete(true)} disabled={isSaving} className="focus-ring interactive-control" style={{ minHeight: 44, padding: 0, background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer', ...typographyRoles.labelButton }}>Delete transaction</button>}
+        </div>
+      </div>}
+    </BottomSheet>
   )
 }

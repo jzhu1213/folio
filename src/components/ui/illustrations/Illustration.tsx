@@ -24,6 +24,7 @@ export type IllustrationName =
   | 'category:entertainment'
   | 'category:personal-care'
   | 'category:miscellaneous'
+  | 'empty:history-ledger'
 
 export const ILLUSTRATION_LABELS: Record<IllustrationName, string> = {
   'category:dining-hall': 'Dining hall tray',
@@ -35,6 +36,7 @@ export const ILLUSTRATION_LABELS: Record<IllustrationName, string> = {
   'category:entertainment': 'Entertainment ticket',
   'category:personal-care': 'Personal care bottle',
   'category:miscellaneous': 'Miscellaneous parcel',
+  'empty:history-ledger': 'Open ledger with a coin',
 }
 
 type IllustrationArt = () => JSX.Element
@@ -123,6 +125,16 @@ const Miscellaneous: IllustrationArt = () => (
   </>
 )
 
+/** An open ledger with one accent coin, reserved for an encouraging history empty state. */
+const HistoryLedger: IllustrationArt = () => (
+  <>
+    <path d="M10 13c5-2 10-1 14 3v21c-4-4-9-5-14-3z" />
+    <path d="M38 13c-5-2-10-1-14 3v21c4-4 9-5 14-3z" />
+    <path d="M15 24h5M28 24h5" />
+    <circle cx="31" cy="29" r="4" fill="var(--accent)" stroke="var(--accent)" />
+  </>
+)
+
 /** Central, typed source of the category illustrations. */
 export const ILLUSTRATION_REGISTRY: Record<IllustrationName, IllustrationArt> = {
   'category:dining-hall': DiningHall,
@@ -134,6 +146,7 @@ export const ILLUSTRATION_REGISTRY: Record<IllustrationName, IllustrationArt> = 
   'category:entertainment': Entertainment,
   'category:personal-care': PersonalCare,
   'category:miscellaneous': Miscellaneous,
+  'empty:history-ledger': HistoryLedger,
 }
 
 export interface IllustrationProps extends Omit<SVGProps<SVGSVGElement>, 'children' | 'height' | 'width' | 'viewBox' | 'aria-hidden' | 'aria-label' | 'aria-labelledby'> {

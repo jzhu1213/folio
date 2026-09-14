@@ -413,6 +413,34 @@ describe('useHomeData', () => {
       expect(result.current.allowance?.spentToday).toBe(85) // 65 + 20
     })
   })
+
+  it('recalculates allowance and both affected category budgets after a cross-date edit', async () => {
+    vi.mocked(supabaseData.fetchHomeDataBatch).mockResolvedValue({
+      currentMonthTransactions: mockTransactions,
+      paginatedTransactions: { transactions: mockTransactions, hasMore: false },
+      budgets: mockBudgets, goals: mockGoals, lessonProgress: [], allocations: [],
+      savingsAccounts: [], debts: [], paySchedule: null, sinkingFunds: [], fundingSources: [], failedSources: [],
+    })
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayLocal = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`
+    const moved = { ...mockTransactions[0], amount: 20, category: 'transport' as const, date: yesterdayLocal }
+    vi.mocked(supabaseData.updateTransaction).mockResolvedValue(moved)
+
+    const { result } = renderHook(() => useHomeData(mockUserId))
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    await act(async () => {
+      await result.current.updateTransaction(moved.id, {
+        amount: moved.amount, category: moved.category, type: moved.type, date: moved.date, note: moved.note,
+      })
+    })
+
+    expect(result.current.transactions.find((transaction) => transaction.id === moved.id)).toMatchObject(moved)
+    await waitFor(() => expect(result.current.allowance?.spentToday).toBe(50))
+    expect(supabaseData.updateBudgetSpent).toHaveBeenCalledWith(mockUserId, 'food', 0)
+    expect(supabaseData.updateBudgetSpent).toHaveBeenCalledWith(mockUserId, 'transport', 70)
+  })
   
   it('should recalculate category rows when budgets change via setter', async () => {
     vi.mocked(supabaseData.fetchHomeDataBatch).mockResolvedValue({

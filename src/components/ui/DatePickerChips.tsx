@@ -7,6 +7,7 @@ import { triggerHaptic } from '@/lib/haptics'
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
 import { radius } from '@/styles/surfaces'
 import { Icon } from '@/components/ui/Icon'
+import { formatDateLocal } from '@/lib/dateUtils'
 
 // â”€â”€ Date helper utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -16,7 +17,7 @@ function getLastFriday(today: Date): string {
   const diff = day >= 5 ? day - 5 : day + 2 // days back to last Friday
   const lastFri = new Date(today)
   lastFri.setDate(today.getDate() - diff)
-  return lastFri.toISOString().slice(0, 10)
+  return formatDateLocal(lastFri)
 }
 
 /** Returns YYYY-MM-DD of the next Monday (task 90.1 â€” future date chip). */
@@ -25,16 +26,16 @@ function getNextMonday(today: Date): string {
   const diff = day === 0 ? 1 : 8 - day // days forward to next Monday
   const nextMon = new Date(today)
   nextMon.setDate(today.getDate() + diff)
-  return nextMon.toISOString().slice(0, 10)
+  return formatDateLocal(nextMon)
 }
 
 /** Returns a human-readable relative label for a date string. */
 export function getRelativeDateLabel(dateStr: string): string {
   const today = new Date()
-  const todayStr = today.toISOString().slice(0, 10)
+  const todayStr = formatDateLocal(today)
   const yesterday = new Date(today)
   yesterday.setDate(today.getDate() - 1)
-  const yesterdayStr = yesterday.toISOString().slice(0, 10)
+  const yesterdayStr = formatDateLocal(yesterday)
 
   if (dateStr === todayStr) return 'Today'
   if (dateStr === yesterdayStr) return 'Yesterday'
@@ -53,7 +54,7 @@ export function getRelativeDateLabel(dateStr: string): string {
 
 /** Returns true if a date string is in the future relative to today. */
 export function isFutureDate(dateStr: string): boolean {
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayStr = formatDateLocal(new Date())
   return dateStr > todayStr
 }
 
@@ -68,6 +69,8 @@ interface DatePickerChipsProps {
   allowFutureDates?: boolean
   /** Custom label override for the date button â€” defaults to getRelativeDateLabel */
   customLabel?: string
+  /** Optional lower bound for a constrained backfill flow. */
+  minDate?: string
 }
 
 // â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -89,13 +92,16 @@ export function DatePickerChips({
   onDateChange,
   allowFutureDates = false,
   customLabel,
+  minDate,
 }: DatePickerChipsProps) {
   const { prefersReducedMotion } = useReducedMotion()
   const [showPicker, setShowPicker] = useState(false)
   const [showCustomInput, setShowCustomInput] = useState(false)
 
-  const todayStr = new Date().toISOString().slice(0, 10)
-  const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+  const todayStr = formatDateLocal(new Date())
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  const yesterdayStr = formatDateLocal(yesterday)
   const lastFriStr = getLastFriday(new Date())
   const nextMonStr = getNextMonday(new Date())
 
@@ -109,12 +115,13 @@ export function DatePickerChips({
 
   const handleDateSelect = useCallback(
     (date: string) => {
+      if (minDate && date < minDate) return
       onDateChange(date)
       setShowPicker(false)
       setShowCustomInput(false)
       triggerHaptic('light')
     },
-    [onDateChange]
+    [onDateChange, minDate]
   )
 
   const handleTogglePicker = useCallback(() => {
@@ -135,6 +142,7 @@ export function DatePickerChips({
         onClick={handleTogglePicker}
         aria-label={`Date: ${displayLabel}`}
         aria-expanded={showPicker}
+        className="focus-ring interactive-control"
         style={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -193,6 +201,7 @@ export function DatePickerChips({
               type="button"
               onClick={() => handleDateSelect(todayStr)}
               aria-pressed={selectedDate === todayStr}
+              className="focus-ring interactive-control"
               style={{
                 padding: '8px 14px',
                 background:
@@ -220,6 +229,7 @@ export function DatePickerChips({
               type="button"
               onClick={() => handleDateSelect(yesterdayStr)}
               aria-pressed={selectedDate === yesterdayStr}
+              className="focus-ring interactive-control"
               style={{
                 padding: '8px 14px',
                 background:
@@ -249,6 +259,7 @@ export function DatePickerChips({
               type="button"
               onClick={() => handleDateSelect(lastFriStr)}
               aria-pressed={selectedDate === lastFriStr}
+              className="focus-ring interactive-control"
               style={{
                 padding: '8px 14px',
                 background:
@@ -277,6 +288,7 @@ export function DatePickerChips({
                 type="button"
                 onClick={() => handleDateSelect(nextMonStr)}
                 aria-pressed={selectedDate === nextMonStr}
+                className="focus-ring interactive-control"
                 style={{
                   padding: '8px 14px',
                   background:
@@ -307,6 +319,7 @@ export function DatePickerChips({
               type="button"
               onClick={handleToggleCustomInput}
               aria-pressed={showCustomInput}
+              className="focus-ring interactive-control"
               style={{
                 padding: '8px 14px',
                 background: showCustomInput
@@ -346,6 +359,7 @@ export function DatePickerChips({
                   }}
                   // Allow past and future dates in the input
                   max={allowFutureDates ? undefined : todayStr}
+                  min={minDate}
                   style={{
                     background: 'var(--fill-04)',
                     border: '1px solid var(--fill-10)',

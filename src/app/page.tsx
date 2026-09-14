@@ -242,6 +242,8 @@ import { applyRoundUp, getRoundUpTargetGoal } from '@/lib/roundUpSavings'
 import { createRefundTransaction } from '@/lib/refundUtils'
 import { saveTagsForTransaction } from '@/lib/tagUtils'
 import { formatMoney } from '@/lib/localeFormat'
+import { formatDateLocal } from '@/lib/dateUtils'
+import { buildExpenseConfirmation, buildTransactionChangeConfirmation } from '@/lib/confirmationFeedback'
 import { useUndo } from '@/hooks/useUndo'
 import { useConflictNotification } from '@/hooks/useConflictNotification'
 import { useRecurringBills } from '@/hooks/useRecurringBills'
@@ -1308,7 +1310,7 @@ export default function FolioApp() {
   }) => {
     if (!user?.id) return
 
-    const today = data.date ?? new Date().toISOString().slice(0, 10)
+    const today = data.date ?? formatDateLocal(new Date())
     const result = await addTransaction({
       amount: data.amount,
       category: data.category,
@@ -1428,6 +1430,18 @@ export default function FolioApp() {
     showToast('Expense removed')
   }, [lastLoggedId, deleteTransaction, showToast])
 
+  const buildQuickAddConfirmation = useCallback((data: {
+    amount: number
+    category: TransactionCategory
+    categoryLabel: string
+    date: string
+  }) => buildExpenseConfirmation({
+    ...data,
+    transactions,
+    budgets,
+    dailyBudget: allowance?.amount ?? 0,
+  }), [allowance?.amount, budgets, transactions])
+
   // ── Quick-log capture handlers (task 180.1) ────────────────────
   // Confirm reuses handleExpenseSubmit so a captured expense flows through the
   // exact same persistence path (optimistic write, offline queue, round-up,
@@ -1438,10 +1452,12 @@ export default function FolioApp() {
     note?: string
     fundingSourceId?: string
   }) => {
+    const date = formatDateLocal(new Date())
+    const categoryLabel = BUDGET_CATEGORIES.find((item) => item.category === data.category)?.label ?? data.category
     overlay.closeSheet('quickLog')
-    await handleExpenseSubmit(data)
-    showToast('Logged it ✓')
-  }, [overlay, handleExpenseSubmit, showToast])
+    await handleExpenseSubmit({ ...data, date })
+    showToast(buildQuickAddConfirmation({ ...data, categoryLabel, date }), 'success')
+  }, [overlay, handleExpenseSubmit, buildQuickAddConfirmation, showToast])
 
   // Ambiguous parse or user tapped "Edit details" → fall back to the normal
   // ExpenseSheet. ExpenseSheet takes a default category; any extracted amount/
@@ -1593,9 +1609,15 @@ export default function FolioApp() {
       note: confirmed.label,
     })
     if (result) {
-      showToast('Transaction confirmed')
+      const categoryLabel = BUDGET_CATEGORIES.find((item) => item.category === confirmed.category)?.label ?? confirmed.category
+      showToast(buildQuickAddConfirmation({
+        amount: confirmed.amount,
+        category: confirmed.category,
+        categoryLabel,
+        date: confirmed.date,
+      }), 'success')
     }
-  }, [confirmSuggestedEntry, addTransaction, showToast])
+  }, [confirmSuggestedEntry, addTransaction, buildQuickAddConfirmation, showToast])
 
   const handleDismissSuggestion = useCallback((entryId: string) => {
     dismissSuggestedEntry(entryId)
@@ -1730,22 +1752,73 @@ export default function FolioApp() {
 
   const handleSaveTransaction = useCallback(async (
     id: string,
-    data: { amount: number; category: TransactionCategory; note?: string; date?: string }
+    data: { amount: number; category: TransactionCategory; note?: string; date: string; isRecurring: boolean }
   ) => {
     // Try sheet payload first, fall back to transactions list (needed for undo after sheet closes)
     const editPayload = overlay.getSheetPayload('edit')
     const editTx = editPayload?.transaction ?? transactions.find(t => t.id === id) ?? null
     if (!editTx) return null
+    const recurringId = editTx.type === 'expense' && data.isRecurring
+      ? editTx.recurringId ?? crypto.randomUUID()
+      : null
+
     // Task 534.2: Track transaction edited
     track('transaction_edited')
-    return updateTransaction(id, {
+    const result = await updateTransaction(id, {
       amount: data.amount,
       category: data.category,
       type: editTx.type,
-      date: data.date ?? editTx.date, // Use provided date or keep original
+      date: data.date,
       note: data.note,
+      isRecurring: editTx.type === 'expense' ? data.isRecurring : editTx.isRecurring,
+      recurringId,
     })
-  }, [overlay, transactions, updateTransaction])
+    if (!result) return null
+
+    // Keep the transaction's explicit recurring linkage and the established
+    // fixed-expense model in lockstep after a successful transaction save.
+    if (editTx.type === 'expense') {
+      const existingBill = recurringBills.find((bill) => bill.recurringId === editTx.recurringId || bill.recurringId === recurringId)
+      if (data.isRecurring) {
+        const billData = {
+          label: data.note?.trim() || BUDGET_CATEGORIES.find((item) => item.category === data.category)?.label || 'Recurring expense',
+          amount: data.amount,
+          category: data.category,
+          dueDay: Number.parseInt(data.date.slice(-2), 10),
+          recurringId: recurringId ?? crypto.randomUUID(),
+          isActive: true,
+        }
+        if (existingBill) await updateBill(existingBill.id, billData)
+        else await addBill(billData)
+      } else if (existingBill) {
+        await deleteBill(existingBill.id)
+      }
+    }
+
+    const nextTransactions = transactions.map((candidate) => candidate.id === id ? result : candidate)
+    const label = BUDGET_CATEGORIES.find((item) => item.category === result.category)?.label ?? result.category
+    showToast(buildTransactionChangeConfirmation({
+      action: 'updated', transaction: result, categoryLabel: label,
+      transactions: nextTransactions, budgets, dailyBudget: allowance?.amount ?? 0,
+    }), 'success')
+    return result
+  }, [addBill, allowance?.amount, budgets, deleteBill, overlay, recurringBills, showToast, transactions, updateBill, updateTransaction])
+
+  const handleDeleteTransactionFromSheet = useCallback(async (transaction: Transaction) => {
+    const didDelete = await deleteTransaction(transaction.id)
+    if (!didDelete) {
+      showToast("Couldn't delete this transaction — check your connection and try again", 'error')
+      return false
+    }
+    track('transaction_deleted')
+    const label = BUDGET_CATEGORIES.find((item) => item.category === transaction.category)?.label ?? transaction.category
+    showToast(buildTransactionChangeConfirmation({
+      action: 'deleted', transaction, categoryLabel: label,
+      transactions: transactions.filter((candidate) => candidate.id !== transaction.id),
+      budgets, dailyBudget: allowance?.amount ?? 0,
+    }), 'success')
+    return true
+  }, [allowance?.amount, budgets, deleteTransaction, showToast, transactions])
 
   /** Inline edit handler — looks up the transaction from the list (no sheet state needed) */
   const handleInlineSaveTransaction = useCallback(async (
@@ -3231,6 +3304,7 @@ export default function FolioApp() {
           expenseSubmittedRef.current = true
           return handleExpenseSubmit(...args)
         }}
+        onBuildConfirmation={buildQuickAddConfirmation}
         onUndo={lastLoggedId ? handleExpenseUndo : undefined}
         defaultCategory={overlay.getSheetPayload('expense')?.defaultCategory}
         transactions={transactions}
@@ -3245,6 +3319,7 @@ export default function FolioApp() {
         categorizationRules={categorizationRules}
         onAddCategorizationRule={handleAddCategorizationRule}
         dailyAllowanceAmount={allowance?.amount}
+        onCreateRecurringBill={addBill}
       />
 
       {/* ── Quick-log confirm sheet (task 180.1 — share sheet & assistant) ── */}
@@ -3356,6 +3431,7 @@ export default function FolioApp() {
         onClose={() => overlay.closeSheet('edit')}
         transaction={overlay.getSheetPayload('edit')?.transaction ?? null}
         onSave={handleSaveTransaction}
+        onDelete={handleDeleteTransactionFromSheet}
         onRefund={handleOpenRefund}
       />
 

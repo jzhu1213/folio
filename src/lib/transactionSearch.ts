@@ -11,6 +11,7 @@
 
 import { TRANSACTION_CATEGORIES } from '@/types'
 import type { Transaction, TransactionCategory } from '@/types'
+import { formatDateLocal } from '@/lib/dateUtils'
 
 // ============================================================================
 // Types
@@ -59,7 +60,7 @@ const MONTH_ABBREVS = [
 ]
 
 function toDateStr(d: Date): string {
-  return d.toISOString().slice(0, 10)
+  return formatDateLocal(d)
 }
 
 /**

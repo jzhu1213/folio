@@ -80,6 +80,8 @@ export interface ListRowProps {
   className?: string
   /** Accessible label. */
   "aria-label"?: string
+  /** Whether the row's related content is expanded. */
+  "aria-expanded"?: boolean
   /** Test ID for testing. */
   "data-testid"?: string
 }
@@ -183,6 +185,7 @@ export const ListRow = forwardRef<HTMLDivElement, ListRowProps>(function ListRow
     style,
     className,
     "aria-label": ariaLabel,
+    "aria-expanded": ariaExpanded,
     "data-testid": testId,
   },
   ref
@@ -281,7 +284,10 @@ export const ListRow = forwardRef<HTMLDivElement, ListRowProps>(function ListRow
         role={onPress ? "button" : undefined}
         tabIndex={tabIndexProp ?? (onPress ? 0 : undefined)}
         aria-label={ariaLabel}
+        aria-expanded={ariaExpanded}
         data-testid={testId}
+        whileTap={onPress ? { scale: 0.98 } : undefined}
+        transition={springs.snappy}
         onKeyDown={(e) => {
           onKeyDownProp?.(e)
           if (onPress && (e.key === "Enter" || e.key === " ")) {
@@ -306,7 +312,6 @@ export const ListRow = forwardRef<HTMLDivElement, ListRowProps>(function ListRow
       }}
       style={{ ...baseStyle, padding: 0, overflow: "hidden" }}
       className={className}
-      aria-label={ariaLabel}
       data-testid={testId}
       layout
       transition={layoutSpring}
@@ -370,6 +375,8 @@ export const ListRow = forwardRef<HTMLDivElement, ListRowProps>(function ListRow
         }}
         role={onPress ? "button" : undefined}
         tabIndex={onPress ? 0 : undefined}
+        aria-label={ariaLabel}
+        aria-expanded={ariaExpanded}
         className={onPress ? "focus-ring interactive-control" : undefined}
       >
         {children}

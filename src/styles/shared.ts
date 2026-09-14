@@ -11,6 +11,7 @@
 import type { CSSProperties } from "react"
 import type { TransactionCategory } from "@/types"
 import { FONT_FAMILY, spacing, pxToRem } from "./typography"
+import { categoryPalette } from './chartTokens'
 import {
   borderRadius, colorRamp, CONTENT_MAX_WIDTH, HORIZONTAL_PADDING, shadows,
 } from './tokens'
@@ -58,20 +59,7 @@ export type { RampStep, ColorRamp } from './tokens'
  * - Previously identical health/income are now differentiated (teal vs blue-green)
  * - Purple cluster (drinks/rent/gig) spread across distinct hue angles
  */
-export const CATEGORY_ACCENTS: Record<TransactionCategory | "fallback", string> = {
-  food: "#fb923c", // warm orange — distinct from amber in all CVD types
-  drinks: "#7c3aed", // deep violet — shifted darker to separate from gig/rent
-  rent: "#a78bfa", // brand purple (accent-2)
-  transport: "#3b82f6", // blue (slightly deeper for CVD contrast vs cyan)
-  school: "#f59e0b", // amber — shifted from #fbbf24 for better orange separation
-  fun: "#ec4899", // hot pink — shifted for tritanopia distinction from red
-  health: "#2dd4bf", // teal — shifted from green to avoid red-green confusion
-  subscriptions: "#22d3ee", // cyan — distinct from teal by lightness
-  gig: "#d946ef", // magenta/fuchsia — distinct from violet/purple in all CVD types
-  income: "#34d399", // emerald — differentiated from health teal by hue
-  other: "#94a3b8", // neutral slate
-  fallback: "#818cf8", // --accent
-}
+export const CATEGORY_ACCENTS = categoryPalette
 
 /**
  * Resolve a category to its accent color, falling back to purple accent.

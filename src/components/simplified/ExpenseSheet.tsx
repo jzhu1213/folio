@@ -42,7 +42,10 @@ import { getHomeCurrency } from '@/lib/currencyPreferences'
 import { normalizeCode, convertToHome } from '@/lib/currencyUtils'
 import { getRate } from '@/lib/exchangeRates'
 import { getTravelCurrency, isTravelModeActive } from '@/lib/travelMode'
+import { formatDateLocal } from '@/lib/dateUtils'
 import { CurrencySelector } from './CurrencySelector'
+import { DatePickerChips } from '@/components/ui/DatePickerChips'
+import type { FixedExpense } from '@/lib/fixedExpenses'
 
 /** A split participant — either a linked friend (with userId) or a name-only entry */
 interface SplitParticipant {
@@ -55,7 +58,9 @@ interface SplitParticipant {
 interface ExpenseSheetProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (data: { amount: number; category: TransactionCategory; note?: string; date?: string; fundingSourceId?: string; trackAsIOU?: boolean; splitWith?: string; splitOwedAmount?: number; tags?: string[]; splitData?: { totalAmount: number; splitMethod: SplitMethod; participants: { name: string; userId: string | null; shareAmount: number; isPayer: boolean }[] }; currency?: string; exchangeRate?: number }) => void
+  onSubmit: (data: { amount: number; category: TransactionCategory; note?: string; date?: string; fundingSourceId?: string; trackAsIOU?: boolean; splitWith?: string; splitOwedAmount?: number; tags?: string[]; splitData?: { totalAmount: number; splitMethod: SplitMethod; participants: { name: string; userId: string | null; shareAmount: number; isPayer: boolean }[] }; currency?: string; exchangeRate?: number }) => void | Promise<void>
+  /** Builds save feedback from the transaction's post-save budget/runway state. */
+  onBuildConfirmation?: (data: { amount: number; category: TransactionCategory; categoryLabel: string; date: string }) => string
   onUndo?: () => void
   defaultCategory?: TransactionCategory
   transactions?: Transaction[]
@@ -97,6 +102,7 @@ interface ExpenseSheetProps {
    * entering an amount. Reinforces the core "can I afford this?" identity. (Task 117.1)
    */
   dailyAllowanceAmount?: number
+  onCreateRecurringBill?: (bill: Omit<FixedExpense, 'id' | 'userId'>) => Promise<void>
   /**
    * Called when user taps "View settle-up" to navigate to the ReimbursementLedger (task 284.1).
    */
@@ -176,8 +182,7 @@ const CATEGORY_ILLUSTRATIONS: Record<TransactionCategory, IllustrationName> = {
 }
 
 function getCategoryIllustration(item: CategoryDisplayItem): IllustrationName {
-  // Custom categories intentionally use the neutral artwork until Phase 2.5
-  // establishes custom-category illustration choices.
+  // Custom categories preserve their curated Phase 2.2 illustration choice.
   if (item.isCustom && item.illustration && item.illustration in ILLUSTRATION_REGISTRY) {
     return item.illustration as IllustrationName
   }
@@ -194,6 +199,7 @@ export function ExpenseSheet({
   isOpen,
   onClose,
   onSubmit,
+  onBuildConfirmation,
   onUndo,
   defaultCategory,
   transactions,
@@ -208,6 +214,7 @@ export function ExpenseSheet({
   categorizationRules = [],
   onAddCategorizationRule,
   dailyAllowanceAmount,
+  onCreateRecurringBill,
   onOpenSettleUp,
   sharedBudgets = [],
   onLogToSharedBudget,
@@ -267,7 +274,12 @@ export function ExpenseSheet({
   const [currencyRate, setCurrencyRate] = useState<number | null>(null)
 
   // ── Date selection state (task 87.1) ────────────────────────────────────
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [selectedDate, setSelectedDate] = useState(() => formatDateLocal(new Date()))
+  const [isRecurring, setIsRecurring] = useState(false)
+  const backfillMinDate = useMemo(() => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+  }, [])
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showDateInput, setShowDateInput] = useState(false)
 
@@ -329,11 +341,11 @@ export function ExpenseSheet({
       categoryRowRef.current?.querySelectorAll<HTMLButtonElement>('[data-category-tile]') ?? [],
     ).find((tile) => tile.dataset.categoryTileKey === selectedCategoryTileKey)
     selectedTile?.scrollIntoView({
-      behavior: 'smooth',
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
       block: 'nearest',
       inline: 'nearest',
     })
-  }, [isOpen, selectedCategoryTileKey])
+  }, [isOpen, prefersReducedMotion, selectedCategoryTileKey])
 
   // Compute effective default: explicit prop > most recently used > null
   const effectiveDefault = useMemo(() => {
@@ -398,7 +410,8 @@ export function ExpenseSheet({
       setIsAddingCategory(false)
       
       // Reset date to today (task 87.1)
-      setSelectedDate(new Date().toISOString().slice(0, 10))
+      setSelectedDate(formatDateLocal(new Date()))
+      setIsRecurring(false)
       setShowDatePicker(false)
       setShowDateInput(false)
       
@@ -560,7 +573,7 @@ export function ExpenseSheet({
     setAmount(raw)
   }, [])
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     const parsed = parseFloat(amount)
     if (!parsed || parsed <= 0) return
 
@@ -653,7 +666,7 @@ export function ExpenseSheet({
       splitData = { totalAmount: parsed, splitMethod: splitMode, participants: participantEntries }
     }
 
-    onSubmit({
+    await onSubmit({
       amount: submittedAmount,
       category: effectiveCategory,
       note: note.trim() || undefined,
@@ -670,11 +683,29 @@ export function ExpenseSheet({
         ? { currency: normalizeCode(selectedCurrency), exchangeRate: currencyRate }
         : {}),
     })
-    // Show success toast with split-aware copy (task 123.1 — Splitwise-level ease)
+    if (isRecurring && onCreateRecurringBill) {
+      void onCreateRecurringBill({
+        label: note.trim() || displayCategories.find((item) => item.categoryValue === effectiveCategory)?.label || 'Recurring expense',
+        amount: submittedAmount,
+        category: effectiveCategory,
+        dueDay: Number.parseInt(selectedDate.slice(-2), 10),
+        recurringId: crypto.randomUUID(),
+        isActive: true,
+      })
+    }
+    // Use the post-save monthly context when supplied; retain the older
+    // split-aware copy for callers that do not provide runway feedback.
     const categoryLabel = displayCategories.find(c => c.categoryValue === effectiveCategory)?.label ?? effectiveCategory
-    const amountStr = formatMoney(submittedAmount)
     let toastMessage: string
-    if (splitEnabled && allFriends && totalOwed > 0) {
+    if (onBuildConfirmation) {
+      toastMessage = onBuildConfirmation({
+        amount: submittedAmount,
+        category: effectiveCategory,
+        categoryLabel,
+        date: selectedDate,
+      })
+    } else if (splitEnabled && allFriends && totalOwed > 0) {
+      const amountStr = formatMoney(submittedAmount)
       const owedStr = formatMoney(totalOwed)
       // Show who owes what: single friend gets named, multiple shows "friends"
       const friendNames = splitFriends.length > 0 ? splitFriends : (splitWith.trim() ? [splitWith.trim()] : [])
@@ -684,7 +715,7 @@ export function ExpenseSheet({
         toastMessage = t('expense.loggedSplitMultiple', { amount: amountStr, owed: owedStr })
       }
     } else {
-      toastMessage = t('expense.logged', { amount: amountStr, category: categoryLabel })
+      toastMessage = t('expense.logged', { amount: formatMoney(submittedAmount), category: categoryLabel })
     }
     showToast(
       toastMessage,
@@ -709,7 +740,7 @@ export function ExpenseSheet({
 
     shouldResetDraftOnOpenRef.current = true
     onClose()
-  }, [amount, category, spendingMode, note, tags, splitEnabled, splitCount, splitWith, splitFriends, splitMode, splitParticipants, percentInputs, shareInputs, customShareInput, selectedSourceId, selectedSourceIsBorrowed, trackAsIOU, selectedDate, displayCategories, onSubmit, onClose, onUndo, showToast, budgets, onAlertMessage, logToSharedBudget, matchingSharedBudget, onLogToSharedBudget, selectedCurrency, currencyRate])
+  }, [amount, category, spendingMode, note, tags, splitEnabled, splitCount, splitWith, splitFriends, splitMode, splitParticipants, percentInputs, shareInputs, customShareInput, selectedSourceId, selectedSourceIsBorrowed, trackAsIOU, selectedDate, displayCategories, onSubmit, onBuildConfirmation, onClose, onUndo, showToast, budgets, onAlertMessage, logToSharedBudget, matchingSharedBudget, onLogToSharedBudget, selectedCurrency, currencyRate, isRecurring, onCreateRecurringBill])
 
   const canSubmit = (() => {
     const parsed = parseFloat(amount)
@@ -939,7 +970,7 @@ export function ExpenseSheet({
               event.preventDefault()
               const nextTile = tiles[nextIndex]
               nextTile?.focus({ preventScroll: true })
-              nextTile?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+              nextTile?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest', inline: 'nearest' })
             }}
             style={{
               display: 'flex',
@@ -950,7 +981,7 @@ export function ExpenseSheet({
               marginInline: -4,
               scrollPaddingInline: 4,
               scrollSnapType: 'x proximity',
-              scrollBehavior: 'smooth',
+              scrollBehavior: prefersReducedMotion ? 'auto' : 'smooth',
               touchAction: 'pan-x',
               WebkitOverflowScrolling: 'touch',
             }}
@@ -1031,6 +1062,20 @@ export function ExpenseSheet({
           </div>
         </section>
 
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.lg }}>
+          <DatePickerChips selectedDate={selectedDate} onDateChange={setSelectedDate} allowFutureDates={false} minDate={backfillMinDate} />
+          <button
+            type="button"
+            onClick={() => setIsRecurring((value) => !value)}
+            aria-pressed={isRecurring}
+            aria-label="This expense repeats monthly"
+            className="focus-ring interactive-control"
+            style={{ minHeight: 36, padding: '0 12px', background: isRecurring ? 'var(--accent-muted)' : 'var(--surface-recessed)', border: isRecurring ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: radius.full, color: 'var(--sub)', cursor: 'pointer', ...typographyRoles.labelButton }}
+          >
+            This repeats · monthly
+          </button>
+        </div>
+
               {habitChips.length > 0 && (
                 <div
                   style={{
@@ -1046,18 +1091,18 @@ export function ExpenseSheet({
                     <button
                       key={`habit-${chip.category}-${chip.amount}-${i}`}
                       type="button"
-                      onClick={() => {
+                      onClick={async () => {
                         triggerHaptic('light')
-                        onSubmit({
+                        await onSubmit({
                           amount: chip.amount,
                           category: chip.category,
                           note: chip.note,
                           date: selectedDate,
                         })
-                        const amountStr = formatMoney(chip.amount)
                         const categoryLabel = displayCategories.find(c => c.categoryValue === chip.category)?.label ?? chip.category
                         showToast(
-                          t('expense.logged', { amount: amountStr, category: categoryLabel }),
+                          onBuildConfirmation?.({ amount: chip.amount, category: chip.category, categoryLabel, date: selectedDate })
+                            ?? t('expense.logged', { amount: formatMoney(chip.amount), category: categoryLabel }),
                           'success',
                           onUndo ? { label: t('common.undo'), onClick: onUndo } : undefined
                         )
@@ -1138,9 +1183,9 @@ export function ExpenseSheet({
                         <button
                           key={s.id}
                           type="button"
-                          onClick={() => {
+                          onClick={async () => {
                             // One-tap log: immediately submit with suggested amount (Req 3.4)
-                            onSubmit({
+                            await onSubmit({
                               amount: s.amount,
                               category,
                               note: s.label || undefined,
@@ -1148,7 +1193,8 @@ export function ExpenseSheet({
                             })
                             const categoryLabel = displayCategories.find(c => c.categoryValue === category)?.label ?? category
                             showToast(
-                              t('expense.logged', { amount: amountStr, category: categoryLabel }),
+                              onBuildConfirmation?.({ amount: s.amount, category, categoryLabel, date: selectedDate })
+                                ?? t('expense.logged', { amount: amountStr, category: categoryLabel }),
                               'success',
                               onUndo ? { label: t('common.undo'), onClick: onUndo } : undefined
                             )
@@ -1961,8 +2007,9 @@ export function ExpenseSheet({
                 />
               </div>
 
-              {/* ── Date Picker (optional, task 87.1) ─────────────────────────────── */}
-              <div style={{ marginBottom: HORIZONTAL_PADDING, textAlign: 'center' }}>
+              {/* Legacy date picker retained as a non-rendered transition reference.
+                  Phase 2.6's constrained DatePickerChips above is the one active path. */}
+              {false && <div style={{ marginBottom: HORIZONTAL_PADDING, textAlign: 'center' }}>
                 {!showDatePicker ? (
                   <button
                     type="button"
@@ -2214,7 +2261,7 @@ export function ExpenseSheet({
                     </motion.div>
                   </AnimatePresence>
                 )}
-              </div>
+              </div>}
 
               {/* ── Scheduled indicator (task 90.1) — shows when a future date is selected ── */}
               {isFutureDate(selectedDate) && (

@@ -10,7 +10,8 @@ import {
   ILLUSTRATION_LABELS,
   type IllustrationName,
 } from '@/components/ui/illustrations'
-import { CATEGORY_ACCENTS, shadows } from '@/styles/shared'
+import { categoryPalette } from '@/styles/chartTokens'
+import { shadows } from '@/styles/shared'
 import { FONT_FAMILY, typographyRoles, spacing } from '@/styles/typography'
 import { radius } from '@/styles/surfaces'
 
@@ -29,8 +30,8 @@ export interface CategoryManagementScreenProps {
 }
 
 const ILLUSTRATION_OPTIONS = Object.keys(ILLUSTRATION_LABELS) as IllustrationName[]
-const COLOR_SWATCHES = Array.from(new Set(Object.values(CATEGORY_ACCENTS))).filter(
-  (color) => color !== CATEGORY_ACCENTS.fallback,
+const COLOR_SWATCHES = Array.from(new Set(Object.values(categoryPalette))).filter(
+  (color) => color !== categoryPalette.fallback,
 )
 
 function illustrationFor(category: CustomCategory): IllustrationName {

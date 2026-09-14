@@ -7,6 +7,10 @@
  */
 import { spacing } from "@/styles/typography"
 import { radius } from "@/styles/surfaces"
+import { motion } from 'motion/react'
+import { useReducedMotion } from '@/lib/animations'
+import { fadeScaleIn, reducedFade } from '@/lib/motionPresets'
+import { Skeleton } from './Skeleton'
 
 export function SkeletonRow() {
   return (
@@ -79,5 +83,48 @@ export function SkeletonGroup({ count = 5 }: { count?: number }) {
         <SkeletonRow key={i} />
       ))}
     </div>
+  )
+}
+
+/**
+ * History's initial loading state mirrors the grouped day layout: each group
+ * has a date/subtotal header followed by transaction-row placeholders. The
+ * base Skeleton handles shimmer and its reduced-motion opacity pulse.
+ */
+export function HistoryGroupedSkeleton() {
+  const { prefersReducedMotion } = useReducedMotion()
+  const variants = prefersReducedMotion ? reducedFade : fadeScaleIn
+  const groups = [3, 2]
+
+  return (
+    <motion.div
+      role="status"
+      aria-live="polite"
+      aria-label="Loading transaction history"
+      variants={variants}
+      initial="initial"
+      animate="enter"
+      exit="exit"
+      style={{ display: 'flex', flexDirection: 'column', gap: spacing.lg }}
+    >
+      {groups.map((rowCount, groupIndex) => (
+        <div
+          key={groupIndex}
+          aria-hidden="true"
+          style={{
+            overflow: 'hidden',
+            background: 'var(--color-surface)',
+            border: 'var(--border-default)',
+            borderRadius: radius.control,
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: `${spacing.sm}px ${spacing.md}px`, borderBottom: 'var(--border-default)' }}>
+            <Skeleton width={groupIndex === 0 ? 76 : 116} height={14} radius={radius.min} />
+            <Skeleton width={64} height={14} radius={radius.min} />
+          </div>
+          {Array.from({ length: rowCount }, (_, rowIndex) => <SkeletonRow key={rowIndex} />)}
+        </div>
+      ))}
+    </motion.div>
   )
 }

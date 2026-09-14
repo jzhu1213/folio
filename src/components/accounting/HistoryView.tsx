@@ -7,7 +7,10 @@ import type { FundingSource } from '@/lib/fundingSources'
 import { shiftMonth, toMonthString } from '@/lib/budgetUtils'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Icon } from '@/components/ui/Icon'
-import { springs } from '@/lib/animations'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Illustration } from '@/components/ui/illustrations'
+import { HistoryGroupedSkeleton } from '@/components/ui/SkeletonRow'
+import { springs as springPresets, useReducedMotion } from '@/lib/animations'
 import { SECTION_SPACING, DOCK_PADDING_BOTTOM } from '@/styles/shared'
 import { radius } from '@/styles/surfaces'
 import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
@@ -34,14 +37,22 @@ interface HistoryViewProps {
   splitMap?: Map<string, { splitId: string; participantCount: number }>
   /** Callback when split indicator is tapped (Task 401.3) */
   onViewSplit?: (splitId: string) => void
+  /** Minimal message shown when active history criteria omit the selected month. */
+  noResultsMessage?: string
+  /** Clears search and filter criteria for a functional no-match state. */
+  onClearCriteria?: () => void
+  /** Opens the quick-add expense flow from a true history empty state. */
+  onLogExpense: () => void
 }
 
 export function HistoryView({
   transactions, isLoading = false,
   onEditTransaction, onDeleteTransaction, onRepeatTransaction,
   fundingSources, onBulkDelete, onBulkRecategorize, onBulkTag,
-  onTagFilter, splitMap, onViewSplit,
+  onTagFilter, splitMap, onViewSplit, noResultsMessage, onClearCriteria, onLogExpense,
 }: HistoryViewProps) {
+  const { prefersReducedMotion } = useReducedMotion()
+  const springs = prefersReducedMotion ? { snappy: { duration: 0 } } : springPresets
   const [selectedMonth, setSelectedMonth] = useState(() => toMonthString(new Date()))
   const currentMonth   = toMonthString(new Date())
   const isCurrentMonth = selectedMonth === currentMonth
@@ -89,6 +100,7 @@ export function HistoryView({
           <div className="flex items-center justify-between">
             <motion.button
               type="button"
+              className="focus-ring interactive-control"
               onClick={() => setSelectedMonth(m => shiftMonth(m, -1))}
               whileTap={{ scale: 0.95 }}
               transition={springs.snappy}
@@ -121,6 +133,7 @@ export function HistoryView({
 
             <motion.button
               type="button"
+              className="focus-ring interactive-control"
               onClick={() => setSelectedMonth(m => shiftMonth(m, 1))}
               disabled={isCurrentMonth}
               whileTap={{ scale: isCurrentMonth ? 1 : 0.95 }}
@@ -146,24 +159,25 @@ export function HistoryView({
 
         {/* Transaction list */}
         {isLoading ? (
-          <GlassCard elevation="low" style={{ padding: "32px 20px", borderRadius: radius.control }}>
-            <div className="flex flex-col items-center justify-center gap-4">
-              <div
-                className="w-6 h-6 animate-spin"
-                style={{ border: '2px solid var(--fill-10)', borderTopColor: 'var(--accent)', borderRadius: '50%' }}
-              />
-              <p
-                style={{
-                  fontSize: typography['body-sm'].fontSize,
-                  color: 'var(--sub)',
-                  fontFamily: FONT_FAMILY,
-                  fontWeight: fontWeights.medium,
-                }}
-              >
-                Loading...
-              </p>
-            </div>
-          </GlassCard>
+          <HistoryGroupedSkeleton />
+        ) : noResultsMessage && monthTxs.length === 0 ? (
+          <EmptyState
+            illustration="filter"
+            title="No matches found"
+            subtitle={noResultsMessage}
+            actionLabel="Clear search and filters"
+            onAction={onClearCriteria}
+            analyticsContext="history-filtered-empty-month"
+          />
+        ) : monthTxs.length === 0 ? (
+          <EmptyState
+            illustration={<Illustration name="empty:history-ledger" size={88} />}
+            title="Your history starts here"
+            subtitle="Log a first transaction and your spending story will begin to take shape."
+            actionLabel="Log your first expense"
+            onAction={onLogExpense}
+            analyticsContext="history-true-empty"
+          />
         ) : (
           <TransactionList
             transactions={monthTxs}
@@ -178,6 +192,7 @@ export function HistoryView({
             splitMap={splitMap}
             onViewSplit={onViewSplit}
             isScrollingFast={isScrollingFast}
+            criteriaManagedExternally
           />
         )}
       </div>

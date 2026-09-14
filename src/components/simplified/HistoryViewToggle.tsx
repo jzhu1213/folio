@@ -2,13 +2,9 @@
 
 import { useCallback, useRef } from "react"
 import { motion } from 'motion/react'
-import { springs } from "@/lib/animations"
-import {
-  segmentedControl,
-  segmentedButtonBase,
-  segmentedButtonActive,
-  segmentedButtonInactive,
-} from "@/styles/shared"
+import { springs as springPresets, useReducedMotion } from "@/lib/animations"
+import { radius } from "@/styles/surfaces"
+import { spacing, typographyRoles } from "@/styles/typography"
 
 // ============================================================================
 // Types
@@ -44,6 +40,8 @@ const VIEW_OPTIONS: { key: HistoryGroupingView; label: string }[] = [
  * Requirements: 22.4, accessibility standard
  */
 export function HistoryViewToggle({ value, onChange }: HistoryViewToggleProps) {
+  const { prefersReducedMotion } = useReducedMotion()
+  const springs = prefersReducedMotion ? { snappy: { duration: 0 } } : springPresets
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
 
   const handleKeyDown = useCallback(
@@ -74,9 +72,16 @@ export function HistoryViewToggle({ value, onChange }: HistoryViewToggleProps) {
 
   return (
     <div
-      role="tablist"
+      role="group"
       aria-label="Transaction grouping mode"
-      style={segmentedControl}
+      style={{
+        display: "flex",
+        gap: spacing.xs,
+        padding: 4,
+        borderRadius: radius.control,
+        background: "var(--surface-recessed)",
+        border: "var(--border-default)",
+      }}
     >
       {VIEW_OPTIONS.map(({ key, label }, index) => {
         const isActive = value === key
@@ -85,17 +90,28 @@ export function HistoryViewToggle({ value, onChange }: HistoryViewToggleProps) {
             key={key}
             ref={(el: HTMLButtonElement | null) => { tabRefs.current[index] = el }}
             type="button"
-            role="tab"
-            aria-selected={isActive}
+            className="focus-ring interactive-control"
+            aria-pressed={isActive}
             aria-label={`Group by ${label}`}
             tabIndex={isActive ? 0 : -1}
             onClick={() => onChange(key)}
             onKeyDown={(e: React.KeyboardEvent<HTMLButtonElement>) => handleKeyDown(e, index)}
             whileTap={{ scale: 0.97 }}
             transition={springs.snappy}
+            layout
             style={{
-              ...segmentedButtonBase,
-              ...(isActive ? segmentedButtonActive : segmentedButtonInactive),
+              flex: 1,
+              minHeight: 44,
+              padding: "8px 10px",
+              boxSizing: "border-box",
+              borderRadius: radius.min,
+              border: isActive ? "1px solid var(--accent)" : "1px solid transparent",
+              color: isActive ? "var(--text)" : "var(--sub)",
+              background: isActive ? "var(--accent-muted)" : "transparent",
+              boxShadow: "var(--shadow-none)",
+              cursor: "pointer",
+              textAlign: "center",
+              ...typographyRoles.labelButton,
             }}
           >
             {label}

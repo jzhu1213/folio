@@ -15,15 +15,16 @@
  * Requirements: 22.2
  */
 
-import { useState, useCallback, useMemo, useRef } from "react"
+import { useState, useCallback, useMemo, useRef, useId } from "react"
 import { motion, AnimatePresence } from 'motion/react'
 import { TRANSACTION_CATEGORIES } from "@/types"
 import type { TransactionCategory, Transaction } from "@/types"
-import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
+import { FONT_FAMILY, spacing, typography, typographyRoles } from '@/styles/typography'
 import { radius } from '@/styles/surfaces'
-import { springs } from "@/lib/animations"
+import { springs as springPresets, useReducedMotion } from "@/lib/animations"
 import { getHomeCurrency } from "@/lib/currencyPreferences"
 import { getCurrencySymbol, normalizeCode } from "@/lib/currencyUtils"
+import { formatDateLocal } from '@/lib/dateUtils'
 
 // ============================================================================
 // Types
@@ -134,7 +135,7 @@ export function applyHistoryFilters(transactions: Transaction[], filters: Histor
 function getDateRangeBounds(preset: DateRangePreset, custom: CustomDateRange | null): { start: string | null; end: string | null } | null {
   if (!preset) return null
   const now = new Date()
-  const todayStr = now.toISOString().slice(0, 10)
+  const todayStr = formatDateLocal(now)
 
   switch (preset) {
     case "today":
@@ -143,16 +144,16 @@ function getDateRangeBounds(preset: DateRangePreset, custom: CustomDateRange | n
       const start = new Date(now)
       const day = start.getDay()
       start.setDate(start.getDate() - ((day + 6) % 7)) // Monday
-      return { start: start.toISOString().slice(0, 10), end: todayStr }
+      return { start: formatDateLocal(start), end: todayStr }
     }
     case "this_month": {
       const start = new Date(now.getFullYear(), now.getMonth(), 1)
-      return { start: start.toISOString().slice(0, 10), end: todayStr }
+      return { start: formatDateLocal(start), end: todayStr }
     }
     case "last_month": {
       const start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
       const end = new Date(now.getFullYear(), now.getMonth(), 0)
-      return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) }
+      return { start: formatDateLocal(start), end: formatDateLocal(end) }
     }
     case "custom":
       if (custom) return { start: custom.start || null, end: custom.end || null }
@@ -192,15 +193,11 @@ function chipStyle(active: boolean): React.CSSProperties {
     padding: "7px 14px",
     minHeight: 44,
     boxSizing: "border-box",
-    fontFamily: FONT_FAMILY,
-    fontSize: typography['body-sm'].fontSize,
-    fontWeight: fontWeights.medium,
+    ...typographyRoles.labelButton,
     borderRadius: radius.full,
-    border: "1px solid",
-    borderColor: active ? "var(--accent-400)" : "var(--fill-10)",
+    border: active ? "1px solid var(--accent)" : "var(--border-default)",
     color: active ? "var(--text)" : "var(--sub)",
-    background: active ? "var(--accent-200)" : "var(--fill-04)",
-    transition: "all 0.15s",
+    background: active ? "var(--accent-muted)" : "var(--surface-recessed)",
     whiteSpace: "nowrap",
     cursor: "pointer",
     display: "inline-flex",
@@ -225,9 +222,7 @@ const sectionStyle: React.CSSProperties = {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontSize: typography.caption.fontSize,
-  fontFamily: FONT_FAMILY,
-  fontWeight: fontWeights.semibold,
+  ...typographyRoles.caption,
   color: "var(--muted)",
   textTransform: "uppercase",
   letterSpacing: "0.08em",
@@ -280,8 +275,12 @@ export function HistoryFilterChips({
   totalCount,
   transactions = [],
 }: HistoryFilterChipsProps) {
+  const { prefersReducedMotion } = useReducedMotion()
+  const springs = prefersReducedMotion ? { snappy: { duration: 0 } } : springPresets
+  const [isExpanded, setIsExpanded] = useState(false)
   const [showCustomDate, setShowCustomDate] = useState(false)
   const [showCustomAmount, setShowCustomAmount] = useState(false)
+  const filterContentId = useId()
 
   // Local state for custom inputs
   const [customDateStart, setCustomDateStart] = useState(filters.customDateRange?.start ?? "")
@@ -455,6 +454,10 @@ export function HistoryFilterChips({
     return parts
   }, [filters])
 
+  const filterSummary = hasActiveFilters
+    ? summaryParts.join(" + ")
+    : "All transactions"
+
   // ── Render ────────────────────────────────────────────────────────
 
   return (
@@ -463,12 +466,81 @@ export function HistoryFilterChips({
       role="region"
       aria-label="Transaction filters"
     >
+      <button
+        type="button"
+        className="focus-ring interactive-control"
+        aria-expanded={isExpanded}
+        aria-controls={filterContentId}
+        onClick={() => setIsExpanded((expanded) => !expanded)}
+        style={{
+          minHeight: 44,
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          gap: spacing.xs,
+          padding: "8px 12px",
+          background: hasActiveFilters ? "var(--accent-muted)" : "var(--surface-recessed)",
+          border: hasActiveFilters ? "1px solid var(--accent)" : "var(--border-default)",
+          borderRadius: radius.control,
+          color: "var(--text)",
+          cursor: "pointer",
+          textAlign: "start",
+          ...typographyRoles.labelButton,
+        }}
+      >
+        <span>Filters</span>
+        {hasActiveFilters && (
+          <span
+            aria-label={`${summaryParts.length} active filters`}
+            style={{
+              minWidth: 20,
+              height: 20,
+              padding: "0 6px",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: radius.full,
+              background: "var(--accent)",
+              color: "var(--surface-canvas)",
+              ...typographyRoles.caption,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {summaryParts.length}
+          </span>
+        )}
+        <span
+          style={{
+            color: "var(--sub)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            flex: 1,
+            textAlign: "end",
+            ...typographyRoles.caption,
+          }}
+        >
+          {filterSummary}
+        </span>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            id={filterContentId}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={springs.snappy}
+            style={{ display: "flex", flexDirection: "column", gap: spacing.sm, overflow: "hidden" }}
+          >
       {/* Category chips */}
       <div style={sectionStyle}>
         <span style={labelStyle} id="filter-category-label">Category</span>
         <div style={scrollRowStyle} role="toolbar" aria-labelledby="filter-category-label">
           <motion.button
             type="button"
+            className="focus-ring interactive-control"
             ref={(el: HTMLButtonElement | null) => { categoryNav.itemsRef.current[0] = el }}
             whileTap={{ scale: 0.96 }}
             transition={springs.snappy}
@@ -485,6 +557,7 @@ export function HistoryFilterChips({
             <motion.button
               key={cat.category}
               type="button"
+              className="focus-ring interactive-control"
               ref={(el: HTMLButtonElement | null) => { categoryNav.itemsRef.current[i + 1] = el }}
               whileTap={{ scale: 0.96 }}
               transition={springs.snappy}
@@ -515,6 +588,7 @@ export function HistoryFilterChips({
             <motion.button
               key={item.key}
               type="button"
+              className="focus-ring interactive-control"
               ref={(el: HTMLButtonElement | null) => { dateNav.itemsRef.current[i] = el }}
               whileTap={{ scale: 0.96 }}
               transition={springs.snappy}
@@ -537,7 +611,7 @@ export function HistoryFilterChips({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={springs.snappy}
               style={{ overflow: "hidden" }}
             >
               <div
@@ -550,6 +624,7 @@ export function HistoryFilterChips({
               >
                 <input
                   type="date"
+                  className="focus-ring interactive-field"
                   value={customDateStart}
                   onChange={(e) => setCustomDateStart(e.target.value)}
                   aria-label="Start date"
@@ -558,6 +633,7 @@ export function HistoryFilterChips({
                 <span style={{ fontSize: typography['body-sm'].fontSize, color: "var(--sub)", fontFamily: FONT_FAMILY }}>to</span>
                 <input
                   type="date"
+                  className="focus-ring interactive-field"
                   value={customDateEnd}
                   onChange={(e) => setCustomDateEnd(e.target.value)}
                   aria-label="End date"
@@ -565,13 +641,13 @@ export function HistoryFilterChips({
                 />
                 <motion.button
                   type="button"
+                  className="focus-ring interactive-control"
                   whileTap={{ scale: 0.96 }}
                   transition={springs.snappy}
                   onClick={applyCustomDate}
                   style={{
                     ...chipStyle(true),
                     padding: "6px 12px",
-                    fontSize: typography['body-sm'].fontSize,
                   }}
                   aria-label="Apply custom date range"
                 >
@@ -597,6 +673,7 @@ export function HistoryFilterChips({
             <motion.button
               key={item.key}
               type="button"
+              className="focus-ring interactive-control"
               ref={(el: HTMLButtonElement | null) => { amountNav.itemsRef.current[i] = el }}
               whileTap={{ scale: 0.96 }}
               transition={springs.snappy}
@@ -619,7 +696,7 @@ export function HistoryFilterChips({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={springs.snappy}
               style={{ overflow: "hidden" }}
             >
               <div
@@ -632,6 +709,7 @@ export function HistoryFilterChips({
               >
                 <input
                   type="number"
+                  className="focus-ring interactive-field"
                   placeholder="Min"
                   value={customAmountMin}
                   onChange={(e) => setCustomAmountMin(e.target.value)}
@@ -643,6 +721,7 @@ export function HistoryFilterChips({
                 <span style={{ fontSize: typography['body-sm'].fontSize, color: "var(--sub)", fontFamily: FONT_FAMILY }}>to</span>
                 <input
                   type="number"
+                  className="focus-ring interactive-field"
                   placeholder="Max"
                   value={customAmountMax}
                   onChange={(e) => setCustomAmountMax(e.target.value)}
@@ -653,13 +732,13 @@ export function HistoryFilterChips({
                 />
                 <motion.button
                   type="button"
+                  className="focus-ring interactive-control"
                   whileTap={{ scale: 0.96 }}
                   transition={springs.snappy}
                   onClick={applyCustomAmount}
                   style={{
                     ...chipStyle(true),
                     padding: "6px 12px",
-                    fontSize: typography['body-sm'].fontSize,
                   }}
                   aria-label="Apply custom amount range"
                 >
@@ -684,6 +763,7 @@ export function HistoryFilterChips({
             <motion.button
               key={item.key}
               type="button"
+              className="focus-ring interactive-control"
               ref={(el: HTMLButtonElement | null) => { typeNav.itemsRef.current[i] = el }}
               whileTap={{ scale: 0.96 }}
               transition={springs.snappy}
@@ -707,6 +787,7 @@ export function HistoryFilterChips({
           <div style={scrollRowStyle} role="toolbar" aria-labelledby="filter-currency-label">
             <motion.button
               type="button"
+              className="focus-ring interactive-control"
               ref={(el: HTMLButtonElement | null) => { currencyNav.itemsRef.current[0] = el }}
               whileTap={{ scale: 0.96 }}
               transition={springs.snappy}
@@ -723,6 +804,7 @@ export function HistoryFilterChips({
               <motion.button
                 key={code}
                 type="button"
+                className="focus-ring interactive-control"
                 ref={(el: HTMLButtonElement | null) => { currencyNav.itemsRef.current[i + 1] = el }}
                 whileTap={{ scale: 0.96 }}
                 transition={springs.snappy}
@@ -747,15 +829,15 @@ export function HistoryFilterChips({
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15 }}
+            transition={springs.snappy}
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
               gap: spacing.sm,
-              padding: "10px 14px",
-              background: "var(--accent-100)",
-              border: "1px solid var(--accent-200)",
+              padding: "10px 12px",
+              background: "var(--accent-muted)",
+              border: "1px solid var(--accent)",
               borderRadius: radius.control,
             }}
             role="status"
@@ -764,9 +846,7 @@ export function HistoryFilterChips({
           >
             <span
               style={{
-                fontSize: typography['body-sm'].fontSize,
-                fontFamily: FONT_FAMILY,
-                fontWeight: fontWeights.medium,
+                ...typographyRoles.labelButton,
                 color: "var(--text)",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
@@ -781,25 +861,27 @@ export function HistoryFilterChips({
             </span>
             <motion.button
               type="button"
+              className="focus-ring interactive-control"
               whileTap={{ scale: 0.96 }}
               transition={springs.snappy}
               onClick={clearAll}
               style={{
                 flexShrink: 0,
                 padding: "5px 12px",
-                fontSize: typography['body-sm'].fontSize,
-                fontFamily: FONT_FAMILY,
-                fontWeight: fontWeights.medium,
                 color: "var(--accent)",
-                background: "var(--accent-200)",
-                border: "1px solid var(--accent-300)",
+                background: "var(--surface-raised)",
+                border: "1px solid var(--accent)",
                 borderRadius: radius.full,
                 cursor: "pointer",
+                ...typographyRoles.labelButton,
               }}
               aria-label="Clear all filters"
             >
               Clear all
             </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
@@ -814,11 +896,10 @@ export function HistoryFilterChips({
 const dateInputStyle: React.CSSProperties = {
   flex: 1,
   padding: "8px 10px",
-  fontSize: typography['body-sm'].fontSize,
-  fontFamily: FONT_FAMILY,
+  ...typographyRoles.labelButton,
   color: "var(--text)",
-  background: "var(--fill-04)",
-  border: "1px solid var(--fill-10)",
+  background: "var(--surface-recessed)",
+  border: "var(--border-default)",
   borderRadius: radius.control,
   outline: "none",
   colorScheme: "dark",
@@ -827,11 +908,10 @@ const dateInputStyle: React.CSSProperties = {
 const amountInputStyle: React.CSSProperties = {
   width: 80,
   padding: "8px 10px",
-  fontSize: typography['body-sm'].fontSize,
-  fontFamily: FONT_FAMILY,
+  ...typographyRoles.labelButton,
   color: "var(--text)",
-  background: "var(--fill-04)",
-  border: "1px solid var(--fill-10)",
+  background: "var(--surface-recessed)",
+  border: "var(--border-default)",
   borderRadius: radius.control,
   outline: "none",
 }

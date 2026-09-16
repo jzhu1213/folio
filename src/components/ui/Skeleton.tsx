@@ -288,10 +288,11 @@ export interface HomeScreenSkeletonProps {
  *
  * Sections (top → bottom, matching HomeScreen):
  *  1. Hero — GlassCard high elevation with ring, amount, message
- *  2. Quick actions — row of 2 pill buttons + tertiary link
- *  3. Category budget cards — 2×2 grid with icon, name, progress bar
- *  4. Recent transactions — header + glass card with timeline rows
- *  5. Tip card — single card placeholder at the bottom
+ *  2. Spending insights — three narrative-card placeholders
+ *  3. Quick actions — row of 2 pill buttons + tertiary link
+ *  4. Category budget cards — 2×2 grid with icon, name, progress bar
+ *  5. Recent transactions — header + glass card with timeline rows
+ *  6. Tip card — single card placeholder at the bottom
  *
  * Spacing uses the real layout constants: SECTION_SPACING (32px gap),
  * HORIZONTAL_PADDING (20px sides), spacing.lg (24px top), DOCK_PADDING_BOTTOM
@@ -345,6 +346,19 @@ export function HomeScreenSkeleton({ className = "", style }: HomeScreenSkeleton
         <Skeleton width={200} height={14} radius={7} />
         {/* Context text (spent today / rollover) */}
         <Skeleton width={120} height={10} radius={5} />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: spacing.sm }}>
+        <Skeleton width={124} height={16} radius={6} />
+        {Array.from({ length: 3 }).map((_, i) => (
+          <SkeletonCard key={i} height={104}>
+            <div style={{ display: "flex", flexDirection: "column", gap: spacing.sm }}>
+              <Skeleton width={32} height={32} radius={9999} />
+              <Skeleton width={i === 1 ? "72%" : "86%"} height={15} radius={6} />
+              <Skeleton width="42%" height={10} radius={5} />
+            </div>
+          </SkeletonCard>
+        ))}
       </div>
 
       {/* ── 2. Quick Actions (2 pills + tertiary link) ── */}

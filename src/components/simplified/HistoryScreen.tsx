@@ -16,8 +16,6 @@ import { Icon } from "@/components/ui/Icon"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { HistoryGroupedSkeleton } from "@/components/ui/SkeletonRow"
 import { Illustration } from "@/components/ui/illustrations"
-import { InsightTrendCard } from "./InsightTrendCard"
-import { InsightBreakdownCard } from "./InsightBreakdownCard"
 import { HistorySearchBar } from "./HistorySearchBar"
 import { HistoryFilterChips, EMPTY_FILTERS } from "./HistoryFilterChips"
 import type { HistoryFilters } from "./HistoryFilterChips"
@@ -54,6 +52,14 @@ function saveHistoryFilters(filters: HistoryFilters): void {
   } catch {
     // Silently fail if sessionStorage is unavailable
   }
+}
+
+/**
+ * Prepares the existing persisted filter-chip state before navigating to
+ * History. Callers do not need a parallel filter-routing format.
+ */
+export function primeHistoryFilters(filters: HistoryFilters): void {
+  saveHistoryFilters(filters)
 }
 
 // ============================================================================
@@ -415,16 +421,6 @@ export const HistoryScreen = memo(function HistoryScreen({
         </div>
         </motion.div>
       )}
-      {/* Month-over-month trend insight (Requirement 9.4) */}
-      <motion.div variants={listItem} style={{ padding: `${spacing.md}px 16px 0` }}>
-        <InsightTrendCard transactions={transactions} />
-      </motion.div>
-
-      {/* Spending breakdown insight (Requirement 9.4) */}
-      <motion.div variants={listItem} style={{ padding: `${spacing.sm}px 16px 0` }}>
-        <InsightBreakdownCard transactions={transactions} />
-      </motion.div>
-
       {/* Trip spending summary — shown when travel mode is active (Task 423.3) */}
       {isTravelModeActive() && getTravelCurrency() && (
         <motion.div variants={listItem} style={{ padding: `${spacing.sm}px 16px 0` }}>

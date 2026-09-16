@@ -17,7 +17,9 @@ import { FocusTrapContainer } from '@/components/ui/FocusTrapContainer'
 import { DepthSurfaceLoadGuard } from '@/components/ui/DepthSurfaceLoadGuard'
 import type { AppNavKey } from '@/components/ui/AppShell'
 import { HomeScreen } from '@/components/simplified/HomeScreen'
-import { HistoryScreen } from '@/components/simplified/HistoryScreen'
+import { HistoryScreen, primeHistoryFilters } from '@/components/simplified/HistoryScreen'
+import { EMPTY_FILTERS } from '@/components/simplified/HistoryFilterChips'
+import type { Insight } from '@/lib/insights'
 import { SettingsScreen } from '@/components/simplified/SettingsScreen'
 import type { SettingsCategory } from '@/components/simplified/SettingsScreen'
 import { ToolsScreen } from '@/components/simplified/ToolsScreen'
@@ -2285,6 +2287,15 @@ export default function FolioApp() {
   const handleHeroTapDetails = useCallback(() => handleNavChange('history'), [handleNavChange])
   const handleLogIncome = useCallback(() => overlay.openSheet('income'), [overlay])
   const handleViewAllHistory = useCallback(() => handleNavChange('history'), [handleNavChange])
+  const handleViewInsightHistory = useCallback((insight: Insight) => {
+    primeHistoryFilters({
+      ...EMPTY_FILTERS,
+      categories: [insight.category],
+      type: 'expenses',
+      dateRange: insight.type === 'category_delta' ? 'this_week' : 'this_month',
+    })
+    handleNavChange('history')
+  }, [handleNavChange])
   const handleCelebrationDismiss = useCallback(() => setCelebrationEvent(null), [])
   const handleOpenBudgetSettingsFromHome = useCallback(() => overlay.openOverlay('budgetSettings'), [overlay])
   const handleOpenReimbursementsFromHome = useCallback(() => overlay.openOverlay('reimbursements'), [overlay])
@@ -3129,6 +3140,8 @@ export default function FolioApp() {
                 goals={goals}
                 isLoading={dataLoading}
                 isStale={isStale}
+                insightsError={loadError || failedSources.includes('transactions')}
+                onRetryInsights={refresh}
                 activeSpendDown={activeSpendDown}
                 timeHorizonStats={timeHorizonStats}
                 spendingMode={spendingMode}
@@ -3159,6 +3172,7 @@ export default function FolioApp() {
                 onRepeatLog={handleRepeatLog}
                 onViewTransaction={handleEditTransaction}
                 onViewAllHistory={handleViewAllHistory}
+                onViewInsightHistory={handleViewInsightHistory}
                 onDeleteTransaction={handleDeleteTransaction}
                 onEditTransaction={handleInlineSaveTransaction}
                 onRefresh={refresh}

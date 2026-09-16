@@ -141,6 +141,9 @@ export type {
   GlowColor,
 } from './GlassCard'
 
+export { InsightCard } from './InsightCard'
+export type { InsightCardProps, InsightComparison } from './InsightCard'
+
 export { Card as LegacyCard } from './Card'
 export type { CardProps as LegacyCardProps } from './Card'
 

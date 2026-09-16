@@ -5,7 +5,7 @@ import { motion } from 'motion/react'
 import { springs } from "@/lib/animations"
 import { GlassCard } from "@/components/ui/GlassCard"
 import { ChartFrame } from "@/components/ui/primitives/ChartFrame"
-import { FONT_FAMILY, spacing, typography, fontWeights } from '@/styles/typography'
+import { FONT_FAMILY, spacing, typography, typographyRoles, fontWeights } from '@/styles/typography'
 import {
   CONTENT_MAX_WIDTH,
   HORIZONTAL_PADDING,
@@ -14,7 +14,7 @@ import {
   borderRadius,
 } from "@/styles/shared"
 import { radius } from '@/styles/surfaces'
-import { chartMotion } from "@/styles/chartTokens"
+import { categoryPalette, chartMotion } from "@/styles/chartTokens"
 import {
   computeAllocationByType,
   computeGrowthVsContribution,
@@ -40,14 +40,19 @@ function formatDollars(amount: number): string {
   return formatCurrency(Math.round(Math.abs(amount)), 'USD', { fractionDigits: 0 })
 }
 
-/** Soft, distinct colors for each allocation bar segment. */
+/**
+ * Keep the allocation bar to four established category-palette colors: cash
+ * accounts share green, retirement accounts share lavender, brokerage stays
+ * blue, and the catch-all remains neutral. The account rows carry the exact
+ * type labels, so separate decorative colors would not add a decision.
+ */
 const TYPE_COLORS: Record<string, string> = {
-  hysa: "var(--success)",       // teal
-  roth_ira: "var(--accent-500)", // purple
-  "401k": "var(--warning)",    // amber
-  brokerage: "var(--blue-500)", // blue
-  savings: "var(--success-500)",   // green
-  other: "var(--muted)",    // gray
+  hysa: categoryPalette.income,
+  roth_ira: categoryPalette.rent,
+  "401k": categoryPalette.rent,
+  brokerage: categoryPalette.transport,
+  savings: categoryPalette.income,
+  other: categoryPalette.other,
 }
 
 function getTypeColor(type: string): string {
@@ -345,93 +350,17 @@ export function PortfolioAllocationScreen({
         <ChartFrame
           type="bar"
           state="loaded"
-          height={160}
+          height={112}
           aria-label="Growth vs. contributions breakdown chart"
         >
           <div style={{ padding: "16px 18px" }}>
-            {/* Summary stats */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: spacing.sm,
-                marginBottom: 14,
-              }}
-            >
-              <div
-                style={{
-                  padding: "12px 14px",
-                  borderRadius: borderRadius.sm,
-                  background: "var(--fill-04)",
-                  textAlign: "center",
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: typography.caption.fontSize,
-                    fontWeight: fontWeights.medium,
-                    color: "var(--muted)",
-                    marginBottom: 4,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.03em",
-                  }}
-                >
-                  Contributed
-                </p>
-                <p
-                  style={{
-                    fontSize: typography.body.fontSize,
-                    fontWeight: fontWeights.bold,
-                    color: "var(--text)",
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {formatDollars(growthSummary.totalContributions)}
-                </p>
-              </div>
-              <div
-                style={{
-                  padding: "12px 14px",
-                  borderRadius: borderRadius.sm,
-                  background: "var(--fill-04)",
-                  textAlign: "center",
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: typography.caption.fontSize,
-                    fontWeight: fontWeights.medium,
-                    color: "var(--muted)",
-                    marginBottom: 4,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.03em",
-                  }}
-                >
-                  Est. Growth
-                </p>
-                <p
-                  style={{
-                    fontSize: typography.body.fontSize,
-                    fontWeight: fontWeights.bold,
-                    color: growthSummary.totalEstimatedGrowth >= 0
-                      ? "var(--success)"
-                      : "var(--text)",
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {growthSummary.totalEstimatedGrowth >= 0 ? "+" : "-"}
-                  {formatDollars(growthSummary.totalEstimatedGrowth)}
-                </p>
-              </div>
-            </div>
-
-            {/* Split bar visualization */}
+            {/* One visual, one takeaway: how the current balance is composed. */}
             {growthSummary.totalContributions > 0 && (
               <div>
                 <div
                   style={{
                     display: "flex",
-                    height: 8,
+                    height: 10,
                     borderRadius: radius.min,
                     overflow: "hidden",
                     background: "var(--fill-04)",
@@ -445,7 +374,7 @@ export function PortfolioAllocationScreen({
                         (growthSummary.totalContributions / growthSummary.totalBalance) * 100,
                         2
                       )}%`,
-                      background: "var(--accent-400)",
+                      background: "var(--accent)",
                       transition: chartMotion.barGrow,
                     }}
                   />
@@ -466,14 +395,15 @@ export function PortfolioAllocationScreen({
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
-                    marginTop: 6,
+                    gap: spacing.sm,
+                    marginTop: spacing.xs,
                   }}
                 >
-                  <span style={{ fontSize: typography.caption.fontSize, color: "var(--muted)" }}>
-                    💰 Contributed
+                  <span style={{ ...typographyRoles.caption, color: "var(--sub)" }}>
+                    Contributed <strong style={{ color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>{formatDollars(growthSummary.totalContributions)}</strong>
                   </span>
-                  <span style={{ fontSize: typography.caption.fontSize, color: "var(--muted)" }}>
-                    📈 Growth
+                  <span style={{ ...typographyRoles.caption, color: "var(--sub)", textAlign: "end" }}>
+                    Growth <strong style={{ color: growthSummary.totalEstimatedGrowth >= 0 ? "var(--success)" : "var(--text)", fontVariantNumeric: "tabular-nums" }}>{growthSummary.totalEstimatedGrowth >= 0 ? "+" : "-"}{formatDollars(growthSummary.totalEstimatedGrowth)}</strong>
                   </span>
                 </div>
               </div>
@@ -482,9 +412,8 @@ export function PortfolioAllocationScreen({
             {growthSummary.totalContributions === 0 && (
               <p
                 style={{
-                  fontSize: typography['body-sm'].fontSize,
+                  ...typographyRoles.body,
                   color: "var(--sub)",
-                  lineHeight: 1.5,
                   textAlign: "center",
                 }}
               >

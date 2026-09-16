@@ -30,6 +30,8 @@ import { EmptyState } from "@/components/ui/EmptyState"
 import { recordLastActive } from "@/lib/reminderPreferences"
 import { getInsightsEnabled, getSavingsRateBadgeEnabled } from "@/lib/uiPreferences"
 import { getPaceIndicatorEnabled } from "@/lib/paceIndicatorPreferences"
+import { getInsights, rankInsights } from "@/lib/insights"
+import type { Insight } from "@/lib/insights"
 import { motion, AnimatePresence } from 'motion/react'
 import { springs, timings, STAGGER_STEP, layoutTransition, useReducedMotion as useAppReducedMotion } from "@/lib/animations"
 import { FONT_FAMILY, spacing, typography, typographyRoles, fontWeights } from '@/styles/typography'
@@ -48,6 +50,8 @@ import {
   shadows,
 } from "@/styles/shared"
 import { DailyAllowanceHero } from "./DailyAllowanceHero"
+import { InsightCard } from "@/components/ui/InsightCard"
+import { PartialLoadBanner } from "@/components/ui/PartialLoadBanner"
 import { useToast } from "@/contexts/ToastContext"
 import { GlassCard } from "@/components/ui/GlassCard"
 import { HomeScreenSkeleton, FadeInContent } from "@/components/ui/Skeleton"
@@ -189,6 +193,10 @@ export interface HomeScreenProps {
   isLoading: boolean
   /** Whether cached data is stale and background fetch hasn't completed */
   isStale?: boolean
+  /** The transaction source failed, so insight candidates cannot be trusted. */
+  insightsError?: boolean
+  /** Retries the existing transaction refresh flow after an insight load error. */
+  onRetryInsights?: () => void
 
   // ── Callbacks ──────────────────────────────────────────────────────────────
   /** Called when the hero is tapped for breakdown details */
@@ -203,6 +211,8 @@ export interface HomeScreenProps {
   onViewTransaction: (tx: Transaction) => void
   /** Called when user wants to see full history */
   onViewAllHistory: () => void
+  /** Opens History with the existing category and period filter chips primed. */
+  onViewInsightHistory?: (insight: Insight) => void
   /** Called when user swipes to delete a transaction (optimistic delete with undo) */
   onDeleteTransaction?: (id: string) => void
   /** Called when user wants to inline-edit a transaction (swipe-right) — saves edits */
@@ -322,12 +332,15 @@ export const HomeScreen = memo(function HomeScreen({
   goals,
   isLoading,
   isStale,
+  insightsError = false,
+  onRetryInsights,
   onHeroTapDetails,
   onLogExpense,
   onLogIncome,
   onRepeatLog,
   onViewTransaction,
   onViewAllHistory,
+  onViewInsightHistory,
   onDeleteTransaction,
   onEditTransaction,
   onRefresh,
@@ -556,22 +569,12 @@ export const HomeScreen = memo(function HomeScreen({
     orientation: "horizontal",
   })
 
-  // Placeholder until the dedicated insights phase: choose the most relevant
-  // current category signal from data already available on the home screen.
-  const dashboardInsight = useMemo(() => {
-    const category = categoryRows.find((row) => row.overWeekly)
-      ?? categoryRows.find((row) => row.nearLimit)
-      ?? categoryRows.find((row) => row.weeklySpent > 0)
-
-    if (!category) return "Add an expense to start shaping this month’s runway."
-    if (category.overWeekly) {
-      return `${category.label} is ${formatMoney(Math.abs(category.weeklyLeft))} over its weekly limit.`
-    }
-    if (category.nearLimit) {
-      return `${category.label} has ${formatMoney(Math.max(0, category.weeklyLeft))} left this week.`
-    }
-    return `${category.label} is your highest-spend category this week at ${formatMoney(category.weeklySpent)}.`
-  }, [categoryRows])
+  // The engine returns its full capped list; the dashboard intentionally keeps
+  // only the first three decisions so the home screen remains a launchpad.
+  const dashboardInsights = useMemo(
+    () => rankInsights(getInsights(transactions, budgets)).slice(0, 3),
+    [transactions, budgets],
+  )
 
   // Memoize recent repeats for "Log Again" section
   const repeats = useMemo(
@@ -1090,7 +1093,45 @@ export const HomeScreen = memo(function HomeScreen({
 
         </motion.section>
 
-        {/* ── 2. Category snapshot — a glanceable route to category detail ── */}
+        {/* ── 2. Decision-ready insights, directly below Monthly Runway ── */}
+        <motion.section variants={homeSection} aria-label="Spending insights">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.sm }}>
+            <h2 style={{ ...typographyRoles.sectionHeadline, color: "var(--text-primary)", margin: 0 }}>
+              Spending insights
+            </h2>
+          </div>
+          {insightsError ? (
+            <PartialLoadBanner visible onRetry={onRetryInsights ?? (() => undefined)} />
+          ) : dashboardInsights.length === 0 ? (
+            <GlassCard elevation="low" style={{ padding: "4px 0", borderRadius: borderRadius.lg }}>
+              <EmptyState
+                illustration="transactions"
+                title="Nothing stands out yet"
+                subtitle="Check back once you&rsquo;ve logged a few more days."
+                actionLabel="Log an expense"
+                onAction={() => onLogExpense()}
+                actionAriaLabel="Log an expense"
+                actionColor="success"
+                analyticsContext="home-insights-empty"
+              />
+            </GlassCard>
+          ) : (
+            <div style={{ display: "grid", gap: spacing.sm }}>
+              {dashboardInsights.map((insight, index) => (
+                <motion.div
+                  key={insight.id}
+                  initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { ...springs.gentle, delay: index * STAGGER_STEP }}
+                >
+                  <InsightCard insight={insight} onPress={onViewInsightHistory ? () => onViewInsightHistory(insight) : undefined} />
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </motion.section>
+
+        {/* ── 3. Category snapshot — a glanceable route to category detail ── */}
         <motion.section variants={homeSection} aria-label="Category snapshot">
           <div className="flex items-center justify-between" style={{ marginBottom: spacing.sm }}>
             <h2 style={{ ...typographyRoles.sectionHeadline, color: "var(--text-primary)", margin: 0 }}>
@@ -1172,13 +1213,6 @@ export const HomeScreen = memo(function HomeScreen({
               })}
             </div>
           )}
-        </motion.section>
-
-        {/* ── 3. Single home insight (temporary signal until the insights phase) ── */}
-        <motion.section variants={homeSection} aria-label="Monthly insight">
-          <p style={{ ...typographyRoles.body, color: "var(--text-secondary)", margin: 0 }}>
-            {dashboardInsight}
-          </p>
         </motion.section>
 
         {/* ── 4. Quick actions — retained as a secondary action group ── */}

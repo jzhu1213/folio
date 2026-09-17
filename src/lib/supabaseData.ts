@@ -726,6 +726,22 @@ export async function getBudgets(userId: string): Promise<Budget[]> {
   return result.data
 }
 
+/** Fetches only the completed preceding month for category carry-forward. */
+export async function getPreviousMonthBudgets(userId: string): Promise<Budget[]> {
+  const now = new Date()
+  const previousMonth = formatDateLocal(new Date(now.getFullYear(), now.getMonth() - 1, 1)).slice(0, 7)
+  const result = await withResilience(async () => {
+    const { data, error } = await supabase
+      .from('budgets')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('month', previousMonth)
+    if (error) throw error
+    return validateArray((data || []).map(dbBudgetToApp), BudgetSchema, 'previousMonthBudgets').valid as Budget[]
+  }, 'getPreviousMonthBudgets')
+  return result.ok ? result.data : []
+}
+
 /**
  * On the first load of a new month, copies budget limits from the most recent
  * previous month into the current month so users don't have to re-enter them.
@@ -2832,6 +2848,8 @@ export interface HomeDataBatchResult {
   paginatedTransactions: { transactions: Transaction[]; hasMore: boolean }
   /** Current-month budgets */
   budgets: Budget[]
+  /** Completed preceding-month budgets used for category rollover. */
+  previousMonthBudgets?: Budget[]
   /** User's goals (with participants pre-loaded) */
   goals: Goal[]
   /** Lesson progress records */
@@ -2912,9 +2930,10 @@ export async function fetchHomeDataBatch(
   // All secondary data fetches in parallel — with per-source failure tracking (Task 475.2)
   const failedSources: string[] = []
 
-  const [txResult, budgetData, goalData, lessonData, allocationData, savingsData, debtData, payScheduleData, sinkingFundsData, fundingSourcesData] = await Promise.all([
+  const [txResult, budgetData, previousMonthBudgetData, goalData, lessonData, allocationData, savingsData, debtData, payScheduleData, sinkingFundsData, fundingSourcesData] = await Promise.all([
     txPromise,
     getBudgets(userId).catch(() => { failedSources.push('budgets'); return [] as Budget[] }),
+    getPreviousMonthBudgets(userId).catch(() => { failedSources.push('previousMonthBudgets'); return [] as Budget[] }),
     getGoals(userId).catch(() => { failedSources.push('goals'); return [] as Goal[] }),
     getLessonProgress(userId).catch(() => { failedSources.push('lessonProgress'); return [] as UserLessonProgress[] }),
     getMonthAllocations(userId, currentMonthStr).catch(() => { failedSources.push('allocations'); return [] as AppAllocation[] }),
@@ -2968,6 +2987,7 @@ export async function fetchHomeDataBatch(
     currentMonthTransactions,
     paginatedTransactions,
     budgets: budgetData,
+    previousMonthBudgets: previousMonthBudgetData,
     goals: goalData,
     lessonProgress: lessonData,
     allocations: allocationData,

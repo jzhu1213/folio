@@ -77,10 +77,6 @@ import { FONT_FAMILY } from '@/styles/typography'
 
 import { DepthSurfaceSkeleton } from '@/components/ui/DepthSurfaceSkeleton'
 
-const BudgetSettings = dynamic(
-  () => import('@/components/simplified/BudgetSettings').then(m => ({ default: m.BudgetSettings })),
-  { ssr: false, loading: () => <DepthSurfaceSkeleton /> }
-)
 const GoalsScreen = dynamic(
   () => import('@/components/simplified/GoalsScreen').then(m => ({ default: m.GoalsScreen })),
   { ssr: false, loading: () => <DepthSurfaceSkeleton /> }
@@ -447,6 +443,7 @@ export default function FolioApp() {
   const {
     transactions,
     budgets,
+    previousMonthBudgets,
     goals,
     lessonProgress,
     allowance,
@@ -2297,7 +2294,8 @@ export default function FolioApp() {
     handleNavChange('history')
   }, [handleNavChange])
   const handleCelebrationDismiss = useCallback(() => setCelebrationEvent(null), [])
-  const handleOpenBudgetSettingsFromHome = useCallback(() => overlay.openOverlay('budgetSettings'), [overlay])
+  // Category limits now live with the rest of category configuration.
+  const handleOpenBudgetSettingsFromHome = useCallback(() => overlay.openOverlay('categoryHub'), [overlay])
   const handleOpenReimbursementsFromHome = useCallback(() => overlay.openOverlay('reimbursements'), [overlay])
 
   // ── Profile Handlers ───────────────────────────────────────────
@@ -2459,20 +2457,6 @@ export default function FolioApp() {
           />
         )}
       />
-    )
-  }
-
-  // ── Budget Settings (full-screen overlay) ─────────────────────
-  if (overlay.activeOverlay === 'budgetSettings') {
-    return (
-      <FocusTrapContainer aria-label="Budget Settings" className="min-h-screen" style={{ background: 'var(--bg)', paddingTop: 60 }}>
-        <BudgetSettings
-          budgets={budgets}
-          onUpdateBudget={handleUpdateBudget}
-          onBack={() => overlay.closeOverlay()}
-          paySchedule={paySchedule}
-        />
-      </FocusTrapContainer>
     )
   }
 
@@ -2887,8 +2871,12 @@ export default function FolioApp() {
         <div className="min-h-screen" style={{ paddingTop: 60 }}>
           <CategoryManagementScreen
             customCategories={customCategories}
+            budgets={budgets}
+            previousMonthBudgets={previousMonthBudgets}
+            transactions={transactions}
             onAddCustomCategory={addCustomCategory}
             onUpdateCustomCategory={renameCustomCategory}
+            onUpdateBudget={handleUpdateBudget}
             onClose={handleCloseDepthSurface}
           />
         </div>
@@ -3137,6 +3125,7 @@ export default function FolioApp() {
                 allowance={allowance}
                 transactions={transactions}
                 budgets={budgets}
+                previousMonthBudgets={previousMonthBudgets}
                 goals={goals}
                 isLoading={dataLoading}
                 isStale={isStale}
@@ -3263,7 +3252,7 @@ export default function FolioApp() {
                 countCreditImmediately={user?.countCreditImmediately}
                 onSetIncomeSmoothing={setIncomeSmoothing}
                 onUpdateCountCreditImmediately={handleUpdateCountCreditImmediately}
-                onOpenBudgetSettings={() => overlay.openOverlay('budgetSettings')}
+                onOpenBudgetSettings={() => overlay.openOverlay('categoryHub')}
                 onOpenGoals={() => overlay.openOverlay('goals')}
                 onOpenTools={() => handleNavChange('tools')}
                 onOpenProfile={handleOpenProfile}

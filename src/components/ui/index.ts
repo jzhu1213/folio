@@ -110,6 +110,9 @@ export type { BottomSheetProps } from './BottomSheet'
 
 export { Toast } from './Toast'
 
+export { CategoryProgress } from './CategoryProgress'
+export type { CategoryProgressProps } from './CategoryProgress'
+
 export { GradientMesh } from './GradientMesh'
 export type { GradientMeshVariant, GradientMeshProps } from './GradientMesh'
 

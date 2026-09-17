@@ -4,6 +4,7 @@ import type { Transaction, TransactionCategory } from '@/types'
 import type { CategoryBudgetRow } from '@/lib/budgetUtils'
 import { weekStart } from '@/lib/budgetUtils'
 import { CategoryIcon } from '@/components/ui/CategoryIcon'
+import { CategoryProgress } from '@/components/ui/CategoryProgress'
 import { Icon } from '@/components/ui/Icon'
 import { FONT_FAMILY, typography } from '@/styles/typography'
 
@@ -28,15 +29,16 @@ export function CategoryDetailSheet({
   const recentTxs  = transactions
     .filter(t => t.category === row.category && t.type === 'expense' && t.date >= ws)
     .slice(0, 3)
+  const isOverMonthly = row.hasLimit && row.monthlySpent > row.availableMonthlyLimit
 
   const leftLabel = (() => {
     if (!row.hasLimit) return row.weeklySpent > 0 ? `$${row.weeklySpent.toFixed(0)} spent this week` : 'No limit set'
-    if (row.overWeekly) return `$${Math.abs(row.weeklyLeft).toFixed(0)} over this week`
+    if (isOverMonthly) return 'A bit over this month'
     return `$${Math.max(0, row.weeklyLeft).toFixed(0)} left this week`
   })()
 
   const statusColor = !row.hasLimit ? 'var(--sub)'
-    : row.overWeekly ? 'var(--red)'
+    : isOverMonthly ? 'var(--warning)'
     : row.nearLimit ? 'var(--amber)'
     : 'var(--green)'
 
@@ -72,26 +74,15 @@ export function CategoryDetailSheet({
         <div className="px-6 py-6 space-y-6 flex-1 overflow-y-auto">
           {row.hasLimit && (
             <div>
-              <div className="flex justify-between mb-2">
-                <span className="label">Weekly progress</span>
-                <span style={{ fontFamily: FONT_FAMILY, fontSize: typography['body-sm'].fontSize, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>
-                  ${row.weeklySpent.toFixed(0)} / ${row.weeklyLimit.toFixed(0)}
-                </span>
+              <span className="label">This month</span>
+              <div style={{ marginTop: 8 }}>
+                <CategoryProgress spent={row.monthlySpent} limit={row.availableMonthlyLimit} />
+                <div style={{ marginTop: 16, display: 'grid', gap: 6, fontFamily: FONT_FAMILY, fontSize: typography['body-sm'].fontSize, fontVariantNumeric: 'tabular-nums' }}>
+                  <p style={{ margin: 0, color: 'var(--sub)' }}>Base monthly limit <span style={{ color: 'var(--text)', float: 'right' }}>${row.monthlyLimit.toFixed(0)}</span></p>
+                  {row.rolloverAmount > 0 && <><p style={{ margin: 0, color: 'var(--sub)' }}>Carried over <span style={{ color: 'var(--text)', float: 'right' }}>+${row.rolloverAmount.toFixed(0)}</span></p><p style={{ margin: 0, color: 'var(--warning)', fontVariantNumeric: 'normal' }}>Includes ${row.rolloverAmount.toFixed(0)} carried over from last month.</p></>}
+                  <p style={{ margin: 0, paddingTop: 6, borderTop: '1px solid var(--border)', color: 'var(--sub)' }}>Available this month <span style={{ color: 'var(--text)', float: 'right' }}>${row.availableMonthlyLimit.toFixed(0)}</span></p>
+                </div>
               </div>
-              <div className="progress-track">
-                <div
-                  className="progress-fill"
-                  style={{
-                    ["--progress-fill-fraction" as string]: row.weekPct / 100,
-                    background: row.overWeekly ? 'var(--red)' : row.nearLimit ? 'var(--amber)' : 'var(--green)',
-                  } as React.CSSProperties}
-                />
-              </div>
-              {row.monthlyLimit > 0 && (
-                <p style={{ fontFamily: FONT_FAMILY, fontSize: typography.caption.fontSize, color: 'var(--muted)', marginTop: '8px', textAlign: "end", fontVariantNumeric: 'tabular-nums' }}>
-                  ${row.monthlySpent.toFixed(0)} / ${row.monthlyLimit.toFixed(0)} this month
-                </p>
-              )}
             </div>
           )}
 

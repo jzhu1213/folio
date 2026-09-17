@@ -18,7 +18,7 @@ export interface UseCustomCategoriesReturn {
   isLoading: boolean
   addCustomCategory: (label: string, emoji: string, icon?: string, options?: { illustration?: string; color?: string }) => Promise<CustomCategory | null>
   removeCustomCategory: (id: string) => Promise<boolean>
-  renameCustomCategory: (id: string, updates: { label?: string; emoji?: string; icon?: string; illustration?: string; color?: string; archived?: boolean }) => Promise<CustomCategory | null>
+  renameCustomCategory: (id: string, updates: { label?: string; emoji?: string; icon?: string; illustration?: string; color?: string; archived?: boolean; sortOrder?: number }) => Promise<CustomCategory | null>
 }
 
 export function useCustomCategories(userId: string | null | undefined): UseCustomCategoriesReturn {
@@ -67,7 +67,7 @@ export function useCustomCategories(userId: string | null | undefined): UseCusto
     return success
   }, [])
 
-  const renameCustomCategory = useCallback(async (id: string, updates: { label?: string; emoji?: string; icon?: string; illustration?: string; color?: string; archived?: boolean }): Promise<CustomCategory | null> => {
+  const renameCustomCategory = useCallback(async (id: string, updates: { label?: string; emoji?: string; icon?: string; illustration?: string; color?: string; archived?: boolean; sortOrder?: number }): Promise<CustomCategory | null> => {
     const result = await updateCustomCategory(id, updates)
     if (result) {
       setCustomCategories((prev) => prev.map((c) => c.id === id ? result : c))

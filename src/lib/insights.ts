@@ -213,7 +213,7 @@ export function getPaceVsBudget(
     category: budget.category,
     direction: 'up',
     magnitude: roundMoney(amountAbovePlan),
-    sentence: `At this pace, ${label} could reach ${formatDollar(projectedSpend)} by month-end — ${formatDollar(amountAbovePlan)} above your plan.`,
+    sentence: `At this pace, ${label} could reach ${formatDollar(projectedSpend)} by month-end — a bit past your plan.`,
     budgetAmount: roundMoney(budgetAmount),
     cumulativeSpend,
     spentSoFar: roundMoney(spentSoFar),

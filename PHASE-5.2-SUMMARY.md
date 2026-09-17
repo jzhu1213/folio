@@ -1,0 +1,8 @@
+# Phase 5.2 — Category Management
+
+- **Entry point:** Settings → Budget → Manage → Categories. The home spending snapshot’s “See all” action and the Budget summary edit action now route here too, making this the permanent home for monthly caps instead of the former Budget Settings overlay.
+- **Management screen:** Core categories list their token-palette swatch, current monthly cap, month-to-date spend, and the compact `CategoryProgress` bar from Phase 5.1. Custom categories add the existing curated illustration picker, palette-only swatches, rename/edit, create, archive/restore, and an optional cap at creation or edit time.
+- **Reordering:** Custom categories use explicit up/down controls and persist their rank in `custom_categories.sort_order` (migration `0008_custom_category_sort_order.sql`). This matches the app’s existing touch-friendly controls without introducing a new drag dependency.
+- **Archiving:** Archive remains a reversible soft delete. It only updates the custom category’s `archived` metadata, never a transaction row; archived categories are removed from active pickers but remain in historical data. The existing `mergeCategories` test case verifies an archived category is excluded from quick-add while its original record/label remains intact. The UI requires confirmation when archiving the last active custom category or while this month has `Other` spending.
+- **Limits:** The reachable Phase 5.1 temporary Budget Settings control was removed. The Category Hub is now the sole reachable UI for setting or changing monthly category caps.
+- **Verification:** `npm run typecheck`, `npm run test:run -- src/lib/customCategories.test.ts` (2 passing), and `npm run build` pass.

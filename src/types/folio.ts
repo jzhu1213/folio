@@ -599,6 +599,8 @@ export interface CustomCategory {
   color?: string
   /** Soft-delete state: excluded from active pickers while retaining its record. */
   archived?: boolean
+  /** Stable user-selected ordering for the category-management list. */
+  sortOrder?: number
 }
 
 // ============================================================================

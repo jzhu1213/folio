@@ -26,6 +26,7 @@ import { recordEngagement } from "@/lib/engagementTracker"
 import { checkAllCelebrations, getUnderBudgetStreak } from "@/lib/celebrationEngine"
 import { CELEBRATION_COPY, CELEBRATION_EMOJI } from "@/lib/vocabulary"
 import { CategoryIcon } from "@/components/ui/CategoryIcon"
+import { CategoryProgress } from "@/components/ui/CategoryProgress"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { recordLastActive } from "@/lib/reminderPreferences"
 import { getInsightsEnabled, getSavingsRateBadgeEnabled } from "@/lib/uiPreferences"
@@ -187,6 +188,8 @@ export interface HomeScreenProps {
   transactions: Transaction[]
   /** User budget limits by category */
   budgets: Budget[]
+  /** Final budget records from the preceding month, used for category carry-forward. */
+  previousMonthBudgets?: Budget[]
   /** User savings goals */
   goals: Goal[]
   /** Whether data is still loading */
@@ -329,6 +332,7 @@ export const HomeScreen = memo(function HomeScreen({
   allowance,
   transactions,
   budgets,
+  previousMonthBudgets = [],
   goals,
   isLoading,
   isStale,
@@ -545,7 +549,7 @@ export const HomeScreen = memo(function HomeScreen({
 
   // ── Category budget rows (sorted) ────────────────────────────────────────
   const categoryRows = useMemo(() => {
-    const rows = computeCategoryBudgets(budgets, transactions, currentMonth, true)
+    const rows = computeCategoryBudgets(budgets, transactions, currentMonth, true, previousMonthBudgets)
     return rows.sort((a, b) => {
       // Over-budget first (only applies to categories with limits set)
       if (a.overWeekly && !b.overWeekly) return -1
@@ -558,7 +562,7 @@ export const HomeScreen = memo(function HomeScreen({
       // Then by most spent
       return b.weeklySpent - a.weeklySpent
     })
-  }, [budgets, transactions, currentMonth])
+  }, [budgets, transactions, currentMonth, previousMonthBudgets])
 
   const categorySnapshotRows = useMemo(() => categoryRows.slice(0, 4), [categoryRows])
 
@@ -1165,14 +1169,15 @@ export const HomeScreen = memo(function HomeScreen({
               }}
             >
               {categorySnapshotRows.map((row, index) => {
-                const statusColor = row.overWeekly
-                  ? "var(--danger)"
+                const isOverMonthly = row.hasLimit && row.monthlySpent > row.availableMonthlyLimit
+                const statusColor = isOverMonthly
+                  ? "var(--warning)"
                   : row.nearLimit
                     ? "var(--warning)"
                     : "var(--text-secondary)"
                 const detail = row.hasLimit
-                  ? row.overWeekly
-                    ? `${formatMoney(Math.abs(row.weeklyLeft))} over`
+                  ? isOverMonthly
+                    ? "A bit over this month"
                     : `${formatMoney(Math.max(0, row.weeklyLeft))} left`
                   : `${formatMoney(row.weeklySpent)} spent`
                 const rovingProps = categoryGridRoving.getItemProps(index)
@@ -1208,6 +1213,11 @@ export const HomeScreen = memo(function HomeScreen({
                     <span style={{ ...typographyRoles.caption, color: statusColor, fontVariantNumeric: "tabular-nums" }}>
                       {detail}
                     </span>
+                    <CategoryProgress
+                      spent={row.monthlySpent}
+                      limit={row.availableMonthlyLimit}
+                      compact
+                    />
                   </button>
                 )
               })}

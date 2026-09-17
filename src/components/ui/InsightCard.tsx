@@ -48,7 +48,9 @@ export function InsightCard({
   style,
 }: InsightCardProps) {
   const { prefersReducedMotion } = useReducedMotion()
-  const accent = getCategoryAccent(insight.category)
+  // Pace insights describe a category that may pass its cap, so they share the
+  // same calm warning token as CategoryProgress rather than a category accent.
+  const accent = insight.type === 'pace' ? 'var(--warning)' : getCategoryAccent(insight.category)
   const directionLabel = getDirectionLabel(insight.direction)
   const card = (
     <GlassCard

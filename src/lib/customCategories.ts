@@ -10,6 +10,7 @@ export interface CustomCategoryUpdates {
   illustration?: string
   color?: string
   archived?: boolean
+  sortOrder?: number
 }
 
 /**
@@ -93,6 +94,7 @@ export async function fetchCustomCategories(userId: string): Promise<CustomCateg
     .from('custom_categories')
     .select('*')
     .eq('user_id', userId)
+    .order('sort_order', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: true })
 
   if (error) {
@@ -112,6 +114,7 @@ export async function fetchCustomCategories(userId: string): Promise<CustomCateg
     illustration: row.illustration ?? undefined,
     color: row.color ?? undefined,
     archived: row.archived ?? false,
+    sortOrder: row.sort_order ?? undefined,
   }))
 }
 
@@ -163,6 +166,7 @@ export async function createCustomCategory(
     illustration: data.illustration ?? options.illustration,
     color: data.color ?? options.color,
     archived: data.archived ?? false,
+    sortOrder: data.sort_order ?? undefined,
   }
 }
 
@@ -191,14 +195,15 @@ export async function updateCustomCategory(
   updates: CustomCategoryUpdates
 ): Promise<CustomCategory | null> {
   // Fields that always exist on the table.
-  const basePayload: Record<string, string> = {}
+  const basePayload: Record<string, string | number> = {}
   if (updates.label !== undefined) basePayload.label = updates.label
   if (updates.emoji !== undefined) basePayload.emoji = updates.emoji
   if (updates.illustration !== undefined) basePayload.illustration = updates.illustration
   if (updates.color !== undefined) basePayload.color = updates.color
   if (updates.archived !== undefined) basePayload.archived = String(updates.archived)
+  if (updates.sortOrder !== undefined) basePayload.sort_order = updates.sortOrder
 
-  const withIcon: Record<string, string> = { ...basePayload }
+  const withIcon: Record<string, string | number> = { ...basePayload }
   if (updates.icon !== undefined) withIcon.icon = updates.icon
 
   if (Object.keys(withIcon).length === 0) return null
@@ -237,5 +242,6 @@ export async function updateCustomCategory(
     illustration: data.illustration ?? updates.illustration,
     color: data.color ?? updates.color,
     archived: data.archived ?? updates.archived ?? false,
+    sortOrder: data.sort_order ?? updates.sortOrder ?? undefined,
   }
 }

@@ -75,8 +75,10 @@ export function computeCategoryRollover(opts: CategoryRolloverInput): CategoryRo
  * Reads from localStorage. Defaults to false (simple behavior).
  */
 export function isCategoryRolloverEnabled(): boolean {
-  if (typeof window === 'undefined') return false
-  return localStorage.getItem(CATEGORY_ROLLOVER_STORAGE_KEY) === 'true'
+  // Rollover is now a visible category-budget behavior. Preserve an explicit
+  // prior opt-out, but make the useful default available on every new device.
+  if (typeof window === 'undefined') return true
+  return localStorage.getItem(CATEGORY_ROLLOVER_STORAGE_KEY) !== 'false'
 }
 
 /**
@@ -129,6 +131,10 @@ export interface CategoryBudgetRow {
   emoji: string
   label: string
   monthlyLimit: number
+  /** Unspent amount carried from the preceding calendar month. */
+  rolloverAmount: number
+  /** This month's base cap plus its carried amount. */
+  availableMonthlyLimit: number
   monthlySpent: number
   weeklyLimit: number
   weeklySpent: number
@@ -193,12 +199,21 @@ export function computeCategoryBudgets(
   transactions: Transaction[],
   selectedMonth: string,
   isCurrentMonth: boolean,
+  previousMonthBudgets: Budget[] = [],
 ): CategoryBudgetRow[] {
   const ws = weekStart()
 
   return BUDGET_CATEGORIES.map(cat => {
     const budget       = budgets.find(b => b.category === cat.category)
     const monthlyLimit = budget?.monthlyLimit ?? 0
+    const previousBudget = previousMonthBudgets.find(b => b.category === cat.category)
+    // Carry is based on the previous month's final budget and spent value, so a
+    // mid-month edit only changes this month's base cap—not money already
+    // carried into the month. The established 50% cap stays intact.
+    const rolloverAmount = previousBudget && isCategoryRolloverEnabled()
+      ? Math.min(Math.max(0, previousBudget.monthlyLimit - previousBudget.spent), previousBudget.monthlyLimit * 0.5)
+      : 0
+    const availableMonthlyLimit = monthlyLimit + rolloverAmount
     const isWeeklyPeriod = budget?.period === 'weekly'
 
     // Effective weekly and monthly equivalents, accounting for period
@@ -218,11 +233,13 @@ export function computeCategoryBudgets(
     // untracked categories are over budget.
     const weeklyLimit  = effectiveWeeklyLimit
 
-    const monthlySpent = isCurrentMonth
-      ? (budget?.spent ?? 0)
-      : transactions
-          .filter(t => t.category === cat.category && t.type === 'expense' && t.date.startsWith(selectedMonth))
-          .reduce((s, t) => s + t.amount, 0)
+    // Transactions are the source of truth for displayed spending. In
+    // particular, this preserves the optimistic transaction update used by
+    // Monthly Runway, so category progress changes in the same render rather
+    // than waiting for the asynchronous `budgets.spent` reconciliation.
+    const monthlySpent = transactions
+      .filter(t => t.category === cat.category && t.type === 'expense' && t.date.startsWith(selectedMonth))
+      .reduce((s, t) => s + t.amount, 0)
 
     const weeklySpent = isCurrentMonth
       ? transactions
@@ -232,7 +249,7 @@ export function computeCategoryBudgets(
 
     const weeklyLeft = weeklyLimit > 0 ? weeklyLimit - weeklySpent : 0
     const weekPct    = weeklyLimit > 0 ? Math.min((weeklySpent / weeklyLimit) * 100, 100) : 0
-    const monthPct   = monthlyLimit > 0 ? Math.min((monthlySpent / monthlyLimit) * 100, 100) : 0
+    const monthPct   = availableMonthlyLimit > 0 ? Math.min((monthlySpent / availableMonthlyLimit) * 100, 100) : 0
     const overWeekly = isCurrentMonth && weeklyLimit > 0 && weeklySpent > weeklyLimit
     const nearLimit  = isCurrentMonth && !overWeekly && weeklyLimit > 0 && weekPct >= 80
 
@@ -241,6 +258,8 @@ export function computeCategoryBudgets(
       emoji: cat.emoji,
       label: cat.label,
       monthlyLimit,
+      rolloverAmount,
+      availableMonthlyLimit,
       monthlySpent,
       weeklyLimit,
       weeklySpent,

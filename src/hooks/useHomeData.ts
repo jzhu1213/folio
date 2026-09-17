@@ -279,6 +279,8 @@ export interface UseHomeDataReturn {
   transactions: Transaction[]
   /** User budget limits by category */
   budgets: Budget[]
+  /** Completed preceding-month budgets used to derive category carry-forward. */
+  previousMonthBudgets: Budget[]
   /** User savings goals */
   goals: Goal[]
   /** User lesson progress records */
@@ -660,6 +662,7 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
   const transactionsRef = useRef<Transaction[]>(transactions)
   transactionsRef.current = transactions
   const [budgets, setBudgets] = useState<Budget[]>([])
+  const [previousMonthBudgets, setPreviousMonthBudgets] = useState<Budget[]>([])
   const [goals, setGoals] = useState<Goal[]>([])
   const [lessonProgress, setLessonProgress] = useState<UserLessonProgress[]>([])
   const [allocations, setAllocations] = useState<AppAllocation[]>([])
@@ -799,6 +802,7 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
         paginationPage.current = 1 // next page to fetch is page 1
       }
       if (!batch.failedSources.includes('budgets')) setBudgets(batch.budgets)
+      if (!batch.failedSources.includes('previousMonthBudgets')) setPreviousMonthBudgets(batch.previousMonthBudgets ?? [])
       if (!batch.failedSources.includes('goals')) setGoals(batch.goals)
       if (!batch.failedSources.includes('lessonProgress')) setLessonProgress(batch.lessonProgress)
       if (!batch.failedSources.includes('allocations')) setAllocations(batch.allocations)
@@ -2168,7 +2172,7 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
    */
   const categoryRows = useMemo<CategoryBudgetRow[]>(() => {
     const currentMonth = formatDateLocal(new Date()).slice(0, 7) // YYYY-MM
-    const rows = computeCategoryBudgets(budgets, transactions, currentMonth, true)
+    const rows = computeCategoryBudgets(budgets, transactions, currentMonth, true, previousMonthBudgets)
     
     // Sort by priority: over-budget first, then by least remaining
     return rows.sort((a, b) => {
@@ -2186,7 +2190,7 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
       // Finally by most spent
       return b.weeklySpent - a.weeklySpent
     })
-  }, [budgets, transactions])
+  }, [budgets, transactions, previousMonthBudgets])
   
   /**
    * Reconciled "money set aside" breakdown — the single source of truth that
@@ -2428,6 +2432,7 @@ export function useHomeData(userId: string | null | undefined, userProfile?: Use
     // Core data
     transactions,
     budgets,
+    previousMonthBudgets,
     goals,
     lessonProgress,
     savingsAccounts,

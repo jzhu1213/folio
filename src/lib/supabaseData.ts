@@ -27,6 +27,7 @@ import type { ActiveSession } from './sessionManagement'
 import type { BudgetPeriodPreference } from './budgetPeriod'
 import { getTotalDaysInPeriod } from './budgetPeriod'
 import type { TermSchedule } from './termSchedule'
+import type { RecurringCharge, RecurringChargeFrequency, RecurringObligationType } from './fixedExpenses'
 import { formatDateLocal } from './dateUtils'
 
 import type { OnboardingPath, UserPriority } from '@/types'
@@ -49,6 +50,20 @@ interface DbTransaction {
   created_at: string
   funding_source_id?: string
   updated_at?: string
+}
+
+interface DbRecurringCharge {
+  id: string
+  user_id: string
+  name: string
+  category: string
+  amount: number
+  frequency: RecurringChargeFrequency
+  next_due_date: string
+  obligation_type: RecurringObligationType
+  is_subscription: boolean
+  is_flagged_unused?: boolean
+  is_active: boolean
 }
 
 /**
@@ -199,6 +214,25 @@ function dbTransactionToApp(db: DbTransaction): Transaction {
     createdAt: db.created_at,
     fundingSourceId: db.funding_source_id,
     ...(db.updated_at ? { updatedAt: db.updated_at } : {}),
+  }
+}
+
+function dbRecurringChargeToApp(db: DbRecurringCharge): RecurringCharge {
+  const dueDay = new Date(`${db.next_due_date}T00:00:00Z`).getUTCDate()
+  return {
+    id: db.id,
+    userId: db.user_id,
+    label: db.name,
+    category: db.category as TransactionCategory,
+    amount: Number(db.amount),
+    dueDay,
+    recurringId: db.id,
+    isActive: db.is_active,
+    frequency: db.frequency,
+    nextDueDate: db.next_due_date,
+    obligationType: db.obligation_type,
+    isSubscription: db.is_subscription,
+    isFlaggedUnused: db.is_flagged_unused ?? false,
   }
 }
 
@@ -701,6 +735,90 @@ export async function deleteTransaction(userId: string, txId: string): Promise<b
 
   if (!result.ok) return false
   return result.data
+}
+
+// ============================================
+// RECURRING CHARGES (Phase 6.1)
+// ============================================
+
+export async function getRecurringCharges(userId: string): Promise<RecurringCharge[]> {
+  const { data, error } = await supabase
+    .from('recurring_charges')
+    .select('*')
+    .eq('user_id', userId)
+    .order('next_due_date', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching recurring charges:', error)
+    return []
+  }
+  return (data ?? []).map(row => dbRecurringChargeToApp(row as DbRecurringCharge))
+}
+
+export type RecurringChargeInput = Omit<RecurringCharge, 'id' | 'userId' | 'recurringId' | 'dueDay'>
+
+export async function createRecurringCharge(
+  userId: string,
+  charge: RecurringChargeInput
+): Promise<RecurringCharge | null> {
+  const { data, error } = await supabase
+    .from('recurring_charges')
+    .insert({
+      user_id: userId,
+      name: charge.label,
+      category: charge.category,
+      amount: charge.amount,
+      frequency: charge.frequency,
+      next_due_date: charge.nextDueDate,
+      obligation_type: charge.obligationType,
+      is_subscription: charge.isSubscription,
+      is_flagged_unused: charge.isFlaggedUnused,
+      is_active: charge.isActive,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating recurring charge:', error)
+    return null
+  }
+  return dbRecurringChargeToApp(data as DbRecurringCharge)
+}
+
+export async function updateRecurringCharge(
+  userId: string,
+  id: string,
+  updates: Partial<RecurringChargeInput>
+): Promise<RecurringCharge | null> {
+  const fields: Record<string, unknown> = {}
+  if (updates.label !== undefined) fields.name = updates.label
+  if (updates.category !== undefined) fields.category = updates.category
+  if (updates.amount !== undefined) fields.amount = updates.amount
+  if (updates.frequency !== undefined) fields.frequency = updates.frequency
+  if (updates.nextDueDate !== undefined) fields.next_due_date = updates.nextDueDate
+  if (updates.obligationType !== undefined) fields.obligation_type = updates.obligationType
+  if (updates.isSubscription !== undefined) fields.is_subscription = updates.isSubscription
+  if (updates.isFlaggedUnused !== undefined) fields.is_flagged_unused = updates.isFlaggedUnused
+  if (updates.isActive !== undefined) fields.is_active = updates.isActive
+
+  const { data, error } = await supabase
+    .from('recurring_charges')
+    .update(fields)
+    .eq('id', id)
+    .eq('user_id', userId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating recurring charge:', error)
+    return null
+  }
+  return dbRecurringChargeToApp(data as DbRecurringCharge)
+}
+
+/** Deactivation preserves the charge and its transaction history. */
+export async function deactivateRecurringCharge(userId: string, id: string): Promise<boolean> {
+  return (await updateRecurringCharge(userId, id, { isActive: false })) !== null
 }
 
 // ============================================

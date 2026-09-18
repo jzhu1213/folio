@@ -79,6 +79,34 @@ create table if not exists public.transactions (
 );
 create index if not exists idx_transactions_user_date on public.transactions(user_id, date desc);
 
+-- recurring_charges ---------------------------------------------------------
+-- A recurring charge describes the obligation; transactions are its individual
+-- occurrences and link back through transactions.recurring_id.
+create table if not exists public.recurring_charges (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid not null references auth.users(id) on delete cascade,
+  name            text not null,
+  category        text not null,
+  amount          numeric(12,2) not null check (amount > 0),
+  frequency       text not null default 'monthly'
+                  check (frequency in ('weekly', 'biweekly', 'monthly', 'quarterly', 'yearly')),
+  next_due_date   date not null,
+  obligation_type text not null default 'fixed'
+                  check (obligation_type in ('fixed', 'variable')),
+  is_subscription boolean not null default false,
+  is_flagged_unused boolean not null default false,
+  is_active       boolean not null default true,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+create index if not exists idx_recurring_charges_user_active
+  on public.recurring_charges(user_id, is_active, next_due_date);
+
+alter table public.recurring_charges enable row level security;
+drop policy if exists "Users manage own recurring charges" on public.recurring_charges;
+create policy "Users manage own recurring charges" on public.recurring_charges
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
 -- budgets -------------------------------------------------------------------
 create table if not exists public.budgets (
   id                    uuid primary key default gen_random_uuid(),

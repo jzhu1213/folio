@@ -14,6 +14,35 @@ export interface FixedExpense {
   dueDay: number // 1–31
   recurringId: string
   isActive: boolean
+  /** Cadence of the obligation. Older locally stored bills default to monthly. */
+  frequency?: RecurringChargeFrequency
+  /** Next occurrence, stored as an ISO calendar date (YYYY-MM-DD). */
+  nextDueDate?: string
+  /**
+   * `fixed` is a predictable obligation such as rent or a phone plan;
+   * `variable` is recurring but irregular, such as a utility bill.
+   */
+  obligationType?: RecurringObligationType
+  /** Reserved for the subscription experience in Phase 6.2. */
+  isSubscription?: boolean
+  /** User-marked signal for a subscription that may no longer be used. */
+  isFlaggedUnused?: boolean
+}
+
+export type RecurringChargeFrequency = 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly'
+export type RecurringObligationType = 'fixed' | 'variable'
+
+/**
+ * The persisted recurring-charge record. `FixedExpense` remains as a
+ * compatibility shape for runway math and older localStorage data, while new
+ * reads and writes use this complete record.
+ */
+export interface RecurringCharge extends FixedExpense {
+  frequency: RecurringChargeFrequency
+  nextDueDate: string
+  obligationType: RecurringObligationType
+  isSubscription: boolean
+  isFlaggedUnused: boolean
 }
 
 /**

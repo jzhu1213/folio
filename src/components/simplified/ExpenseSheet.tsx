@@ -45,7 +45,7 @@ import { getTravelCurrency, isTravelModeActive } from '@/lib/travelMode'
 import { formatDateLocal } from '@/lib/dateUtils'
 import { CurrencySelector } from './CurrencySelector'
 import { DatePickerChips } from '@/components/ui/DatePickerChips'
-import type { FixedExpense } from '@/lib/fixedExpenses'
+import type { FixedExpense, RecurringChargeFrequency } from '@/lib/fixedExpenses'
 
 /** A split participant — either a linked friend (with userId) or a name-only entry */
 interface SplitParticipant {
@@ -166,6 +166,17 @@ function isFutureDate(dateStr: string): boolean {
   return dateStr > todayStr
 }
 
+/** A lightweight quick-add default: the next occurrence after the logged one. */
+function nextOccurrenceDate(dateStr: string, frequency: RecurringChargeFrequency): string {
+  const date = new Date(`${dateStr}T00:00:00`)
+  if (frequency === 'weekly') date.setDate(date.getDate() + 7)
+  else if (frequency === 'biweekly') date.setDate(date.getDate() + 14)
+  else if (frequency === 'quarterly') date.setMonth(date.getMonth() + 3)
+  else if (frequency === 'yearly') date.setFullYear(date.getFullYear() + 1)
+  else date.setMonth(date.getMonth() + 1)
+  return formatDateLocal(date)
+}
+
 /** Maps the existing expense data model to the Phase 2.2 illustration registry. */
 const CATEGORY_ILLUSTRATIONS: Record<TransactionCategory, IllustrationName> = {
   food: 'category:eating-out',
@@ -276,6 +287,7 @@ export function ExpenseSheet({
   // ── Date selection state (task 87.1) ────────────────────────────────────
   const [selectedDate, setSelectedDate] = useState(() => formatDateLocal(new Date()))
   const [isRecurring, setIsRecurring] = useState(false)
+  const [recurringFrequency, setRecurringFrequency] = useState<RecurringChargeFrequency>('monthly')
   const backfillMinDate = useMemo(() => {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
@@ -412,6 +424,7 @@ export function ExpenseSheet({
       // Reset date to today (task 87.1)
       setSelectedDate(formatDateLocal(new Date()))
       setIsRecurring(false)
+      setRecurringFrequency('monthly')
       setShowDatePicker(false)
       setShowDateInput(false)
       
@@ -684,13 +697,19 @@ export function ExpenseSheet({
         : {}),
     })
     if (isRecurring && onCreateRecurringBill) {
-      void onCreateRecurringBill({
+      const nextDueDate = nextOccurrenceDate(selectedDate, recurringFrequency)
+      await onCreateRecurringBill({
         label: note.trim() || displayCategories.find((item) => item.categoryValue === effectiveCategory)?.label || 'Recurring expense',
         amount: submittedAmount,
         category: effectiveCategory,
-        dueDay: Number.parseInt(selectedDate.slice(-2), 10),
+        dueDay: Number.parseInt(nextDueDate.slice(-2), 10),
         recurringId: crypto.randomUUID(),
         isActive: true,
+        frequency: recurringFrequency,
+        nextDueDate,
+        obligationType: effectiveCategory === 'rent' || effectiveCategory === 'subscriptions' ? 'fixed' : 'variable',
+        isSubscription: effectiveCategory === 'subscriptions',
+        isFlaggedUnused: false,
       })
     }
     // Use the post-save monthly context when supplied; retain the older
@@ -740,7 +759,7 @@ export function ExpenseSheet({
 
     shouldResetDraftOnOpenRef.current = true
     onClose()
-  }, [amount, category, spendingMode, note, tags, splitEnabled, splitCount, splitWith, splitFriends, splitMode, splitParticipants, percentInputs, shareInputs, customShareInput, selectedSourceId, selectedSourceIsBorrowed, trackAsIOU, selectedDate, displayCategories, onSubmit, onBuildConfirmation, onClose, onUndo, showToast, budgets, onAlertMessage, logToSharedBudget, matchingSharedBudget, onLogToSharedBudget, selectedCurrency, currencyRate, isRecurring, onCreateRecurringBill])
+  }, [amount, category, spendingMode, note, tags, splitEnabled, splitCount, splitWith, splitFriends, splitMode, splitParticipants, percentInputs, shareInputs, customShareInput, selectedSourceId, selectedSourceIsBorrowed, trackAsIOU, selectedDate, displayCategories, onSubmit, onBuildConfirmation, onClose, onUndo, showToast, budgets, onAlertMessage, logToSharedBudget, matchingSharedBudget, onLogToSharedBudget, selectedCurrency, currencyRate, isRecurring, recurringFrequency, onCreateRecurringBill])
 
   const canSubmit = (() => {
     const parsed = parseFloat(amount)
@@ -1068,12 +1087,20 @@ export function ExpenseSheet({
             type="button"
             onClick={() => setIsRecurring((value) => !value)}
             aria-pressed={isRecurring}
-            aria-label="This expense repeats monthly"
+            aria-label="Make this expense recurring"
             className="focus-ring interactive-control"
             style={{ minHeight: 36, padding: '0 12px', background: isRecurring ? 'var(--accent-muted)' : 'var(--surface-recessed)', border: isRecurring ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: radius.full, color: 'var(--sub)', cursor: 'pointer', ...typographyRoles.labelButton }}
           >
-            This repeats · monthly
+            Make recurring
           </button>
+          {isRecurring && (
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 36, padding: '0 10px', background: 'var(--surface-recessed)', border: '1px solid var(--border)', borderRadius: radius.full, color: 'var(--sub)', ...typographyRoles.labelButton }}>
+              Every
+              <select value={recurringFrequency} onChange={event => setRecurringFrequency(event.target.value as RecurringChargeFrequency)} aria-label="Recurring frequency" style={{ border: 'none', background: 'transparent', color: 'var(--text)', fontFamily: FONT_FAMILY, fontSize: typography['body-sm'].fontSize }}>
+                <option value="weekly">week</option><option value="biweekly">2 weeks</option><option value="monthly">month</option><option value="quarterly">3 months</option><option value="yearly">year</option>
+              </select>
+            </label>
+          )}
         </div>
 
               {habitChips.length > 0 && (

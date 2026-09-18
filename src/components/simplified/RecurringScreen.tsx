@@ -21,7 +21,7 @@ import {
   segmentedButtonInactive,
 } from "@/styles/shared"
 import type { Transaction } from "@/types"
-import type { FixedExpense } from "@/lib/fixedExpenses"
+import type { FixedExpense, RecurringCharge } from "@/lib/fixedExpenses"
 import type { MergedRecurrence } from "@/lib/recurrenceDetector"
 
 // ============================================================================
@@ -30,7 +30,7 @@ import type { MergedRecurrence } from "@/lib/recurrenceDetector"
 
 export interface RecurringScreenProps {
   /** User's manually-added recurring bills */
-  bills: FixedExpense[]
+  bills: RecurringCharge[]
   /** All user transactions for pattern detection */
   transactions: Transaction[]
   /** Add a new bill */
